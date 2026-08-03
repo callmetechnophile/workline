@@ -16,6 +16,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "ARMOURLINE",
   description: "Automated hardware engineering workflow planner",
+  verification: {
+    other: {
+      "strix-verification": "strix-verify-bb442cfb256a19c1620df82777eac719",
+    },
+  },
 };
 
 export default function RootLayout({
