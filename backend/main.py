@@ -111,6 +111,17 @@ app.include_router(calendar_router)
 app.include_router(speech_router)
 
 
+@app.get("/health", tags=["Health"])
+@app.get("/version", tags=["Health"])
+async def health_check():
+    """Health check probe for Render."""
+    return {
+        "status": "healthy",
+        "service": "workline-core-gateway",
+        "version": "1.0.0-rc1",
+    }
+
+
 @app.get("/health/database")
 async def database_health():
     """Database connectivity health check for SurrealDB and Qdrant."""
@@ -142,4 +153,8 @@ if os.path.exists(STATIC_DIR):
 else:
     @app.get("/")
     def read_root():
-        return {"status": "ONLINE", "product": "Workline", "version": "0.1.0"}
+        return {
+            "status": "healthy",
+            "service": "workline-core-gateway",
+            "version": "1.0.0-rc1",
+        }

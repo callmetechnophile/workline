@@ -75,7 +75,9 @@ app.add_middleware(
 )
 
 
+@app.get("/", tags=["Health"])
 @app.get("/health", tags=["Health"])
+@app.get("/version", tags=["Health"])
 async def health_check() -> Dict[str, Any]:
     """
     Lightweight health probe endpoint for Render uptime monitoring.
