@@ -2,7 +2,7 @@
 
 import threading
 import time
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 from backend.workline.procurement.models import (
     BillOfMaterials,
     BomItem,
