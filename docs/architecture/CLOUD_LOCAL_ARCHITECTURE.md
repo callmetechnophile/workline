@@ -18,7 +18,7 @@ There are no distinct "cli mode", "fully local mode", or "desktop mode" concepts
 ## 2. Cloud Mode Topology
 
 ```
-                         VERCEL EDGE
+                           NETLIFY
                       (Next.js Frontend)
                               │
                         HTTPS REST / BFF
@@ -38,7 +38,7 @@ There are no distinct "cli mode", "fully local mode", or "desktop mode" concepts
     SurrealDB Cloud       Qdrant Cloud
 ```
 
-- **Frontend Tier (Vercel)**: Next.js 16 App Router pages and Clerk authentication proxy.
+- **Frontend Tier (Netlify)**: Next.js 16 App Router pages and Clerk authentication proxy deployed on Netlify.
 - **Microservices (Render R1–R5)**: Dedicated FastAPI containers for routing (R1), LLM reasoning (R2), knowledge & databases (R3), physics/PINN solvers (R4), and BOM/procurement (R5).
 - **Databases**: SurrealDB and Qdrant managed via R3 internal APIs.
 
