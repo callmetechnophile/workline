@@ -3,6 +3,8 @@
 import React, { useState } from "react";
 import { Table, Search, ArrowUpDown, Check, AlertCircle } from "lucide-react";
 
+import { EngineeringStatusBadge } from "./EngineeringStatusBadge";
+
 export interface BOMTableItem {
   ref: string;
   component: string;
@@ -46,27 +48,27 @@ export const BOMTable: React.FC<BOMTableProps> = ({
   );
 
   return (
-    <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-5 flex flex-col gap-4 text-zinc-100">
-      <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
+    <div className="bg-surface border border-border rounded-lg p-5 flex flex-col gap-4 text-foreground">
+      <div className="flex items-center justify-between pb-2 border-b border-border">
         <div className="flex items-center gap-2">
-          <Table className="w-5 h-5 text-indigo-400" />
-          <h3 className="text-base font-bold text-zinc-100">BOM Line Items</h3>
+          <Table className="w-5 h-5 text-primary" />
+          <h3 className="text-base font-bold text-foreground">BOM Line Items</h3>
         </div>
         <div className="relative">
-          <Search className="w-3.5 h-3.5 absolute left-2.5 top-2 text-zinc-500" />
+          <Search className="w-3.5 h-3.5 absolute left-2.5 top-2 text-muted-foreground" />
           <input
             type="text"
             placeholder="Filter components..."
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            className="pl-8 pr-3 py-1 bg-zinc-950 border border-zinc-800 rounded text-xs text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-indigo-500"
+            className="pl-8 pr-3 py-1 bg-surface-secondary border border-border rounded text-xs text-foreground placeholder:text-muted focus:outline-none focus:border-primary"
           />
         </div>
       </div>
 
-      <div className="overflow-x-auto border border-zinc-800 rounded-lg">
-        <table className="w-full text-left text-xs font-mono">
-          <thead className="bg-zinc-950/80 text-zinc-400 border-b border-zinc-800">
+      <div className="overflow-x-auto border border-border rounded-lg">
+        <table className="w-full text-left text-xs font-mono font-tabular">
+          <thead className="bg-surface-secondary/80 text-muted-foreground border-b border-border">
             <tr>
               <th className="p-2.5">Ref</th>
               <th className="p-2.5">Component</th>
@@ -78,30 +80,22 @@ export const BOMTable: React.FC<BOMTableProps> = ({
               <th className="p-2.5">Status</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-zinc-800 bg-zinc-900">
+          <tbody className="divide-y divide-border bg-surface">
             {filtered.map((item) => (
               <tr
                 key={item.ref}
                 onClick={() => onSelectPart && onSelectPart(item.ref)}
-                className="hover:bg-zinc-800/40 cursor-pointer transition"
+                className="hover:bg-surface-secondary/50 cursor-pointer transition"
               >
-                <td className="p-2.5 font-bold text-indigo-300">{item.ref}</td>
-                <td className="p-2.5 font-semibold text-zinc-200">{item.component}</td>
-                <td className="p-2.5 text-zinc-400">{item.orderingCode}</td>
-                <td className="p-2.5">{item.qty}</td>
-                <td className="p-2.5 text-zinc-300">{item.supplier}</td>
+                <td className="p-2.5 font-bold text-primary">{item.ref}</td>
+                <td className="p-2.5 font-semibold text-foreground">{item.component}</td>
+                <td className="p-2.5 text-muted-foreground">{item.orderingCode}</td>
+                <td className="p-2.5 text-foreground">{item.qty}</td>
+                <td className="p-2.5 text-foreground-secondary">{item.supplier}</td>
                 <td className="p-2.5 font-bold text-emerald-400">₹{item.unitPrice.toFixed(2)}</td>
-                <td className="p-2.5 text-zinc-300">{item.stock > 0 ? item.stock : "0"}</td>
+                <td className="p-2.5 text-foreground-secondary">{item.stock > 0 ? item.stock : "0"}</td>
                 <td className="p-2.5">
-                  <span
-                    className={`px-1.5 py-0.5 rounded text-[10px] ${
-                      item.status === "RESOLVED"
-                        ? "text-emerald-400 bg-emerald-950/40"
-                        : "text-amber-400 bg-amber-950/40"
-                    }`}
-                  >
-                    {item.status}
-                  </span>
+                  <EngineeringStatusBadge status={item.status} size="sm" />
                 </td>
               </tr>
             ))}
