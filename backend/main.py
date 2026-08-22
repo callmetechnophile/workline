@@ -111,8 +111,10 @@ app.include_router(calendar_router)
 app.include_router(speech_router)
 
 
+@app.get("/", tags=["Health"])
 @app.get("/health", tags=["Health"])
 @app.get("/version", tags=["Health"])
+@app.get("/service", tags=["Health"])
 async def health_check():
     """Health check probe for Render."""
     return {
@@ -120,6 +122,12 @@ async def health_check():
         "service": "workline-core-gateway",
         "version": "1.0.0-rc1",
     }
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    from fastapi.responses import Response
+    return Response(status_code=204)
 
 
 @app.get("/health/database")

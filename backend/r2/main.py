@@ -78,9 +78,10 @@ app.add_middleware(
 @app.get("/", tags=["Health"])
 @app.get("/health", tags=["Health"])
 @app.get("/version", tags=["Health"])
+@app.get("/service", tags=["Health"])
 async def health_check() -> Dict[str, Any]:
     """
-    Lightweight health probe endpoint for Render uptime monitoring.
+    Lightweight health probe and service info endpoint for Render uptime monitoring.
     Never executes external AI APIs, databases, or remote crawling.
     """
     return {
@@ -88,6 +89,12 @@ async def health_check() -> Dict[str, Any]:
         "service": SERVICE_NAME,
         "version": SERVICE_VERSION,
     }
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    from fastapi.responses import Response
+    return Response(status_code=204)
 
 
 @app.post("/internal/research", response_model=ResearchResponse, tags=["Internal"])

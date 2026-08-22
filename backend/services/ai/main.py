@@ -36,14 +36,23 @@ app.include_router(cache_router)
 app.include_router(speech_router)
 
 
+@app.get("/", tags=["Health"])
 @app.get("/health", tags=["Health"])
+@app.get("/version", tags=["Health"])
+@app.get("/service", tags=["Health"])
 async def health_check():
-    """Health endpoint for R2 AI/Research service."""
+    """Health & metadata endpoint for R2 AI/Research service."""
     return {
         "status": "healthy",
         "service": "workline-ai-agents",
         "version": "1.0.0-rc1",
     }
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    from fastapi.responses import Response
+    return Response(status_code=204)
 
 
 if __name__ == "__main__":
