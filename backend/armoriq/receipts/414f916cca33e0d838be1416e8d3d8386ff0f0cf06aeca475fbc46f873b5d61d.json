@@ -1,0 +1,13 @@
+{
+  "agent": "Voltage Checker",
+  "parent": "2a165e99-9450-4e28-87c8-5cc74749d516",
+  "tool": "calculate_power_budget",
+  "scope": [
+    "calculate_power_budget"
+  ],
+  "timestamp": "1783872385.6079123",
+  "hash": "414f916cca33e0d838be1416e8d3d8386ff0f0cf06aeca475fbc46f873b5d61d",
+  "status": "success",
+  "execution_result": "{'power_items': [{'component': 'Brushless DC Suction Motor (24V, 100K RPM)', 'voltage': 24.0, 'nominal_current': 8000.0, 'peak_current': 15000.0, 'standby_current': 0.0, 'is_source': False}, {'component': '100W Flexible Monocrystalline Solar Panel', 'voltage': 18.0, 'nominal_current': 0.0, 'peak_cur...",
+  "authority_chain": "Planner Agent -> Voltage Checker"
+}

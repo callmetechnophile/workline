@@ -1,0 +1,206 @@
+{
+  "bom_items": [
+    {
+      "name": "Brushless DC Suction Motor (24V, 100K RPM)",
+      "cost": 40.2289156626506,
+      "notes": "Landed at Pantronics India (Distance: 350 km, ETA: 3-4 Days)",
+      "component": "Brushless DC Suction Motor (24V, 100K RPM)",
+      "category": "Propulsion / Suction",
+      "selected_vendor": "Pantronics India",
+      "vendor_location": "Chennai",
+      "base_cost": 3249,
+      "shipping_cost": 90,
+      "distance": "350 km",
+      "final_cost": 3339,
+      "stock": "Low Stock",
+      "eta": "3-4 Days",
+      "alternatives": [
+        {
+          "alternative": "Brushed DC Suction Motor",
+          "vendor": "Probots Electronics",
+          "base_cost": 1070,
+          "shipping_cost": 80,
+          "final_cost": 1150,
+          "reason": "Lower cost, does not require an Electronic Speed Controller (ESC)."
+        }
+      ],
+      "url": "https://www.pantronics.in/search?q=Brushless+DC+Suction+Motor+(24V,+100K+RPM)"
+    },
+    {
+      "name": "100W Flexible Monocrystalline Solar Panel",
+      "cost": 74.79518072289157,
+      "notes": "Landed at Mouser Electronics India (Distance: 0 km, ETA: 2 Days)",
+      "component": "100W Flexible Monocrystalline Solar Panel",
+      "category": "Power Supply",
+      "selected_vendor": "Mouser Electronics India",
+      "vendor_location": "Bengaluru",
+      "base_cost": 6208,
+      "shipping_cost": 0,
+      "distance": "0 km",
+      "final_cost": 6208,
+      "stock": "In Stock",
+      "eta": "2 Days",
+      "alternatives": [
+        {
+          "alternative": "Budget alternative for 100W Flexible Monocrystalline Solar Panel",
+          "vendor": "element14 India",
+          "base_cost": 448,
+          "shipping_cost": 90,
+          "final_cost": 538,
+          "reason": "Reduced specification replacement for low-cost project configurations."
+        },
+        {
+          "alternative": "Generic equivalent for 100W Flexible Monocrystalline Solar Panel",
+          "vendor": "Pantronics India",
+          "base_cost": 713,
+          "shipping_cost": 90,
+          "final_cost": 803,
+          "reason": "Standard replacement option with similar power ratings and interface pins."
+        }
+      ],
+      "url": "https://www.mouser.in/search?q=100W+Flexible+Monocrystalline+Solar+Panel"
+    },
+    {
+      "name": "12V/24V 20A MPPT Solar Charge Controller",
+      "cost": 30.783132530120483,
+      "notes": "Landed at element14 India (Distance: 0 km, ETA: 2 Days)",
+      "component": "12V/24V 20A MPPT Solar Charge Controller",
+      "category": "Electronics / Power Control",
+      "selected_vendor": "element14 India",
+      "vendor_location": "Bengaluru",
+      "base_cost": 2465,
+      "shipping_cost": 90,
+      "distance": "0 km",
+      "final_cost": 2555,
+      "stock": "In Stock",
+      "eta": "2 Days",
+      "alternatives": [
+        {
+          "alternative": "PWM Solar Charge Controller",
+          "vendor": "element14 India",
+          "base_cost": 1182,
+          "shipping_cost": 90,
+          "final_cost": 1272,
+          "reason": "Cheaper alternative, though 15-20% less efficient than MPPT."
+        },
+        {
+          "alternative": "LT3652 MPPT Charger",
+          "vendor": "element14 India",
+          "base_cost": 2629,
+          "shipping_cost": 90,
+          "final_cost": 2719,
+          "reason": "Similar tracking capabilities in a more compact design."
+        }
+      ],
+      "url": "https://in.element14.com/search?q=12V/24V+20A+MPPT+Solar+Charge+Controller"
+    },
+    {
+      "name": "12.8V 10Ah LiFePO4 Lithium Iron Phosphate Battery Pack",
+      "cost": 80.09638554216868,
+      "notes": "Landed at Mouser Electronics India (Distance: 0 km, ETA: 2 Days)",
+      "component": "12.8V 10Ah LiFePO4 Lithium Iron Phosphate Battery Pack",
+      "category": "Energy Storage",
+      "selected_vendor": "Mouser Electronics India",
+      "vendor_location": "Bengaluru",
+      "base_cost": 6648,
+      "shipping_cost": 0,
+      "distance": "0 km",
+      "final_cost": 6648,
+      "stock": "In Stock",
+      "eta": "2 Days",
+      "alternatives": [
+        {
+          "alternative": "Lead-Acid Battery (12V)",
+          "vendor": "element14 India",
+          "base_cost": 2178,
+          "shipping_cost": 90,
+          "final_cost": 2268,
+          "reason": "Lowest cost but significantly heavier and larger footprint."
+        },
+        {
+          "alternative": "11.1V 3S LiPo Battery Pack",
+          "vendor": "element14 India",
+          "base_cost": 2992,
+          "shipping_cost": 90,
+          "final_cost": 3082,
+          "reason": "Cheaper options, higher energy density but shorter lifespan."
+        }
+      ],
+      "url": "https://www.mouser.in/search?q=12.8V+10Ah+LiFePO4+Lithium+Iron+Phosphate+Battery+Pack"
+    },
+    {
+      "name": "Modular Cyclonic Dust Filter Assembly",
+      "cost": 22.83132530120482,
+      "notes": "Landed at Pantronics India (Distance: 350 km, ETA: 3-4 Days)",
+      "component": "Modular Cyclonic Dust Filter Assembly",
+      "category": "Structural / Mechanical",
+      "selected_vendor": "Pantronics India",
+      "vendor_location": "Chennai",
+      "base_cost": 1805,
+      "shipping_cost": 90,
+      "distance": "350 km",
+      "final_cost": 1895,
+      "stock": "Low Stock",
+      "eta": "3-4 Days",
+      "alternatives": [
+        {
+          "alternative": "Budget alternative for Modular Cyclonic Dust Filter Assembly",
+          "vendor": "element14 India",
+          "base_cost": 410,
+          "shipping_cost": 90,
+          "final_cost": 500,
+          "reason": "Reduced specification replacement for low-cost project configurations."
+        },
+        {
+          "alternative": "Generic equivalent for Modular Cyclonic Dust Filter Assembly",
+          "vendor": "element14 India",
+          "base_cost": 830,
+          "shipping_cost": 90,
+          "final_cost": 920,
+          "reason": "Standard replacement option with similar power ratings and interface pins."
+        }
+      ],
+      "url": "https://www.pantronics.in/search?q=Modular+Cyclonic+Dust+Filter+Assembly"
+    },
+    {
+      "name": "ABS Filament for 3D Printed Housing and Hose Adapters",
+      "cost": 19.96385542168675,
+      "notes": "Landed at Probots Electronics (Distance: 0 km, ETA: 2 Days)",
+      "component": "ABS Filament for 3D Printed Housing and Hose Adapters",
+      "category": "Housing & Attachments",
+      "selected_vendor": "Probots Electronics",
+      "vendor_location": "Bengaluru",
+      "base_cost": 1577,
+      "shipping_cost": 80,
+      "distance": "0 km",
+      "final_cost": 1657,
+      "stock": "In Stock",
+      "eta": "2 Days",
+      "alternatives": [
+        {
+          "alternative": "Budget alternative for ABS Filament for 3D Printed Housing and Hose Adapters",
+          "vendor": "element14 India",
+          "base_cost": 464,
+          "shipping_cost": 90,
+          "final_cost": 554,
+          "reason": "Reduced specification replacement for low-cost project configurations."
+        },
+        {
+          "alternative": "Generic equivalent for ABS Filament for 3D Printed Housing and Hose Adapters",
+          "vendor": "Probots Electronics",
+          "base_cost": 705,
+          "shipping_cost": 80,
+          "final_cost": 785,
+          "reason": "Standard replacement option with similar power ratings and interface pins."
+        }
+      ],
+      "url": "https://www.probots.in/search?q=ABS+Filament+for+3D+Printed+Housing+and+Hose+Adapters"
+    }
+  ],
+  "totals": {
+    "electronics_total": 15321,
+    "mechanical_total": 6631,
+    "shipping_total": 350,
+    "grand_total": 22302
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "agent": "KnowledgeGraphAgent",
+  "parent": "386fa5f3-888b-4e67-b675-780582e987e6",
+  "tool": "graph.read",
+  "scope": [
+    "graph.read"
+  ],
+  "timestamp": "1787359280.2382135",
+  "hash": "169119d875fffbed10053b25e27a4d908c16fceedf32a2b6cacf73036f029537",
+  "status": "success",
+  "execution_result": "{'nodes': [{'id': 'node_project_autonomous-rover', 'label': 'autonomous-rover', 'type': 'Project', 'properties': {'name': 'autonomous-rover'}}], 'edges': []}",
+  "authority_chain": "Planner Agent -> KnowledgeGraphAgent"
+}

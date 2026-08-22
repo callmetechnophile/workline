@@ -1,0 +1,267 @@
+"use client";
+
+import React, { useState } from "react";
+import {
+  ShoppingCart,
+  ShieldCheck,
+  Zap,
+  Clock,
+  ArrowRight,
+  RefreshCw,
+  PlusCircle,
+  FileCheck,
+} from "lucide-react";
+import OrderPreview, { OrderPreviewData } from "./OrderPreview";
+import PaymentPanel, { PaymentDetails } from "./PaymentPanel";
+import OrderStatus from "./OrderStatus";
+import ReceiptPanel, { ReceiptData } from "./ReceiptPanel";
+import OrderAuditTimeline, { AuditEventItem } from "./OrderAuditTimeline";
+
+interface OrderPanelProps {
+  projectId: string;
+  bomId: string;
+  initialOrders?: OrderPreviewData[];
+}
+
+export const OrderPanel: React.FC<OrderPanelProps> = ({
+  projectId,
+  bomId,
+  initialOrders = [],
+}) => {
+  const [orders, setOrders] = useState<OrderPreviewData[]>(initialOrders);
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(
+    initialOrders.length > 0 ? initialOrders[0].order_id : null
+  );
+  const [activePayment, setActivePayment] = useState<PaymentDetails | null>(null);
+  const [activeReceipt, setActiveReceipt] = useState<ReceiptData | null>(null);
+  const [auditEvents, setAuditEvents] = useState<AuditEventItem[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const selectedOrder = orders.find((o) => o.order_id === selectedOrderId);
+
+  // 1. Create Order Plan
+  const handleCreateOrderPlan = async () => {
+    setLoading(true);
+    try {
+      // Create mock preview order if API not reachable
+      const newOrder: OrderPreviewData = {
+        order_id: `WL-ORD-${Math.random().toString(16).substring(2, 8).toUpperCase()}`,
+        project_id: projectId,
+        vendor: "Robu",
+        currency: "INR",
+        subtotal: 701.0,
+        shipping_cost: 90.0,
+        tax: 126.18,
+        fees: 0.0,
+        total: 917.18,
+        status: "READY_FOR_APPROVAL",
+        execution_mode: "MANUAL",
+        items: [
+          {
+            order_item_id: "item_1",
+            manufacturer: "Espressif Systems",
+            mpn: "ESP32-S3-WROOM-1",
+            quantity: 1,
+            unit_price: 385.0,
+            extended_price: 385.0,
+            currency: "INR",
+            vendor_name: "Robu",
+            stock_at_validation: 45,
+          },
+          {
+            order_item_id: "item_2",
+            manufacturer: "Texas Instruments",
+            mpn: "DRV8833",
+            quantity: 1,
+            unit_price: 115.0,
+            extended_price: 115.0,
+            currency: "INR",
+            vendor_name: "Robu",
+            stock_at_validation: 85,
+          },
+          {
+            order_item_id: "item_3",
+            manufacturer: "Texas Instruments",
+            mpn: "LM2596S-3.3",
+            quantity: 2,
+            unit_price: 89.0,
+            extended_price: 178.0,
+            currency: "INR",
+            vendor_name: "Robu",
+            stock_at_validation: 350,
+          },
+        ],
+      };
+      setOrders([newOrder, ...orders]);
+      setSelectedOrderId(newOrder.order_id);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 2. Approve Order
+  const handleApprove = async (orderId: string) => {
+    setLoading(true);
+    try {
+      setOrders((prev) =>
+        prev.map((o) =>
+          o.order_id === orderId
+            ? { ...o, status: "APPROVED" }
+            : o
+        )
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 3. Proceed to Payment
+  const handleProceedToPayment = async (orderId: string) => {
+    const order = orders.find((o) => o.order_id === orderId);
+    if (!order) return;
+
+    setActivePayment({
+      payment_request_id: `req_${Math.random().toString(16).substring(2, 10)}`,
+      order_id: orderId,
+      amount: Number((order.total / 86.50).toFixed(2)),
+      currency: "USD",
+      network: "base-sepolia",
+      asset: "USDC",
+      recipient: "0xWorklineTreasuryRecipient402",
+      expires_at: new Date(Date.now() + 30 * 60000).toISOString(),
+      status: "REQUIRED",
+    });
+  };
+
+  // 4. Authorize Payment & Execute
+  const handleAuthorizePayment = async (paymentId: string, proof: Record<string, any>) => {
+    if (!selectedOrder) return;
+
+    // Transition Order to Confirmed / Manual Checkout
+    const isManual = selectedOrder.execution_mode === "MANUAL";
+    const resultingStatus = isManual ? "MANUAL_CHECKOUT_REQUIRED" : "CONFIRMED";
+
+    setOrders((prev) =>
+      prev.map((o) =>
+        o.order_id === selectedOrder.order_id
+          ? { ...o, status: resultingStatus }
+          : o
+      )
+    );
+
+    setActiveReceipt({
+      receipt_id: `rec_${Math.random().toString(16).substring(2, 10)}`,
+      order_id: selectedOrder.order_id,
+      vendor: selectedOrder.vendor,
+      external_order_id: `VEND-${selectedOrder.order_id}`,
+      subtotal: selectedOrder.subtotal,
+      shipping: selectedOrder.shipping_cost,
+      tax: selectedOrder.tax,
+      fees: selectedOrder.fees,
+      total: selectedOrder.total,
+      currency: selectedOrder.currency,
+      issued_at: new Date().toISOString(),
+      verification_status: "VERIFIED",
+    });
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Top Header Card */}
+      <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-5 shadow-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-lg font-bold text-slate-100 flex items-center gap-2">
+            <ShoppingCart className="w-5 h-5 text-cyan-400" />
+            Item Ordering & Payment Authorization
+          </h2>
+          <p className="text-xs text-slate-400">
+            Autonomous Preparation • Human Approval • x402 Cryptographic Settlement
+          </p>
+        </div>
+
+        <button
+          onClick={handleCreateOrderPlan}
+          disabled={loading}
+          className="px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold shadow-lg shadow-cyan-900/30 flex items-center gap-1.5 transition-all self-start sm:self-auto disabled:opacity-50"
+        >
+          {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <PlusCircle className="w-4 h-4" />}
+          Create Order Plan from BOM
+        </button>
+      </div>
+
+      {/* Orders Navigation Tabs */}
+      {orders.length > 0 && (
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {orders.map((o) => (
+            <button
+              key={o.order_id}
+              onClick={() => {
+                setSelectedOrderId(o.order_id);
+                setActivePayment(null);
+              }}
+              className={`px-3.5 py-2 rounded-lg text-xs font-semibold border transition-all flex items-center gap-2 ${
+                selectedOrderId === o.order_id
+                  ? "bg-slate-800 border-cyan-500 text-cyan-300 shadow-md"
+                  : "bg-slate-950/60 border-slate-800 text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              <span>{o.order_id}</span>
+              <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-900 text-slate-400 border border-slate-800">
+                {o.vendor}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Main Content Area */}
+      {selectedOrder ? (
+        <div className="space-y-6">
+          {/* 1. Order Preview & Approval */}
+          <OrderPreview
+            order={selectedOrder}
+            onApprove={handleApprove}
+            onProceedToPayment={handleProceedToPayment}
+          />
+
+          {/* 2. x402 Payment Panel */}
+          {activePayment && (
+            <PaymentPanel
+              payment={activePayment}
+              onAuthorizePayment={handleAuthorizePayment}
+              onCancelPayment={() => setActivePayment(null)}
+            />
+          )}
+
+          {/* 3. Tracking Status */}
+          <OrderStatus
+            order={{
+              order_id: selectedOrder.order_id,
+              project_id: selectedOrder.project_id,
+              vendor: selectedOrder.vendor,
+              status: selectedOrder.status,
+              payment_status: selectedOrder.status === "APPROVED" ? "REQUIRED" : (selectedOrder.status === "CONFIRMED" ? "SETTLED" : "PENDING"),
+              approval_status: selectedOrder.status === "READY_FOR_APPROVAL" ? "PENDING" : "APPROVED",
+              total: selectedOrder.total,
+              currency: selectedOrder.currency,
+              created_at: new Date().toISOString(),
+            }}
+            onViewReceipt={() => {}}
+            onViewAudit={() => {}}
+          />
+
+          {/* 4. Receipt Panel */}
+          {activeReceipt && <ReceiptPanel receipt={activeReceipt} />}
+        </div>
+      ) : (
+        <div className="bg-slate-900/40 border border-slate-800/80 rounded-xl p-8 text-center text-slate-500 text-xs">
+          No orders created yet. Click <strong>"Create Order Plan from BOM"</strong> to start.
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default OrderPanel;

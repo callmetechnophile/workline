@@ -1,0 +1,13 @@
+{
+  "agent": "CollaborationAgent",
+  "parent": "Planner Agent",
+  "tool": "invite_member",
+  "scope": [
+    "invite_member"
+  ],
+  "timestamp": "1783868331.7834098",
+  "hash": "d26c84bc7d3e71ae72ecf44a6c279fb7dc76b45ab2ca9a716d7363ed42afd363",
+  "status": "success",
+  "execution_result": "User user_clerk_123 joined team",
+  "authority_chain": "Planner Agent -> CollaborationAgent"
+}

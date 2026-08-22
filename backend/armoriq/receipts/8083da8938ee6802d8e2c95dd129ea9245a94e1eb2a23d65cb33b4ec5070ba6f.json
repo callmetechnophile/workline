@@ -1,0 +1,14 @@
+{
+  "agent": "CollaborationAgent",
+  "parent": "fbe0b2be-d13b-4684-a36a-3e9555120aaa",
+  "tool": "invite_member",
+  "scope": [
+    "invite_member",
+    "comment"
+  ],
+  "timestamp": "1783870503.269595",
+  "hash": "8083da8938ee6802d8e2c95dd129ea9245a94e1eb2a23d65cb33b4ec5070ba6f",
+  "status": "success",
+  "execution_result": "{'id': 1, 'team_id': 1, 'user_id': 'engineer_1', 'email': 'engineer1@armourline.io', 'role': 'Engineer', 'joined_at': '2026-07-12T15:35:03.259856'}",
+  "authority_chain": "Planner Agent -> CollaborationAgent"
+}

@@ -1,0 +1,13 @@
+{
+  "agent": "CollaborationAgent",
+  "parent": "Planner Agent",
+  "tool": "invite_member",
+  "scope": [
+    "invite_member"
+  ],
+  "timestamp": "1783868328.6811268",
+  "hash": "842a0b2f6c141368327b1e5e2c45f174850cf6bdd63233c512ea0f3c2f9905f3",
+  "status": "success",
+  "execution_result": "Created invite token for collaborator@armourline.io",
+  "authority_chain": "Planner Agent -> CollaborationAgent"
+}

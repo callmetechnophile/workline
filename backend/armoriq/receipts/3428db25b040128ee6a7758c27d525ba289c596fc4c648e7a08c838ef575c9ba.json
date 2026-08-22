@@ -1,0 +1,15 @@
+{
+  "agent": "ProcurementAgent",
+  "parent": "12973e3d-8ae6-412b-9961-8bf2568cf302",
+  "tool": "generate_optimized_bom",
+  "scope": [
+    "generate_optimized_bom",
+    "calculate_landed_cost",
+    "find_alternative_components"
+  ],
+  "timestamp": "1783892318.6480823",
+  "hash": "3428db25b040128ee6a7758c27d525ba289c596fc4c648e7a08c838ef575c9ba",
+  "status": "success",
+  "execution_result": "{'bom_items': [{'name': 'Brushless DC Suction Motor (24V, 100K RPM)', 'cost': 40.2289156626506, 'notes': 'Landed at Pantronics India (Distance: 350 km, ETA: 3-4 Days)', 'component': 'Brushless DC Suction Motor (24V, 100K RPM)', 'category': 'Propulsion / Suction', 'selected_vendor': 'Pantronics India...",
+  "authority_chain": "Planner Agent -> ProcurementAgent"
+}

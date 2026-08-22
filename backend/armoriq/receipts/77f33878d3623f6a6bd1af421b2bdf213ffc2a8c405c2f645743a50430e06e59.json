@@ -1,0 +1,13 @@
+{
+  "agent": "KnowledgeGraphAgent",
+  "parent": "f3bf5f7f-4eac-4139-af03-e77be853fc62",
+  "tool": "graph.read",
+  "scope": [
+    "graph.read"
+  ],
+  "timestamp": "1783870502.2134943",
+  "hash": "77f33878d3623f6a6bd1af421b2bdf213ffc2a8c405c2f645743a50430e06e59",
+  "status": "success",
+  "execution_result": "[{'name': 'Budget alternative for 5V 3A DC Wall Power Adapter', 'category': None, 'cost': 484, 'notes': None}, {'name': 'Generic equivalent for 5V 3A DC Wall Power Adapter', 'category': None, 'cost': 886, 'notes': None}]",
+  "authority_chain": "Planner Agent -> KnowledgeGraphAgent"
+}

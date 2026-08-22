@@ -1,0 +1,14 @@
+{
+  "agent": "Retrieval Agent",
+  "parent": "460ccff6-cc85-4c7e-b748-e95dc0a05a45",
+  "tool": "fetch_sources",
+  "scope": [
+    "search_projects",
+    "fetch_sources"
+  ],
+  "timestamp": "1783872382.9372132",
+  "hash": "86d8168a6c714d5032cbe3b97193b35c74f1e73459cd05e0f68dbe988e7fcb78",
+  "status": "success",
+  "execution_result": "{'url': 'https://github.com/engineering-labs/solarvac', 'content_markdown': '# Content from source https://github.com/engineering-labs/solarvac\\n\\n## Overview\\nThis project details the mechanical construction and electrical diagram. Key components include a high-efficiency controller, custom 3D prin...",
+  "authority_chain": "Planner Agent -> Retrieval Agent"
+}

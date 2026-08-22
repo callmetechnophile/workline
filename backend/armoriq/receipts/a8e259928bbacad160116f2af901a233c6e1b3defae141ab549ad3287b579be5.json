@@ -1,0 +1,16 @@
+{
+  "agent": "Export Agent",
+  "parent": "f1f6c74c-55a6-44d3-baf0-55d6b132b504",
+  "tool": "export_docx",
+  "scope": [
+    "export_pdf",
+    "export_csv",
+    "export_markdown",
+    "export_docx"
+  ],
+  "timestamp": "1783868785.8687646",
+  "hash": "a8e259928bbacad160116f2af901a233c6e1b3defae141ab549ad3287b579be5",
+  "status": "success",
+  "execution_result": "{'filename': 'VoiceControlled_System.docx', 'url': '/api/exports/VoiceControlled_System.docx', 'status': 'SUCCESS'}",
+  "authority_chain": "Planner Agent -> Export Agent"
+}

@@ -1,0 +1,248 @@
+{
+  "bom_items": [
+    {
+      "name": "ESP32-WROOM-32D Development Board",
+      "cost": 7.746987951807229,
+      "notes": "Landed at element14 India (Distance: 0 km, ETA: 2 Days)",
+      "component": "ESP32-WROOM-32D Development Board",
+      "category": "Core Controller",
+      "selected_vendor": "element14 India",
+      "vendor_location": "Bengaluru",
+      "base_cost": 553,
+      "shipping_cost": 90,
+      "distance": "0 km",
+      "final_cost": 643,
+      "stock": "In Stock",
+      "eta": "2 Days",
+      "alternatives": [
+        {
+          "alternative": "Arduino Nano",
+          "vendor": "element14 India",
+          "base_cost": 318,
+          "shipping_cost": 90,
+          "final_cost": 408,
+          "reason": "Lower price, though lacks built-in Wi-Fi/Bluetooth capabilities."
+        },
+        {
+          "alternative": "Raspberry Pi Pico W",
+          "vendor": "element14 India",
+          "base_cost": 463,
+          "shipping_cost": 90,
+          "final_cost": 553,
+          "reason": "Comparable dual-core processor with clean SDK support."
+        }
+      ],
+      "url": "https://in.element14.com/search?q=ESP32-WROOM-32D+Development+Board"
+    },
+    {
+      "name": "PCA9685 16-Ch PWM Servo Driver Board",
+      "cost": 5.807228915662651,
+      "notes": "Landed at element14 India (Distance: 0 km, ETA: 2 Days)",
+      "component": "PCA9685 16-Ch PWM Servo Driver Board",
+      "category": "Servo Driver",
+      "selected_vendor": "element14 India",
+      "vendor_location": "Bengaluru",
+      "base_cost": 392,
+      "shipping_cost": 90,
+      "distance": "0 km",
+      "final_cost": 482,
+      "stock": "In Stock",
+      "eta": "2 Days",
+      "alternatives": [
+        {
+          "alternative": "Budget alternative for PCA9685 16-Ch PWM Servo Driver Board",
+          "vendor": "element14 India",
+          "base_cost": 435,
+          "shipping_cost": 90,
+          "final_cost": 525,
+          "reason": "Reduced specification replacement for low-cost project configurations."
+        },
+        {
+          "alternative": "Generic equivalent for PCA9685 16-Ch PWM Servo Driver Board",
+          "vendor": "element14 India",
+          "base_cost": 879,
+          "shipping_cost": 90,
+          "final_cost": 969,
+          "reason": "Standard replacement option with similar power ratings and interface pins."
+        }
+      ],
+      "url": "https://in.element14.com/search?q=PCA9685+16-Ch+PWM+Servo+Driver+Board"
+    },
+    {
+      "name": "SG90 9g Micro Servo Motors (5x Set)",
+      "cost": 13.831325301204819,
+      "notes": "Landed at Pantronics India (Distance: 350 km, ETA: 3-4 Days)",
+      "component": "SG90 9g Micro Servo Motors (5x Set)",
+      "category": "Actuators",
+      "selected_vendor": "Pantronics India",
+      "vendor_location": "Chennai",
+      "base_cost": 1058,
+      "shipping_cost": 90,
+      "distance": "350 km",
+      "final_cost": 1148,
+      "stock": "In Stock",
+      "eta": "3-4 Days",
+      "alternatives": [
+        {
+          "alternative": "Budget alternative for SG90 9g Micro Servo Motors (5x Set)",
+          "vendor": "element14 India",
+          "base_cost": 402,
+          "shipping_cost": 90,
+          "final_cost": 492,
+          "reason": "Reduced specification replacement for low-cost project configurations."
+        },
+        {
+          "alternative": "Generic equivalent for SG90 9g Micro Servo Motors (5x Set)",
+          "vendor": "element14 India",
+          "base_cost": 813,
+          "shipping_cost": 90,
+          "final_cost": 903,
+          "reason": "Standard replacement option with similar power ratings and interface pins."
+        }
+      ],
+      "url": "https://www.pantronics.in/search?q=SG90+9g+Micro+Servo+Motors+(5x+Set)"
+    },
+    {
+      "name": "MG996R High-Torque Metal Gear Servo Motor",
+      "cost": 9.433734939759036,
+      "notes": "Landed at Pantronics India (Distance: 350 km, ETA: 3-4 Days)",
+      "component": "MG996R High-Torque Metal Gear Servo Motor",
+      "category": "Actuators",
+      "selected_vendor": "Pantronics India",
+      "vendor_location": "Chennai",
+      "base_cost": 693,
+      "shipping_cost": 90,
+      "distance": "350 km",
+      "final_cost": 783,
+      "stock": "In Stock",
+      "eta": "3-4 Days",
+      "alternatives": [
+        {
+          "alternative": "Budget alternative for MG996R High-Torque Metal Gear Servo Motor",
+          "vendor": "Probots Electronics",
+          "base_cost": 423,
+          "shipping_cost": 80,
+          "final_cost": 503,
+          "reason": "Reduced specification replacement for low-cost project configurations."
+        },
+        {
+          "alternative": "Generic equivalent for MG996R High-Torque Metal Gear Servo Motor",
+          "vendor": "element14 India",
+          "base_cost": 838,
+          "shipping_cost": 90,
+          "final_cost": 928,
+          "reason": "Standard replacement option with similar power ratings and interface pins."
+        }
+      ],
+      "url": "https://www.pantronics.in/search?q=MG996R+High-Torque+Metal+Gear+Servo+Motor"
+    },
+    {
+      "name": "7.4V 2S 2200mAh 25C LiPo Battery Pack",
+      "cost": 16.734939759036145,
+      "notes": "Landed at Pantronics India (Distance: 350 km, ETA: 3-4 Days)",
+      "component": "7.4V 2S 2200mAh 25C LiPo Battery Pack",
+      "category": "Power Source",
+      "selected_vendor": "Pantronics India",
+      "vendor_location": "Chennai",
+      "base_cost": 1299,
+      "shipping_cost": 90,
+      "distance": "350 km",
+      "final_cost": 1389,
+      "stock": "Low Stock",
+      "eta": "3-4 Days",
+      "alternatives": [
+        {
+          "alternative": "Budget alternative for 7.4V 2S 2200mAh 25C LiPo Battery Pack",
+          "vendor": "element14 India",
+          "base_cost": 410,
+          "shipping_cost": 90,
+          "final_cost": 500,
+          "reason": "Reduced specification replacement for low-cost project configurations."
+        },
+        {
+          "alternative": "Generic equivalent for 7.4V 2S 2200mAh 25C LiPo Battery Pack",
+          "vendor": "element14 India",
+          "base_cost": 830,
+          "shipping_cost": 90,
+          "final_cost": 920,
+          "reason": "Standard replacement option with similar power ratings and interface pins."
+        }
+      ],
+      "url": "https://www.pantronics.in/search?q=7.4V+2S+2200mAh+25C+LiPo+Battery+Pack"
+    },
+    {
+      "name": "PLA Filament for 3D Printed Robotic Hand Structure",
+      "cost": 16.602409638554217,
+      "notes": "Landed at element14 India (Distance: 0 km, ETA: 2 Days)",
+      "component": "PLA Filament for 3D Printed Robotic Hand Structure",
+      "category": "Mechanical Frame",
+      "selected_vendor": "element14 India",
+      "vendor_location": "Bengaluru",
+      "base_cost": 1288,
+      "shipping_cost": 90,
+      "distance": "0 km",
+      "final_cost": 1378,
+      "stock": "In Stock",
+      "eta": "2 Days",
+      "alternatives": [
+        {
+          "alternative": "Budget alternative for PLA Filament for 3D Printed Robotic Hand Structure",
+          "vendor": "element14 India",
+          "base_cost": 356,
+          "shipping_cost": 90,
+          "final_cost": 446,
+          "reason": "Reduced specification replacement for low-cost project configurations."
+        },
+        {
+          "alternative": "Generic equivalent for PLA Filament for 3D Printed Robotic Hand Structure",
+          "vendor": "element14 India",
+          "base_cost": 722,
+          "shipping_cost": 90,
+          "final_cost": 812,
+          "reason": "Standard replacement option with similar power ratings and interface pins."
+        }
+      ],
+      "url": "https://in.element14.com/search?q=PLA+Filament+for+3D+Printed+Robotic+Hand+Structure"
+    },
+    {
+      "name": "2.2 Inch Resistor Flex Sensors (5x Set)",
+      "cost": 26.325301204819276,
+      "notes": "Landed at element14 India (Distance: 0 km, ETA: 2 Days)",
+      "component": "2.2 Inch Resistor Flex Sensors (5x Set)",
+      "category": "Sensors",
+      "selected_vendor": "element14 India",
+      "vendor_location": "Bengaluru",
+      "base_cost": 2095,
+      "shipping_cost": 90,
+      "distance": "0 km",
+      "final_cost": 2185,
+      "stock": "In Stock",
+      "eta": "2 Days",
+      "alternatives": [
+        {
+          "alternative": "Budget alternative for 2.2 Inch Resistor Flex Sensors (5x Set)",
+          "vendor": "Probots Electronics",
+          "base_cost": 381,
+          "shipping_cost": 80,
+          "final_cost": 461,
+          "reason": "Reduced specification replacement for low-cost project configurations."
+        },
+        {
+          "alternative": "Generic equivalent for 2.2 Inch Resistor Flex Sensors (5x Set)",
+          "vendor": "element14 India",
+          "base_cost": 755,
+          "shipping_cost": 90,
+          "final_cost": 845,
+          "reason": "Standard replacement option with similar power ratings and interface pins."
+        }
+      ],
+      "url": "https://in.element14.com/search?q=2.2+Inch+Resistor+Flex+Sensors+(5x+Set)"
+    }
+  ],
+  "totals": {
+    "electronics_total": 5698,
+    "mechanical_total": 1680,
+    "shipping_total": 630,
+    "grand_total": 8008
+  }
+}

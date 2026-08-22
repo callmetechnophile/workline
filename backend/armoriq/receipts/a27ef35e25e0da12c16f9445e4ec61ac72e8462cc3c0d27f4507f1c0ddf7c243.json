@@ -1,0 +1,13 @@
+{
+  "agent": "ThermalAgent",
+  "parent": "e30eb483-f55e-41f4-8ce0-3cdb9d8fab2f",
+  "tool": "analyze_thermal_risk",
+  "scope": [
+    "analyze_thermal_risk"
+  ],
+  "timestamp": "1783892322.7286792",
+  "hash": "a27ef35e25e0da12c16f9445e4ec61ac72e8462cc3c0d27f4507f1c0ddf7c243",
+  "status": "success",
+  "execution_result": "[{'component': 'Brushless DC Suction Motor (24V, 100K RPM)', 'estimated_temp': 32.9, 'max_temp': 65.0, 'heat_w': 0.175, 'risk_level': 'Medium', 'warning': 'Elevated temperature detected. Monitor enclosure ventilation.', 'cooling_recommendation': 'Ensure component is not placed flush against heat-sen...",
+  "authority_chain": "Planner Agent -> ThermalAgent"
+}

@@ -1,0 +1,13 @@
+{
+  "agent": "Extraction Agent",
+  "parent": "d6068a00-6ad0-49ac-b739-71f6c6a71d40",
+  "tool": "extract_components",
+  "scope": [
+    "extract_components"
+  ],
+  "timestamp": "1783892390.0165405",
+  "hash": "06b5fdb6dbc16a8824aa5edc0819e15dcad45e233fe1090b14e530e8d3f55c75",
+  "status": "success",
+  "execution_result": "[{'category': 'Propulsion / Suction', 'name': 'Brushless DC Suction Motor (24V, 100K RPM)', 'cost': 45.0, 'notes': 'Generates 15 kPa vacuum suction pressure. Requires ESC.'}, {'category': 'Power Supply', 'name': '100W Flexible Monocrystalline Solar Panel', 'cost': 85.0, 'notes': 'Lightweight, can be...",
+  "authority_chain": "Planner Agent -> Extraction Agent"
+}

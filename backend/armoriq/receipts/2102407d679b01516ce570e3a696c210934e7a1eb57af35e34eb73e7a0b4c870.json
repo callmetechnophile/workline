@@ -1,0 +1,13 @@
+{
+  "agent": "KnowledgeGraphAgent",
+  "parent": "f3bf5f7f-4eac-4139-af03-e77be853fc62",
+  "tool": "graph.read",
+  "scope": [
+    "graph.read"
+  ],
+  "timestamp": "1783870502.6397634",
+  "hash": "2102407d679b01516ce570e3a696c210934e7a1eb57af35e34eb73e7a0b4c870",
+  "status": "success",
+  "execution_result": "[{'name': 'Budget alternative for RGB LED status indicators and wires pack', 'category': None, 'cost': 475, 'notes': None}, {'name': 'Generic equivalent for RGB LED status indicators and wires pack', 'category': None, 'cost': 876, 'notes': None}]",
+  "authority_chain": "Planner Agent -> KnowledgeGraphAgent"
+}

@@ -1,0 +1,14 @@
+{
+  "agent": "Research Agent",
+  "parent": "ae5d48af-25db-467e-a81f-cb56afef3ef7",
+  "tool": "export_pdf",
+  "scope": [
+    "search_papers",
+    "summarize_papers"
+  ],
+  "timestamp": "1783868776.3508446",
+  "hash": "ce45fb982795ae88fd61869d8ea9b4635025f41c8c3314eccf2f9a8695c77039",
+  "status": "success",
+  "execution_result": "{'filename': 'ProjectSpecification_System.pdf', 'url': '/api/exports/ProjectSpecification_System.pdf', 'status': 'SUCCESS'}",
+  "authority_chain": "Planner Agent -> Research Agent"
+}

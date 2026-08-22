@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { Users, UserPlus, MessageSquare, Send, Activity, Shield, CheckCircle2 } from "lucide-react";
+import { Users, UserPlus, MessageSquare, Send, Activity, Shield, CheckCircle2, Link as LinkIcon } from "lucide-react";
+import { TeamInvitationPanel } from "./TeamInvitationPanel";
+import { InvitationList } from "./InvitationList";
+import { InvitationModal } from "./InvitationModal";
 
 interface Member {
   id: number;
   user_id: string;
-  email: string;
+  email?: string;
+  name?: string;
   role: string;
   joined_at: string;
 }
@@ -27,7 +31,7 @@ interface ActivityLog {
 
 interface TeamWorkspaceProps {
   teamData?: {
-    team_id: number;
+    team_id: number | string;
     team_name: string;
     members: Member[];
     comments: Comment[];
@@ -38,52 +42,34 @@ interface TeamWorkspaceProps {
 }
 
 export default function TeamWorkspace({ teamData, projectId, apiBase }: TeamWorkspaceProps) {
+  const [teamName, setTeamName] = useState<string>(teamData?.team_name || "PCB Research");
+  const [teamId, setTeamId] = useState<string>(String(teamData?.team_id || "team_pcb_research"));
   const [members, setMembers] = useState<Member[]>(teamData?.members || []);
   const [comments, setComments] = useState<Comment[]>(teamData?.comments || []);
   const [activities, setActivities] = useState<ActivityLog[]>(teamData?.activities || []);
   
-  const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteRole, setInviteRole] = useState("Engineer");
-  const [inviteTeamName, setInviteTeamName] = useState("");
-  const [inviteResult, setInviteResult] = useState<any>(null);
-  const [showToast, setShowToast] = useState(false);
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [showCreateTeam, setShowCreateTeam] = useState(!teamData?.team_name);
+  const [newTeamNameInput, setNewTeamNameInput] = useState("");
   
   const [newComment, setNewComment] = useState("");
   const [commentSection, setCommentSection] = useState("General");
-  
-  const teamId = teamData?.team_id || 1;
 
-  const handleInvite = async (e: React.FormEvent) => {
+  const handleCreateTeam = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inviteEmail || !inviteTeamName) return;
+    if (!newTeamNameInput.trim()) return;
     try {
-      const res = await fetch(`${apiBase}/api/collaboration/teams/invite-collaborator`, {
+      const res = await fetch(`${apiBase}/api/teams`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          team_name: inviteTeamName,
-          email: inviteEmail,
-          role: inviteRole
-        })
+        body: JSON.stringify({ name: newTeamNameInput.trim() }),
       });
       if (res.ok) {
-        const result = await res.json();
-        setInviteResult(result);
-        setShowToast(true);
-        setTimeout(() => setShowToast(false), 6000);
-        
-        // Add invitee placeholder to local members view
-        const placeholderMember = {
-          id: result.team_id,
-          user_id: `invited_user`,
-          email: inviteEmail,
-          role: inviteRole,
-          joined_at: new Date().toISOString()
-        };
-        setMembers([...members, placeholderMember]);
-        
-        // Refresh logs
-        fetchLogs();
+        const created = await res.json();
+        setTeamName(created.name);
+        setTeamId(String(created.id || created.uuid || "team_1"));
+        setShowCreateTeam(false);
+        setIsInviteModalOpen(true);
       }
     } catch (err) {
       console.error(err);
@@ -101,8 +87,8 @@ export default function TeamWorkspace({ teamData, projectId, apiBase }: TeamWork
           project_id: projectId || "BionicHand_System",
           section: commentSection,
           author: "current_user",
-          content: newComment
-        })
+          content: newComment,
+        }),
       });
       if (res.ok) {
         const added = await res.json();
@@ -119,8 +105,8 @@ export default function TeamWorkspace({ teamData, projectId, apiBase }: TeamWork
     try {
       const res = await fetch(`${apiBase}/api/collaboration/activity/${teamId}`);
       if (res.ok) {
-        const data = await res.json();
-        setActivities(data);
+        const logs = await res.json();
+        setActivities(logs);
       }
     } catch (err) {
       console.error(err);
@@ -129,269 +115,160 @@ export default function TeamWorkspace({ teamData, projectId, apiBase }: TeamWork
 
   return (
     <>
-      {showToast && (
-        <div className="fixed top-6 right-6 z-50 flex items-center gap-3 bg-zinc-950/95 border border-cyan-500/40 p-4 rounded-xl shadow-2xl animate-fade-in font-mono max-w-sm">
-          <div className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping absolute -top-1 -right-1" />
-          <CheckCircle2 className="w-5 h-5 text-cyan-400 shrink-0" />
-          <div>
-            <span className="text-[10px] text-cyan-400 font-extrabold uppercase tracking-widest block">Notification</span>
-            <p className="text-[11px] font-bold text-slate-100 uppercase tracking-wide mt-0.5 leading-normal">
-              EMAIL SENT CHECK YOU JUNK/SPAM FOLDER
-            </p>
-          </div>
-        </div>
-      )}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 p-4">
-      {/* Team Members List & Invite */}
-      <div className="glass-panel p-5 border border-zinc-800 bg-zinc-950/60 rounded-xl space-y-6">
-        <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
-          <div className="flex items-center gap-2">
-            <Users className="w-5 h-5 text-cyan-400" />
-            <h3 className="text-lg font-mono font-bold tracking-wider text-slate-100 uppercase">Team Members</h3>
-          </div>
-          <span className="text-xs font-mono text-cyan-400 bg-cyan-950/40 border border-cyan-800/40 px-2 py-0.5 rounded">
-            ID: {teamId}
-          </span>
-        </div>
+      <InvitationModal
+        isOpen={isInviteModalOpen}
+        onClose={() => setIsInviteModalOpen(false)}
+        teamId={teamId}
+        teamName={teamName}
+        memberCount={members.length}
+        apiBase={apiBase}
+      />
 
-        {/* Invite Form */}
-        {!inviteResult ? (
-          <form onSubmit={handleInvite} className="bg-zinc-900/60 p-4 border border-zinc-850 rounded-lg space-y-3">
-            <div className="text-xs font-mono font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-              <UserPlus className="w-3.5 h-3.5 text-cyan-400" /> Invite Collaborator
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 p-4">
+        {/* Left Column: Team Details & Invitations */}
+        <div className="glass-panel p-5 border border-zinc-800 bg-zinc-950/60 rounded-xl space-y-6">
+          <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+            <div className="flex items-center gap-2">
+              <Users className="w-5 h-5 text-cyan-400" />
+              <h3 className="text-lg font-mono font-bold tracking-wider text-slate-100 uppercase">
+                {teamName}
+              </h3>
             </div>
-            <div className="space-y-2">
+            <span className="text-xs font-mono text-cyan-400 bg-cyan-950/40 border border-cyan-800/40 px-2 py-0.5 rounded">
+              ID: {teamId}
+            </span>
+          </div>
+
+          {showCreateTeam ? (
+            <form onSubmit={handleCreateTeam} className="bg-zinc-900/60 p-4 border border-zinc-800 rounded-lg space-y-3">
+              <div className="text-xs font-mono font-bold text-slate-400 uppercase tracking-widest">
+                Create New Team
+              </div>
               <input
                 type="text"
                 required
-                placeholder="New Team Name"
-                value={inviteTeamName}
-                onChange={(e) => setInviteTeamName(e.target.value)}
+                placeholder="Team Name (e.g. PCB Research)"
+                value={newTeamNameInput}
+                onChange={(e) => setNewTeamNameInput(e.target.value)}
                 className="w-full bg-zinc-950 border border-zinc-800 rounded px-3 py-2 text-xs font-mono text-slate-100 focus:outline-none focus:border-cyan-500"
               />
-              <input
-                type="email"
-                required
-                placeholder="collaborator@company.com"
-                value={inviteEmail}
-                onChange={(e) => setInviteEmail(e.target.value)}
-                className="w-full bg-zinc-950 border border-zinc-800 rounded px-3 py-2 text-xs font-mono text-slate-100 focus:outline-none focus:border-cyan-500"
+              <button
+                type="submit"
+                className="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-mono text-xs font-bold px-4 py-2 rounded transition-all cursor-pointer"
+              >
+                Create Team
+              </button>
+            </form>
+          ) : (
+            <div className="space-y-4">
+              <button
+                onClick={() => setIsInviteModalOpen(true)}
+                className="w-full py-2.5 px-4 bg-cyan-600 hover:bg-cyan-500 text-white font-mono text-xs font-bold rounded-lg transition flex items-center justify-center gap-2 shadow"
+              >
+                <LinkIcon className="w-4 h-4" />
+                Generate Secure Invitation Link
+              </button>
+
+              <TeamInvitationPanel
+                teamId={teamId}
+                teamName={teamName}
+                memberCount={members.length}
+                apiBase={apiBase}
               />
-              <div className="flex gap-2">
-                <select
-                  value={inviteRole}
-                  onChange={(e) => setInviteRole(e.target.value)}
-                  className="flex-1 bg-zinc-950 border border-zinc-800 rounded px-3 py-2 text-xs font-mono text-slate-300 focus:outline-none focus:border-cyan-500"
-                >
-                  <option value="Engineer">Engineer</option>
-                  <option value="Reviewer">Reviewer</option>
-                  <option value="Viewer">Viewer</option>
-                </select>
-                <button
-                  type="submit"
-                  className="bg-cyan-600 hover:bg-cyan-500 text-white font-mono text-xs font-bold px-4 py-2 rounded transition-all cursor-pointer"
-                >
-                  Invite
-                </button>
-              </div>
-            </div>
-          </form>
-        ) : (
-          <div className="bg-zinc-900/60 p-4 border border-cyan-800/20 rounded-lg space-y-3.5 text-xs font-mono">
-            <h4 className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest border-b border-zinc-850 pb-1.5">
-              Secure Team Invite Generated
-            </h4>
-            <div>
-              <span className="text-[9px] text-slate-500 uppercase block font-semibold">Generated Numeric Team ID</span>
-              <span className="text-xs text-white font-bold tracking-wider block bg-zinc-950 px-2 py-1 rounded border border-zinc-800 mt-1 select-all">{inviteResult.team_id_numeric}</span>
-            </div>
-            <div>
-              <span className="text-[9px] text-slate-500 uppercase block font-semibold">Secure Joining Link</span>
-              <span className="text-[10px] text-cyan-400 block bg-zinc-950 px-2 py-1 rounded border border-zinc-800 mt-1 select-all truncate">{inviteResult.invite_url}</span>
-            </div>
-            <div className="space-y-1">
-              <span className="text-[9px] text-slate-500 uppercase block font-semibold">Email Subject</span>
-              <div className="bg-zinc-950 border border-zinc-800 p-1.5 rounded text-slate-200 font-bold select-all text-[10px]">{inviteResult.email_subject}</div>
-            </div>
-            <div className="space-y-1">
-              <span className="text-[9px] text-slate-500 uppercase block font-semibold">Email Body</span>
-              <pre className="bg-zinc-950 border border-zinc-800 p-2.5 rounded text-slate-300 whitespace-pre-wrap select-all text-[9px] overflow-y-auto max-h-[140px] leading-normal">{inviteResult.email_body}</pre>
-            </div>
-            <button
-              onClick={() => {
-                setInviteResult(null);
-                setInviteEmail("");
-                setInviteTeamName("");
-              }}
-              className="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs py-2 rounded transition-all cursor-pointer"
-            >
-              Done & Close
-            </button>
-          </div>
-        )}
 
-        {/* Members Cards */}
-        <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
-          {members.map((m) => (
-            <div key={m.id} className="flex items-center justify-between p-3 bg-zinc-900/40 border border-zinc-850 rounded-lg">
-              <div className="min-w-0">
-                <div className="text-xs font-mono font-bold text-slate-200 truncate">{m.email}</div>
-                <div className="text-[10px] font-mono text-slate-500">Joined {new Date(m.joined_at).toLocaleDateString()}</div>
-              </div>
-              <span className={`text-[10px] font-mono font-bold uppercase tracking-widest px-2 py-0.5 border rounded ${
-                m.role === "Owner" ? "text-red-400 bg-red-950/20 border-red-800/40" :
-                m.role === "Engineer" ? "text-cyan-400 bg-cyan-950/20 border-cyan-800/40" :
-                m.role === "Reviewer" ? "text-amber-400 bg-amber-950/20 border-amber-800/40" :
-                "text-slate-400 bg-slate-900/20 border-slate-800/40"
-              }`}>
-                {m.role}
-              </span>
+              <InvitationList teamId={teamId} apiBase={apiBase} />
             </div>
-          ))}
-        </div>
-      </div>
+          )}
 
-      {/* Discussion & Comments */}
-      <div className="glass-panel p-5 border border-zinc-800 bg-zinc-950/60 rounded-xl space-y-6">
-        <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
-          <div className="flex items-center gap-2">
-            <MessageSquare className="w-5 h-5 text-purple-400" />
-            <h3 className="text-lg font-mono font-bold tracking-wider text-slate-100 uppercase">Comments Panel</h3>
-          </div>
-        </div>
-
-        {/* Add Comment */}
-        <form onSubmit={handleAddComment} className="bg-zinc-900/60 p-4 border border-zinc-850 rounded-lg space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="text-xs font-mono font-bold text-slate-400 uppercase tracking-widest">Section Focus</div>
-            <select
-              value={commentSection}
-              onChange={(e) => setCommentSection(e.target.value)}
-              className="bg-zinc-950 border border-zinc-800 rounded px-2 py-1 text-[10px] font-mono text-slate-300 focus:outline-none focus:border-purple-500"
-            >
-              <option value="General">General</option>
-              <option value="BOM">BOM</option>
-              <option value="Wiring">Wiring</option>
-              <option value="Power">Power</option>
-              <option value="Research">Research</option>
-              <option value="Code">Code</option>
-            </select>
-          </div>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              placeholder="Ask a question or request a review..."
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              className="flex-1 bg-zinc-950 border border-zinc-800 rounded px-3 py-2 text-xs font-mono text-slate-100 focus:outline-none focus:border-purple-500"
-            />
-            <button
-              type="submit"
-              className="bg-purple-600 hover:bg-purple-500 text-white font-mono text-xs font-bold p-2.5 rounded transition-all"
-            >
-              <Send className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        </form>
-
-        {/* Comments Feed */}
-        <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
-          {comments.map((c) => (
-            <div key={c.id} className="p-3 bg-zinc-900/20 border border-zinc-850 rounded-lg space-y-1.5">
-              <div className="flex items-center justify-between border-b border-zinc-900 pb-1">
-                <span className="text-[10px] font-mono font-extrabold text-slate-400">{c.author}</span>
-                <span className="text-[9px] font-mono text-purple-400 uppercase tracking-wider bg-purple-950/20 px-1.5 border border-purple-900/30 rounded">
-                  {c.section}
-                </span>
-              </div>
-              <p className="text-xs font-mono text-slate-300">{c.content}</p>
-              <div className="text-[8px] font-mono text-slate-500 text-right">
-                {new Date(c.timestamp).toLocaleTimeString()}
-              </div>
+          {/* Members List */}
+          <div className="space-y-3 pt-4 border-t border-zinc-800">
+            <div className="text-xs font-mono font-bold text-slate-400 uppercase tracking-widest">
+              Active Members ({members.length})
             </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Activity Feed */}
-      <div className="glass-panel p-5 border border-zinc-800 bg-zinc-950/60 rounded-xl space-y-6">
-        <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
-          <div className="flex items-center gap-2">
-            <Activity className="w-5 h-5 text-emerald-400" />
-            <h3 className="text-lg font-mono font-bold tracking-wider text-slate-100 uppercase">Activity Feed</h3>
-          </div>
-        </div>
-
-        {/* Participants & Emails List */}
-        <div className="bg-zinc-900/20 border border-zinc-850 rounded-lg p-4 space-y-3 font-mono">
-          <div className="flex items-center justify-between border-b border-zinc-900 pb-2">
-            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-              Team Participants ({members.length})
-            </span>
-            <span className="text-[9px] text-slate-500 font-extrabold uppercase">
-              Roster
-            </span>
-          </div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {members.map((member, idx) => {
-              // Owner/Creator has the role "Owner" or "Creator" or is first in the list
-              const isCreator = member.role.toLowerCase() === 'creator' || 
-                                member.role.toLowerCase() === 'owner' || 
-                                idx === 0;
-              
-              return (
-                <div 
-                  key={member.id} 
-                  className="bg-zinc-950/40 border border-zinc-900 rounded p-3 flex items-start justify-between gap-2"
-                >
-                  <div className="space-y-1 min-w-0">
-                    <div className="text-xs font-bold text-slate-200 flex items-center gap-1 truncate">
-                      <span>{member.user_id}</span>
-                      {isCreator && (
-                        <span title="Team Creator" className="text-amber-400 select-none shrink-0">👑</span>
-                      )}
-                    </div>
-                    <div className="text-[10px] text-slate-400 truncate">{member.email}</div>
+            <div className="space-y-2 max-h-48 overflow-y-auto">
+              {members.map((m, idx) => (
+                <div key={idx} className="flex items-center justify-between p-2.5 bg-zinc-900/40 rounded border border-zinc-850 text-xs font-mono">
+                  <div>
+                    <div className="text-slate-200 font-bold">{m.name || m.user_id}</div>
+                    <div className="text-[10px] text-slate-500">{m.email || 'Workline Member'}</div>
                   </div>
-                  <span className={`text-[8px] border px-2 py-0.5 rounded font-bold uppercase shrink-0 ${
-                    isCreator
-                      ? 'bg-amber-950/20 border-amber-900/30 text-amber-400'
-                      : 'bg-slate-900 border-slate-800 text-slate-400'
-                  }`}>
-                    {member.role}
+                  <span className="px-2 py-0.5 bg-zinc-800 text-cyan-400 rounded text-[10px] font-bold">
+                    {m.role}
                   </span>
                 </div>
-              );
-            })}
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* Activity Logs Feed */}
-        <div className="space-y-3">
-          <span className="text-[10px] text-slate-500 font-mono tracking-widest uppercase block border-b border-zinc-900 pb-2">
-            Immutable Activity logs
-          </span>
-          <div className="space-y-3 max-h-[260px] overflow-y-auto pr-1">
-            {activities.map((a) => (
-              <div key={a.id} className="flex gap-2.5 items-start p-3 bg-zinc-900/30 border border-zinc-850 rounded-lg">
-                <div className="p-1.5 bg-emerald-950/30 border border-emerald-800/40 rounded mt-0.5 text-emerald-400">
-                  <Shield className="w-3.5 h-3.5" />
+        {/* Center Column: Project Comments */}
+        <div className="glass-panel p-5 border border-zinc-800 bg-zinc-950/60 rounded-xl space-y-4">
+          <div className="flex items-center gap-2 border-b border-zinc-800 pb-3">
+            <MessageSquare className="w-5 h-5 text-cyan-400" />
+            <h3 className="text-lg font-mono font-bold tracking-wider text-slate-100 uppercase">Project Comments</h3>
+          </div>
+
+          <form onSubmit={handleAddComment} className="space-y-2">
+            <div className="flex gap-2">
+              <select
+                value={commentSection}
+                onChange={(e) => setCommentSection(e.target.value)}
+                className="bg-zinc-950 border border-zinc-800 rounded px-2.5 py-1.5 text-xs font-mono text-slate-300 focus:outline-none focus:border-cyan-500"
+              >
+                <option value="General">General</option>
+                <option value="PCB">PCB Layout</option>
+                <option value="Schematic">Schematics</option>
+                <option value="BOM">BOM / Procurement</option>
+              </select>
+              <input
+                type="text"
+                placeholder="Write a project note or comment..."
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                className="flex-1 bg-zinc-950 border border-zinc-800 rounded px-3 py-1.5 text-xs font-mono text-slate-100 focus:outline-none focus:border-cyan-500"
+              />
+              <button
+                type="submit"
+                className="bg-cyan-600 hover:bg-cyan-500 text-white px-3 py-1.5 rounded text-xs font-mono font-bold flex items-center gap-1"
+              >
+                <Send className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </form>
+
+          <div className="space-y-2.5 max-h-96 overflow-y-auto">
+            {comments.map((c, idx) => (
+              <div key={idx} className="p-3 bg-zinc-900/40 border border-zinc-850 rounded text-xs font-mono space-y-1">
+                <div className="flex items-center justify-between text-slate-400 text-[10px]">
+                  <span>{c.author} • [{c.section}]</span>
+                  <span>{c.timestamp?.substring(11, 19)}</span>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <div className="text-xs font-mono text-slate-300">
-                    <span className="font-extrabold text-slate-400">{a.user_id}</span> {a.details}
-                  </div>
-                  <div className="text-[8px] font-mono text-slate-500 mt-1">
-                    {new Date(a.timestamp).toLocaleTimeString()}
-                  </div>
+                <div className="text-slate-200">{c.content}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Right Column: Audit Trail & Activity */}
+        <div className="glass-panel p-5 border border-zinc-800 bg-zinc-950/60 rounded-xl space-y-4">
+          <div className="flex items-center gap-2 border-b border-zinc-800 pb-3">
+            <Activity className="w-5 h-5 text-cyan-400" />
+            <h3 className="text-lg font-mono font-bold tracking-wider text-slate-100 uppercase">Audit Trail</h3>
+          </div>
+
+          <div className="space-y-2 max-h-[480px] overflow-y-auto font-mono text-xs">
+            {activities.map((a, idx) => (
+              <div key={idx} className="p-2.5 bg-zinc-900/30 border border-zinc-850/60 rounded space-y-1">
+                <div className="flex justify-between text-[10px]">
+                  <span className="text-cyan-400 font-bold">{a.action}</span>
+                  <span className="text-slate-500">{a.timestamp?.substring(11, 19)}</span>
                 </div>
+                <div className="text-slate-300 text-[11px]">{a.details}</div>
               </div>
             ))}
           </div>
         </div>
       </div>
-    </div>
     </>
   );
 }

@@ -1,0 +1,14 @@
+{
+  "agent": "Research Agent",
+  "parent": "64637685-e621-4574-9657-1cc8f1658514",
+  "tool": "search_papers",
+  "scope": [
+    "search_papers",
+    "summarize_papers"
+  ],
+  "timestamp": "1783872385.8088033",
+  "hash": "173869a1d119bd4433db26b73df97a6949ff5f5b99a994187f383b66e6400901",
+  "status": "success",
+  "execution_result": "[{'id': 'paper_1', 'title': 'Design Optimization of Photovoltaic-Powered Brushless DC Suction Systems', 'authors': 'A. Rahman, S. Patel, J. Doe', 'source': 'arXiv', 'url': 'https://arxiv.org/abs/2104.09841', 'publish_year': 2021, 'citation_count': 28}, {'id': 'paper_2', 'title': 'A Review of Portabl...",
+  "authority_chain": "Planner Agent -> Research Agent"
+}

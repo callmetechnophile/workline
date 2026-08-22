@@ -1,0 +1,13 @@
+{
+  "agent": "KnowledgeGraphAgent",
+  "parent": "f3bf5f7f-4eac-4139-af03-e77be853fc62",
+  "tool": "graph.read",
+  "scope": [
+    "graph.read"
+  ],
+  "timestamp": "1783870502.4249723",
+  "hash": "e52f6a2cbaee61c38d7d2b10edc0186dac9a82bae4bde403b09256abf6c24d5d",
+  "status": "success",
+  "execution_result": "[{'name': 'Budget alternative for Laser-cut Acrylic Base Sheet', 'category': None, 'cost': 486, 'notes': None}, {'name': 'Generic equivalent for Laser-cut Acrylic Base Sheet', 'category': None, 'cost': 895, 'notes': None}]",
+  "authority_chain": "Planner Agent -> KnowledgeGraphAgent"
+}

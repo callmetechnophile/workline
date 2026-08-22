@@ -1,0 +1,13 @@
+{
+  "agent": "Planner Agent",
+  "parent": "4e6392f1-2e14-4869-834e-b88862868b91",
+  "tool": "generate_dependency_graph",
+  "scope": [
+    "generate_dependency_graph"
+  ],
+  "timestamp": "1783868778.68405",
+  "hash": "8155e4a387330d6964bf73928f1011f2a07b68c45cdb137af2fd3929ec95fcd0",
+  "status": "success",
+  "execution_result": "{'nodes': [{'id': 'node_0', 'label': 'ESP32-WROOM-32D Development Board', 'type': 'controller', 'category': 'Core Controller'}, {'id': 'node_1', 'label': '5V 3A DC Wall Power Adapter', 'type': 'peripheral', 'category': 'Power Supply'}, {'id': 'node_2', 'label': 'Laser-cut Acrylic Base Sheet', 'type'...",
+  "authority_chain": "Planner Agent"
+}

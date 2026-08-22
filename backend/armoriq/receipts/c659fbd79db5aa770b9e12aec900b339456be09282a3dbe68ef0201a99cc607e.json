@@ -1,0 +1,14 @@
+{
+  "agent": "Research Agent",
+  "parent": "64637685-e621-4574-9657-1cc8f1658514",
+  "tool": "summarize_papers",
+  "scope": [
+    "search_papers",
+    "summarize_papers"
+  ],
+  "timestamp": "1783872386.4634342",
+  "hash": "c659fbd79db5aa770b9e12aec900b339456be09282a3dbe68ef0201a99cc607e",
+  "status": "success",
+  "execution_result": "{'paper_id': 'paper_4', 'title': 'Technical Advancements in Automated Engineering Structures', 'summary': 'Presents core mathematical modeling for load-bearing and energy conversion structures. Suggests modular component integration to reduce single-point failure rates.', 'conclusions': ['Modular st...",
+  "authority_chain": "Planner Agent -> Research Agent"
+}

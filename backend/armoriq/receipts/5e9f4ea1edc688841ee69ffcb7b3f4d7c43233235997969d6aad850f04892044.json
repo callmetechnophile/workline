@@ -1,0 +1,13 @@
+{
+  "agent": "KnowledgeGraphAgent",
+  "parent": "c9ba5c91-980b-4d18-857b-2d4b9c775552",
+  "tool": "graph.read",
+  "scope": [
+    "graph.read"
+  ],
+  "timestamp": "1783872428.6094325",
+  "hash": "5e9f4ea1edc688841ee69ffcb7b3f4d7c43233235997969d6aad850f04892044",
+  "status": "success",
+  "execution_result": "[{'name': 'GPIO short-circuit', 'severity': 'High', 'mitigation': 'Install series resistors on I/O lines.'}, {'name': 'Voltage spike on 3.3V line', 'severity': 'Critical', 'mitigation': 'Use stable voltage regulators.'}]",
+  "authority_chain": "Planner Agent -> KnowledgeGraphAgent"
+}

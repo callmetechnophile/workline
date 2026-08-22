@@ -1,0 +1,13 @@
+{
+  "agent": "CalendarAgent",
+  "parent": "Planner Agent",
+  "tool": "calendar.download",
+  "scope": [
+    "calendar.download"
+  ],
+  "timestamp": "1783873587.822887",
+  "hash": "b1885224fa529dbc0faab660c3e86707850beb75972c9b560c2ee760745edbef",
+  "status": "success",
+  "execution_result": "Generated .ics file for project 1",
+  "authority_chain": "Planner Agent -> CalendarAgent"
+}

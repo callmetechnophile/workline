@@ -1,0 +1,14 @@
+{
+  "agent": "Retrieval Agent",
+  "parent": "9569f8c2-7d76-4c71-8a16-fb4a9dbee2c6",
+  "tool": "fetch_sources",
+  "scope": [
+    "search_projects",
+    "fetch_sources"
+  ],
+  "timestamp": "1783872423.391549",
+  "hash": "90be9c2498cf030a136f36286d2cba64279effdff5a675bfdd51d081818e8237",
+  "status": "success",
+  "execution_result": "{'url': 'https://github.com/community-eng/Bionic-robotic-hand', 'content_markdown': '# Content from source https://github.com/community-eng/Bionic-robotic-hand\\n\\n## Overview\\nThis project details the mechanical construction and electrical diagram. Key components include a high-efficiency controller...",
+  "authority_chain": "Planner Agent -> Retrieval Agent"
+}

@@ -1,0 +1,13 @@
+{
+  "agent": "Voltage Checker",
+  "parent": "9b44b104-43e5-4642-9b67-44c1af069ec9",
+  "tool": "calculate_power_budget",
+  "scope": [
+    "calculate_power_budget"
+  ],
+  "timestamp": "1783868778.682931",
+  "hash": "4a0a5aedfc96350664f3bb107bbdf7624a6c4e40c1055cfe280a03966b2b8506",
+  "status": "success",
+  "execution_result": "{'power_items': [{'component': 'ESP32-WROOM-32D Development Board', 'voltage': 3.3, 'nominal_current': 80.0, 'peak_current': 240.0, 'standby_current': 0.015, 'is_source': False}, {'component': '5V 3A DC Wall Power Adapter', 'voltage': 5.0, 'nominal_current': 20.0, 'peak_current': 50.0, 'standby_curr...",
+  "authority_chain": "Planner Agent -> Voltage Checker"
+}

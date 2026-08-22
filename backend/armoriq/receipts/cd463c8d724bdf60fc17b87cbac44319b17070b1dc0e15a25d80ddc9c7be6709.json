@@ -1,0 +1,13 @@
+{
+  "agent": "Extraction Agent",
+  "parent": "f07ba8b8-52f6-45a2-ac3d-1dca0be199b1",
+  "tool": "fetch_datasheets",
+  "scope": [
+    "fetch_datasheets"
+  ],
+  "timestamp": "1783872385.6067758",
+  "hash": "cd463c8d724bdf60fc17b87cbac44319b17070b1dc0e15a25d80ddc9c7be6709",
+  "status": "success",
+  "execution_result": "[{'component': 'Brushless DC Suction Motor (24V, 100K RPM)', 'datasheet_link': 'https://www.st.com/resource/en/datasheet/l6234.pdf', 'source': 'STMicroelectronics (Official)', 'trust_status': 'TRUSTED'}, {'component': '100W Flexible Monocrystalline Solar Panel', 'datasheet_link': 'https://www.renogy...",
+  "authority_chain": "Planner Agent -> Extraction Agent"
+}

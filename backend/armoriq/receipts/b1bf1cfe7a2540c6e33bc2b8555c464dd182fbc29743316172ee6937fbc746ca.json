@@ -1,0 +1,13 @@
+{
+  "agent": "CalendarExportAgent",
+  "parent": "Planner Agent",
+  "tool": "calendar.generate_link",
+  "scope": [
+    "calendar.generate_link"
+  ],
+  "timestamp": "1783873787.1231818",
+  "hash": "b1bf1cfe7a2540c6e33bc2b8555c464dd182fbc29743316172ee6937fbc746ca",
+  "status": "success",
+  "execution_result": "Generated 1 Google Calendar deep links for project 1",
+  "authority_chain": "Planner Agent -> CalendarExportAgent"
+}

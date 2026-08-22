@@ -1,0 +1,14 @@
+{
+  "agent": "Retrieval Agent",
+  "parent": "cddbcbeb-e215-4d5f-b41d-c51bd8d8ba23",
+  "tool": "fetch_sources",
+  "scope": [
+    "search_projects",
+    "fetch_sources"
+  ],
+  "timestamp": "1783868776.3528013",
+  "hash": "2490ac034ffb4780ae51e45a238c851cef6241d4dc1a1195fec61248eeb71a79",
+  "status": "success",
+  "execution_result": "{'url': 'https://github.com/community-eng/Voice-controlled-lights', 'content_markdown': '# Content from source https://github.com/community-eng/Voice-controlled-lights\\n\\n## Overview\\nThis project details the mechanical construction and electrical diagram. Key components include a high-efficiency co...",
+  "authority_chain": "Planner Agent -> Retrieval Agent"
+}

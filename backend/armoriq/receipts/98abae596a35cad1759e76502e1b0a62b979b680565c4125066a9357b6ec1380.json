@@ -1,0 +1,13 @@
+{
+  "agent": "ContradictionAgent",
+  "parent": "21d4c9cb-54ee-4310-a12d-3e00366793a7",
+  "tool": "detect_contradictions",
+  "scope": [
+    "detect_contradictions"
+  ],
+  "timestamp": "1783872428.3763525",
+  "hash": "98abae596a35cad1759e76502e1b0a62b979b680565c4125066a9357b6ec1380",
+  "status": "success",
+  "execution_result": "[{'conflict_type': 'efficiency', 'source_a': 'Technical Advancements in Automated Bionic robotic hand Engineering Structures', 'source_b': 'Energy Harvesting and Low-Power Operations in Edge Integrated Bionic robotic hand Nodes', 'severity': 'medium', 'details': 'Conflict on actuator power efficienc...",
+  "authority_chain": "Planner Agent -> ContradictionAgent"
+}

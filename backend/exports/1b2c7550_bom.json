@@ -1,0 +1,146 @@
+{
+  "bom_items": [
+    {
+      "name": "ESP32-WROOM-32D Development Board",
+      "cost": 7.746987951807229,
+      "notes": "Landed at element14 India (Distance: 0 km, ETA: 2 Days)",
+      "component": "ESP32-WROOM-32D Development Board",
+      "category": "Core Controller",
+      "selected_vendor": "element14 India",
+      "vendor_location": "Bengaluru",
+      "base_cost": 553,
+      "shipping_cost": 90,
+      "distance": "0 km",
+      "final_cost": 643,
+      "stock": "In Stock",
+      "eta": "2 Days",
+      "alternatives": [
+        {
+          "alternative": "Arduino Nano",
+          "vendor": "element14 India",
+          "base_cost": 318,
+          "shipping_cost": 90,
+          "final_cost": 408,
+          "reason": "Lower price, though lacks built-in Wi-Fi/Bluetooth capabilities."
+        },
+        {
+          "alternative": "Raspberry Pi Pico W",
+          "vendor": "element14 India",
+          "base_cost": 463,
+          "shipping_cost": 90,
+          "final_cost": 553,
+          "reason": "Comparable dual-core processor with clean SDK support."
+        }
+      ],
+      "url": "https://in.element14.com/search?q=ESP32-WROOM-32D+Development+Board"
+    },
+    {
+      "name": "5V 3A DC Wall Power Adapter",
+      "cost": 13.795180722891565,
+      "notes": "Landed at element14 India (Distance: 0 km, ETA: 2 Days)",
+      "component": "5V 3A DC Wall Power Adapter",
+      "category": "Power Supply",
+      "selected_vendor": "element14 India",
+      "vendor_location": "Bengaluru",
+      "base_cost": 1055,
+      "shipping_cost": 90,
+      "distance": "0 km",
+      "final_cost": 1145,
+      "stock": "In Stock",
+      "eta": "2 Days",
+      "alternatives": [
+        {
+          "alternative": "Budget alternative for 5V 3A DC Wall Power Adapter",
+          "vendor": "element14 India",
+          "base_cost": 394,
+          "shipping_cost": 90,
+          "final_cost": 484,
+          "reason": "Reduced specification replacement for low-cost project configurations."
+        },
+        {
+          "alternative": "Generic equivalent for 5V 3A DC Wall Power Adapter",
+          "vendor": "element14 India",
+          "base_cost": 796,
+          "shipping_cost": 90,
+          "final_cost": 886,
+          "reason": "Standard replacement option with similar power ratings and interface pins."
+        }
+      ],
+      "url": "https://in.element14.com/search?q=5V+3A+DC+Wall+Power+Adapter"
+    },
+    {
+      "name": "Laser-cut Acrylic Base Sheet",
+      "cost": 17.132530120481928,
+      "notes": "Landed at element14 India (Distance: 0 km, ETA: 2 Days)",
+      "component": "Laser-cut Acrylic Base Sheet",
+      "category": "Mechanical Frame",
+      "selected_vendor": "element14 India",
+      "vendor_location": "Bengaluru",
+      "base_cost": 1332,
+      "shipping_cost": 90,
+      "distance": "0 km",
+      "final_cost": 1422,
+      "stock": "In Stock",
+      "eta": "2 Days",
+      "alternatives": [
+        {
+          "alternative": "Budget alternative for Laser-cut Acrylic Base Sheet",
+          "vendor": "Probots Electronics",
+          "base_cost": 406,
+          "shipping_cost": 80,
+          "final_cost": 486,
+          "reason": "Reduced specification replacement for low-cost project configurations."
+        },
+        {
+          "alternative": "Generic equivalent for Laser-cut Acrylic Base Sheet",
+          "vendor": "element14 India",
+          "base_cost": 805,
+          "shipping_cost": 90,
+          "final_cost": 895,
+          "reason": "Standard replacement option with similar power ratings and interface pins."
+        }
+      ],
+      "url": "https://in.element14.com/search?q=Laser-cut+Acrylic+Base+Sheet"
+    },
+    {
+      "name": "RGB LED status indicators and wires pack",
+      "cost": 6.27710843373494,
+      "notes": "Landed at element14 India (Distance: 0 km, ETA: 2 Days)",
+      "component": "RGB LED status indicators and wires pack",
+      "category": "Indicators",
+      "selected_vendor": "element14 India",
+      "vendor_location": "Bengaluru",
+      "base_cost": 431,
+      "shipping_cost": 90,
+      "distance": "0 km",
+      "final_cost": 521,
+      "stock": "In Stock",
+      "eta": "2 Days",
+      "alternatives": [
+        {
+          "alternative": "Budget alternative for RGB LED status indicators and wires pack",
+          "vendor": "element14 India",
+          "base_cost": 385,
+          "shipping_cost": 90,
+          "final_cost": 475,
+          "reason": "Reduced specification replacement for low-cost project configurations."
+        },
+        {
+          "alternative": "Generic equivalent for RGB LED status indicators and wires pack",
+          "vendor": "Probots Electronics",
+          "base_cost": 796,
+          "shipping_cost": 80,
+          "final_cost": 876,
+          "reason": "Standard replacement option with similar power ratings and interface pins."
+        }
+      ],
+      "url": "https://in.element14.com/search?q=RGB+LED+status+indicators+and+wires+pack"
+    }
+  ],
+  "totals": {
+    "electronics_total": 2039,
+    "mechanical_total": 1332,
+    "shipping_total": 360,
+    "grand_total": 3731
+  }
+}

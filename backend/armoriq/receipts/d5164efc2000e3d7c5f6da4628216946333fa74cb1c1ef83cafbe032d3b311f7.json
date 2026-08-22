@@ -1,0 +1,13 @@
+{
+  "agent": "KnowledgeGraphAgent",
+  "parent": "6855f4e9-16c7-40db-a94e-894fb044e4da",
+  "tool": "graph.read",
+  "scope": [
+    "graph.read"
+  ],
+  "timestamp": "1783870500.5644102",
+  "hash": "d5164efc2000e3d7c5f6da4628216946333fa74cb1c1ef83cafbe032d3b311f7",
+  "status": "success",
+  "execution_result": "[{'name': 'Thermal runaway', 'severity': 'Critical', 'mitigation': 'BMS temperature monitoring.'}]",
+  "authority_chain": "Planner Agent -> KnowledgeGraphAgent"
+}

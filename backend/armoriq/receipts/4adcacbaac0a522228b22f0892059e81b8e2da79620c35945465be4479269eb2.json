@@ -1,0 +1,13 @@
+{
+  "agent": "CollaborationAgent",
+  "parent": "Planner Agent",
+  "tool": "invite_member",
+  "scope": [
+    "invite_member"
+  ],
+  "timestamp": "1783868844.059534",
+  "hash": "4adcacbaac0a522228b22f0892059e81b8e2da79620c35945465be4479269eb2",
+  "status": "success",
+  "execution_result": "Created invite token for callmetechnophile@gmail.com",
+  "authority_chain": "Planner Agent -> CollaborationAgent"
+}

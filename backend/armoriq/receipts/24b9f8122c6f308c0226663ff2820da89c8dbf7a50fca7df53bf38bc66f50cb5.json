@@ -1,0 +1,13 @@
+{
+  "agent": "BOM Export Engine",
+  "parent": "bcc2a7ca-cf06-44b9-8ace-97890566ca45",
+  "tool": "export_bom",
+  "scope": [
+    "export_bom"
+  ],
+  "timestamp": "1783870502.646114",
+  "hash": "24b9f8122c6f308c0226663ff2820da89c8dbf7a50fca7df53bf38bc66f50cb5",
+  "status": "success",
+  "execution_result": "{'csv': '/api/exports/5af2982a_bom.csv', 'json': '/api/exports/5af2982a_bom.json', 'markdown': '/api/exports/5af2982a_bom.md'}",
+  "authority_chain": "Planner Agent -> BOM Export Engine"
+}

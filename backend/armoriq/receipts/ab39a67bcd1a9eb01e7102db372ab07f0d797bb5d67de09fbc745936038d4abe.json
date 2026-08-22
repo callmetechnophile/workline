@@ -1,0 +1,13 @@
+{
+  "agent": "CalendarAgent",
+  "parent": "Planner Agent",
+  "tool": "calendar.update",
+  "scope": [
+    "calendar.update"
+  ],
+  "timestamp": "1783873587.838242",
+  "hash": "ab39a67bcd1a9eb01e7102db372ab07f0d797bb5d67de09fbc745936038d4abe",
+  "status": "success",
+  "execution_result": "Updated existing Google Calendar events for project 1",
+  "authority_chain": "Planner Agent -> CalendarAgent"
+}

@@ -1,0 +1,13 @@
+{
+  "agent": "Extraction Agent",
+  "parent": "2d408676-729f-4c28-86ca-5242299b071a",
+  "tool": "extract_components",
+  "scope": [
+    "extract_components"
+  ],
+  "timestamp": "1783868776.9850092",
+  "hash": "4c1fbc97eb51e9a9ef7a8a7c93ed2460d7561205fc63349848d54946a9f564e4",
+  "status": "success",
+  "execution_result": "[{'category': 'Core Controller', 'name': 'ESP32-WROOM-32D Development Board', 'cost': 7.5, 'notes': 'Provides Wi-Fi and Bluetooth connectivity for general control.'}, {'category': 'Power Supply', 'name': '5V 3A DC Wall Power Adapter', 'cost': 12.0, 'notes': 'Standard power source.'}, {'category': 'M...",
+  "authority_chain": "Planner Agent -> Extraction Agent"
+}

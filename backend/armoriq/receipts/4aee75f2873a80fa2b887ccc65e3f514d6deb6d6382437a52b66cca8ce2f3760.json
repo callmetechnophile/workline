@@ -1,0 +1,13 @@
+{
+  "agent": "KnowledgeGraphAgent",
+  "parent": "e0e52eda-cd94-49ab-a15d-8d93c5b29fc4",
+  "tool": "graph.read",
+  "scope": [
+    "graph.read"
+  ],
+  "timestamp": "1783872431.4412918",
+  "hash": "4aee75f2873a80fa2b887ccc65e3f514d6deb6d6382437a52b66cca8ce2f3760",
+  "status": "success",
+  "execution_result": "[{'name': 'Arduino Nano', 'category': None, 'cost': 408, 'notes': None}, {'name': 'Raspberry Pi Pico W', 'category': None, 'cost': 553, 'notes': None}]",
+  "authority_chain": "Planner Agent -> KnowledgeGraphAgent"
+}

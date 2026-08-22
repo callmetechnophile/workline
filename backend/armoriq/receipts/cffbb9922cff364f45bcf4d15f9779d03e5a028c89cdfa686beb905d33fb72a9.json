@@ -1,0 +1,13 @@
+{
+  "agent": "ContradictionAgent",
+  "parent": "1cacf079-52c7-44e4-a102-7efe1f116fea",
+  "tool": "detect_contradictions",
+  "scope": [
+    "detect_contradictions"
+  ],
+  "timestamp": "1783870499.8310869",
+  "hash": "cffbb9922cff364f45bcf4d15f9779d03e5a028c89cdfa686beb905d33fb72a9",
+  "status": "success",
+  "execution_result": "[{'conflict_type': 'efficiency', 'source_a': 'Technical Advancements in Automated Voice controlled lights Engineering Structures', 'source_b': 'Energy Harvesting and Low-Power Operations in Edge Integrated Voice controlled lights Nodes', 'severity': 'medium', 'details': 'Conflict on actuator power e...",
+  "authority_chain": "Planner Agent -> ContradictionAgent"
+}

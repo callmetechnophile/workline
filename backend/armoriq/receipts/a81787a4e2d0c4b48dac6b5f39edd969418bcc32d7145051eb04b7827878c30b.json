@@ -1,0 +1,13 @@
+{
+  "agent": "ThermalAgent",
+  "parent": "b76271c4-eb4a-42c2-aea0-e3a821d4af74",
+  "tool": "analyze_thermal_risk",
+  "scope": [
+    "analyze_thermal_risk"
+  ],
+  "timestamp": "1783872431.234993",
+  "hash": "a81787a4e2d0c4b48dac6b5f39edd969418bcc32d7145051eb04b7827878c30b",
+  "status": "success",
+  "execution_result": "[{'component': 'ESP32-WROOM-32D Development Board', 'estimated_temp': 54.7, 'max_temp': 85.0, 'heat_w': 0.475, 'risk_level': 'Medium', 'warning': 'Elevated temperature detected. Monitor enclosure ventilation.', 'cooling_recommendation': 'Ensure component is not placed flush against heat-sensitive ma...",
+  "authority_chain": "Planner Agent -> ThermalAgent"
+}

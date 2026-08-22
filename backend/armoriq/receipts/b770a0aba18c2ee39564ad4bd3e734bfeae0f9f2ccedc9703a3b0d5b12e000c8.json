@@ -1,0 +1,13 @@
+{
+  "agent": "CalendarAgent",
+  "parent": "Planner Agent",
+  "tool": "calendar.export",
+  "scope": [
+    "calendar.export"
+  ],
+  "timestamp": "1783873587.8309026",
+  "hash": "b770a0aba18c2ee39564ad4bd3e734bfeae0f9f2ccedc9703a3b0d5b12e000c8",
+  "status": "success",
+  "execution_result": "Exported 3 events to Google Calendar for project 1",
+  "authority_chain": "Planner Agent -> CalendarAgent"
+}

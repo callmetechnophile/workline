@@ -1,0 +1,16 @@
+{
+  "agent": "Export Agent",
+  "parent": "9c086d27-32ed-4088-8928-7dc245ee87b8",
+  "tool": "export_pdf",
+  "scope": [
+    "export_pdf",
+    "export_csv",
+    "export_markdown",
+    "export_docx"
+  ],
+  "timestamp": "1783892400.1444988",
+  "hash": "fc31a7a1785fdc5eb9df77a312bfd511abb586eaaf172bdb1e5c0d5a88750c8b",
+  "status": "success",
+  "execution_result": "{'filename': 'SolarTracker_System.pdf', 'url': '/api/exports/SolarTracker_System.pdf', 'status': 'SUCCESS'}",
+  "authority_chain": "Planner Agent -> Export Agent"
+}
