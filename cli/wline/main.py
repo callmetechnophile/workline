@@ -32,7 +32,7 @@ from cli.wline.commands.document import app as document_app
 from cli.wline.commands.entity import app as entity_app
 from cli.wline.commands.graph import app as graph_app
 from cli.wline.commands.requirement import app as requirement_app
-from cli.wline.commands.component_validation import app as component_app
+from cli.wline.commands.doctor import doctor_app
 from cli.wline.ui.banner import print_main_banner
 
 app = typer.Typer(
@@ -66,10 +66,9 @@ app.add_typer(cache_app, name="cache")
 app.add_typer(document_app, name="document")
 app.add_typer(entity_app, name="entity")
 app.add_typer(graph_app, name="graph")
-app.add_typer(requirement_app, name="requirement")
-app.add_typer(component_app, name="component")
 app.add_typer(config_app, name="config")
 app.add_typer(database_app, name="database")
+app.add_typer(doctor_app, name="doctor")
 app.command("status")(status_command)
 app.command("version")(version_command)
 app.command("snapshot")(snapshot_command)
