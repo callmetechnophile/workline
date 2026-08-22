@@ -8,9 +8,6 @@ const nextConfig: NextConfig = {
     // Canonical typechecking is handled via TypeScript 7 CLI (npm run typecheck / tsc --noEmit)
     ignoreBuildErrors: true,
   },
-  turbopack: {
-    root: "..",
-  },
 };
 
 export default nextConfig;

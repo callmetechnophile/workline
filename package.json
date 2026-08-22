@@ -13,6 +13,12 @@
     "lint": "npm run lint --workspace=frontend",
     "typecheck": "npm run typecheck --workspace=frontend"
   },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "@types/node": "^22.13.1",
+    "@types/react": "^19.0.8",
+    "@types/react-dom": "^19.0.8"
+  },
   "allowScripts": {
     "sharp": true,
     "unrs-resolver": true
