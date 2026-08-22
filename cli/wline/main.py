@@ -33,6 +33,8 @@ from cli.wline.commands.entity import app as entity_app
 from cli.wline.commands.graph import app as graph_app
 from cli.wline.commands.requirement import app as requirement_app
 from cli.wline.commands.doctor import doctor_app
+from cli.wline.commands.auth import auth_app, login_command, logout_command, whoami_command
+from cli.wline.commands.sync import sync_app
 from cli.wline.ui.banner import print_main_banner
 
 app = typer.Typer(
@@ -69,6 +71,11 @@ app.add_typer(graph_app, name="graph")
 app.add_typer(config_app, name="config")
 app.add_typer(database_app, name="database")
 app.add_typer(doctor_app, name="doctor")
+app.add_typer(auth_app, name="auth")
+app.add_typer(sync_app, name="sync")
+app.command("login")(login_command)
+app.command("logout")(logout_command)
+app.command("whoami")(whoami_command)
 app.command("status")(status_command)
 app.command("version")(version_command)
 app.command("snapshot")(snapshot_command)

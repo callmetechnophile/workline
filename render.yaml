@@ -8,24 +8,67 @@ services:
     region: oregon
     plan: starter
     buildCommand: "pip install -r backend/requirements.txt"
-    startCommand: "uvicorn backend.main:app --host 0.0.0.0 --port $PORT"
-    healthCheckPath: /health/database
+    startCommand: "uvicorn backend.services.core.main:app --host 0.0.0.0 --port $PORT"
+    healthCheckPath: /health
     envVars:
       - key: PORT
         value: 10000
-      - key: WORKLINE_SURREALDB_HOST
-        fromService:
-          type: web
-          name: workline-surrealdb
-          property: host
-      - key: WORKLINE_QDRANT_HOST
-        fromService:
-          type: web
-          name: workline-qdrant
-          property: host
+      - key: WORKLINE_R2_URL
+        value: http://workline-ai-agents:10002
+      - key: WORKLINE_R3_URL
+        value: http://workline-knowledge-documents:10003
+      - key: WORKLINE_R4_URL
+        value: http://workline-engineering-simulation:10004
+      - key: WORKLINE_R5_URL
+        value: http://workline-procurement-service:10005
 
   # ============================================================================
-  # R5: Workline Procurement & Collaboration Service (First Extracted Service)
+  # R2: Workline AI & Research Agents Service
+  # ============================================================================
+  - type: web
+    name: workline-ai-agents
+    env: python
+    region: oregon
+    plan: starter
+    buildCommand: "pip install -r backend/requirements.txt"
+    startCommand: "uvicorn backend.services.ai.main:app --host 0.0.0.0 --port $PORT"
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: 10002
+
+  # ============================================================================
+  # R3: Workline Knowledge & Documents Service
+  # ============================================================================
+  - type: web
+    name: workline-knowledge-documents
+    env: python
+    region: oregon
+    plan: standard
+    buildCommand: "pip install -r backend/requirements.txt"
+    startCommand: "uvicorn backend.services.knowledge.main:app --host 0.0.0.0 --port $PORT"
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: 10003
+
+  # ============================================================================
+  # R4: Workline Engineering & Simulation Service
+  # ============================================================================
+  - type: web
+    name: workline-engineering-simulation
+    env: python
+    region: oregon
+    plan: starter
+    buildCommand: "pip install -r backend/requirements.txt"
+    startCommand: "uvicorn backend.services.engineering.main:app --host 0.0.0.0 --port $PORT"
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: 10004
+
+  # ============================================================================
+  # R5: Workline Procurement & Collaboration Service
   # ============================================================================
   - type: web
     name: workline-procurement-service
