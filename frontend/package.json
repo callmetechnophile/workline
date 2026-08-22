@@ -27,5 +27,9 @@
     "eslint-config-next": "16.2.9",
     "tailwindcss": "^4",
     "typescript": "7.0.2"
+  },
+  "allowScripts": {
+    "sharp": "node install/check.js || npm run build",
+    "unrs-resolver": "node postinstall.js"
   }
 }
