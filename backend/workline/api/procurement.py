@@ -9,8 +9,11 @@ from backend.workline.procurement.models import (
     ComponentCandidate,
     ComponentRequirement,
     DeterministicValidationReport,
+    ProcurementPackage,
     ProcurementPlan,
+    SupplierOffer,
 )
+from backend.workline.procurement.service import procurement_service
 
 
 router = APIRouter(prefix="/api/procurement", tags=["Workline Procurement"])
@@ -35,6 +38,10 @@ class OptimizeRequest(BaseModel):
     requirements: List[Dict[str, Any]]
 
 
+class GeneratePackageRequest(BaseModel):
+    bom_id: str
+
+
 @router.post("/search")
 async def search_components_api(payload: SearchRequest):
     """Search components across supported vendor sources (DigiKey, Mouser, Robu, Robocraze)."""
@@ -44,43 +51,52 @@ async def search_components_api(payload: SearchRequest):
             procurement_engine._components[c.component_id] = c
         return {"query": payload.query, "count": len(candidates), "candidates": [c.model_dump() for c in candidates]}
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Component search failed: {str(exc)}")
+        raise HTTPException(status_code=500, detail=f"Search failed: {str(exc)}")
 
 
 @router.post("/validate", response_model=DeterministicValidationReport)
-async def validate_component_api(payload: ValidateRequest):
-    """Programmatically validate component specifications against engineering requirements."""
+async def validate_candidate_api(payload: ValidateRequest):
+    """Deterministically check candidate specifications against a target requirement."""
     try:
-        cand = ComponentCandidate.model_validate(payload.candidate)
-        req = ComponentRequirement.model_validate(payload.requirement)
-        report = procurement_engine.validator.validate(cand, req)
+        cand_model = ComponentCandidate.model_validate(payload.candidate)
+        req_model = ComponentRequirement.model_validate(payload.requirement)
+        report = procurement_engine.validator.validate(cand_model, req_model)
         return report
     except Exception as exc:
-        raise HTTPException(status_code=400, detail=f"Validation failed: {str(exc)}")
+        raise HTTPException(status_code=400, detail=f"Validation error: {str(exc)}")
 
 
 @router.post("/compare")
 async def compare_components_api(payload: CompareRequest):
-    """Compare multiple components side-by-side across electrical, physical, interface, and vendor pricing dimensions."""
+    """Side-by-side parametric comparison for two or more component candidates."""
     try:
-        results = []
-        for cid in payload.component_ids:
-            c = procurement_engine.get_component(cid)
-            if c:
-                results.append(c.model_dump())
-            else:
-                results.append({"component_id": cid, "status": "UNKNOWN"})
-        return {"count": len(results), "components": results}
+        result = procurement_engine.compare_components(payload.component_ids)
+        return result
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Comparison failed: {str(exc)}")
+        raise HTTPException(status_code=400, detail=f"Comparison failed: {str(exc)}")
 
 
 @router.post("/optimize", response_model=ProcurementPlan)
 async def optimize_procurement_api(payload: OptimizeRequest):
-    """Generate multi-vendor optimization plan for a set of project requirements."""
+    """Generate multi-vendor sourcing options (lowest-cost vs consolidated vs fastest)."""
     try:
         req_models = [ComponentRequirement.model_validate(r) for r in payload.requirements]
         _, plan = await procurement_engine.generate_project_bom(payload.project_id, req_models)
         return plan
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Procurement optimization failed: {str(exc)}")
+        raise HTTPException(status_code=500, detail=f"Optimization failed: {str(exc)}")
+
+
+@router.get("/offers/{part_number}", response_model=List[SupplierOffer])
+def get_supplier_offers_api(part_number: str) -> List[SupplierOffer]:
+    """Retrieve supplier offers and price breaks for a component."""
+    return procurement_service.get_offers(part_number)
+
+
+@router.post("/package", response_model=ProcurementPackage)
+def generate_procurement_package_api(req: GeneratePackageRequest) -> ProcurementPackage:
+    """Generate procurement package for Phase 5 x402 handoff."""
+    try:
+        return procurement_service.generate_procurement_package(req.bom_id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))

@@ -25,8 +25,8 @@ class PINNInferenceResult(BaseModel):
 class PINNInferenceEngine:
     """Evaluates temperature fields from candidate layouts rapidly via PINN forward pass."""
 
-    def __init__(self, model: PCBThermalPINN):
-        self.model = model
+    def __init__(self, model: Optional[PCBThermalPINN] = None):
+        self.model = model or PCBThermalPINN()
         self.feature_engine = PhysicsFeatureEngine()
 
     def predict_project_thermal_field(self, project: PCBProject, nx: int = 50, ny: int = 40) -> PINNInferenceResult:

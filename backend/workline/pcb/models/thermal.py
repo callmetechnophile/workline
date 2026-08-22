@@ -40,3 +40,6 @@ class ThermalModel(BaseModel):
     ambient_temperature: float = 25.0
     hotspots: List[str] = Field(default_factory=list)
     has_overheated_component: bool = False
+
+
+ThermalModelMetadata = ThermalModel

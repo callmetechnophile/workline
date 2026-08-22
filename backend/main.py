@@ -28,6 +28,12 @@ from backend.workline.api.pcb import router as pcb_router
 from backend.workline.api.project import router as project_package_router
 from backend.workline.api.procurement import router as procurement_router
 from backend.workline.api.knowledge import router as knowledge_router
+from backend.workline.api.generation import router as generation_router
+from backend.workline.api.cache import router as cache_router
+from backend.workline.documents.api import router as documents_router
+from backend.workline.knowledge.graph.api import router as graph_router
+from backend.workline.validation.api import router as validation_router
+from backend.workline.decision.api import router as decision_engine_router
 from backend.workline.database.surrealdb import surreal_db
 from backend.workline.retrieval.qdrant import qdrant_manager
 from backend.database import init_db
@@ -95,6 +101,12 @@ app.include_router(components_router)
 app.include_router(git_router)
 app.include_router(project_package_router)
 app.include_router(knowledge_router)
+app.include_router(generation_router)
+app.include_router(cache_router)
+app.include_router(documents_router)
+app.include_router(graph_router)
+app.include_router(validation_router)
+app.include_router(decision_engine_router)
 app.include_router(calendar_router)
 app.include_router(speech_router)
 

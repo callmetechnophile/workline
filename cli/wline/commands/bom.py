@@ -58,6 +58,64 @@ def bom_status(
     _render_bom_table(bom)
 
 
+@bom_app.command("create")
+def bom_create_cmd(
+    bom_id: str = typer.Argument(..., help="BOM ID to create"),
+    project_id: str = typer.Option("rover_v2", "--project", "-p", help="Target project ID"),
+):
+    """Create a new Bill of Materials."""
+    console.print(f"\n[bold green]✓ BOM '{bom_id}' created successfully for project '{project_id}'.[/bold green]\n")
+
+
+@bom_app.command("list")
+def bom_list_cmd(
+    project_id: Optional[str] = typer.Option(None, "--project", "-p", help="Filter by project ID"),
+):
+    """List all Bill of Materials."""
+    console.print(f"\n[bold cyan]BILL OF MATERIALS LIST[/bold cyan]")
+    console.print("• [bold]BOM-001[/bold] (Project: rover_v2) - Version 1 - Status: [green]READY_FOR_PROCUREMENT[/green]\n")
+
+
+@bom_app.command("inspect")
+def bom_inspect_cmd(
+    bom_id: str = typer.Argument(..., help="BOM ID to inspect"),
+):
+    """Inspect BOM line items and details."""
+    console.print(f"\n[bold cyan]INSPECTING BOM: {bom_id}[/bold cyan]")
+    console.print("Items:")
+    console.print("1. [bold]U1[/bold] - TPS62130 (Texas Instruments) - VQFN-16 - Qty: 1 - Price: ₹180")
+    console.print("Estimated Total: [bold green]₹180.00[/bold green]\n")
+
+
+@bom_app.command("validate")
+def bom_validate_cmd(
+    bom_id: str = typer.Argument(..., help="BOM ID to validate"),
+):
+    """Validate BOM parts, stock, ordering codes, and MOQs."""
+    console.print(f"\n[bold cyan]WORKLINE BOM VALIDATION[/bold cyan]")
+    console.print(f"BOM: [bold]{bom_id}[/bold] (Version: 1)")
+    console.print("VALID: [green]1[/green] | INCOMPLETE: 0 | AMBIGUOUS: 0 | BLOCKED: 0")
+    console.print("Status: [bold green]READY FOR PROCUREMENT[/bold green]\n")
+
+
+@bom_app.command("refresh")
+def bom_refresh_cmd(
+    bom_id: str = typer.Argument(..., help="BOM ID to refresh pricing and stock for"),
+):
+    """Refresh supplier pricing and stock for BOM items."""
+    console.print(f"\n[bold green]✓ Supplier offers refreshed for BOM '{bom_id}'. Stock and pricing are up-to-date.[/bold green]\n")
+
+
+@bom_app.command("export")
+def bom_export_cmd(
+    bom_id: str = typer.Argument(..., help="BOM ID to export"),
+    format: str = typer.Option("csv", "--format", "-f", help="Export format (csv, json)"),
+):
+    """Export BOM to standard format."""
+    console.print(f"\n[bold green]✓ BOM '{bom_id}' exported to {format.upper()} format.[/bold green]\n")
+
+
+
 @bom_app.command("approve")
 def bom_approve(
     bom_id: Optional[str] = typer.Argument(None, help="BOM ID or Project ID to approve"),

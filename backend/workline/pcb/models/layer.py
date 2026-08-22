@@ -25,3 +25,7 @@ class Layer(BaseModel):
     dielectric_constant: float = 4.4   # Er (4.4 for FR4)
     loss_tangent: float = 0.02
     copper_thickness: float = 0.035    # mm
+
+
+from backend.workline.pcb.models.stackup import Stackup
+LayerStackup = Stackup

@@ -1,7 +1,7 @@
 """PCB Net and Netlist topology models."""
 
 from enum import Enum
-from typing import List, Optional
+from typing import Any, List, Optional
 from pydantic import BaseModel, Field
 
 
@@ -14,6 +14,12 @@ class NetClass(str, Enum):
     HIGH_SPEED = "HIGH_SPEED"
     CLOCK = "CLOCK"
     DIFFERENTIAL = "DIFFERENTIAL"
+    CONTROL = "CONTROL"
+    RESET = "RESET"
+    OTHER = "OTHER"
+
+
+NetType = NetClass
 
 
 class NetNode(BaseModel):
@@ -25,9 +31,11 @@ class NetNode(BaseModel):
 
 class Net(BaseModel):
     """Electrical Net interconnecting component pins across the board."""
-    id: str                            # e.g. "net_gnd", "net_3v3", "net_sda"
+    id: str = ""                       # e.g. "net_gnd", "net_3v3", "net_sda"
+    net_id: Optional[str] = None
     name: str                          # e.g. "GND", "VCC_3V3", "I2C_SDA", "UART_TX"
     net_class: NetClass = NetClass.DIGITAL
+    net_type: Optional[NetType] = None
     priority: int = 1                  # 1 to 5 (5 highest)
     signal_type: str = "LOGIC"
 
@@ -37,3 +45,5 @@ class Net(BaseModel):
     criticality: str = "MEDIUM"        # LOW, MEDIUM, HIGH, CRITICAL
 
     nodes: List[NetNode] = Field(default_factory=list)
+    pins: List[Any] = Field(default_factory=list)
+    constraints: List[str] = Field(default_factory=list)

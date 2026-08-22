@@ -26,6 +26,13 @@ from cli.wline.commands.status import status_command
 from cli.wline.commands.team import team_app
 from cli.wline.commands.version import release_command, snapshot_command, version_command
 from cli.wline.commands.decision import decision_app
+from cli.wline.commands.generate import app as generate_app
+from cli.wline.commands.cache import app as cache_app
+from cli.wline.commands.document import app as document_app
+from cli.wline.commands.entity import app as entity_app
+from cli.wline.commands.graph import app as graph_app
+from cli.wline.commands.requirement import app as requirement_app
+from cli.wline.commands.component_validation import app as component_app
 from cli.wline.ui.banner import print_main_banner
 
 app = typer.Typer(
@@ -54,6 +61,13 @@ app.add_typer(bom_app, name="bom")
 app.add_typer(order_app, name="order")
 app.add_typer(payment_app, name="payment")
 app.add_typer(pcb_app, name="pcb")
+app.add_typer(generate_app, name="generate")
+app.add_typer(cache_app, name="cache")
+app.add_typer(document_app, name="document")
+app.add_typer(entity_app, name="entity")
+app.add_typer(graph_app, name="graph")
+app.add_typer(requirement_app, name="requirement")
+app.add_typer(component_app, name="component")
 app.add_typer(config_app, name="config")
 app.add_typer(database_app, name="database")
 app.command("status")(status_command)

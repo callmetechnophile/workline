@@ -5,6 +5,7 @@ from typing import Dict, List, Optional
 from pydantic import BaseModel, Field
 
 from backend.workline.pcb.models.board import Board
+BoardGeometry = Board
 from backend.workline.pcb.models.component import PCBComponent
 from backend.workline.pcb.models.constraints import PCBConstraint
 from backend.workline.pcb.models.footprint import Footprint

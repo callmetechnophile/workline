@@ -303,3 +303,6 @@ class PCBValidator:
             warning_count=warn_count,
             violations=violations,
         )
+
+
+PCBValidationEngine = PCBValidator
