@@ -26,9 +26,9 @@ jobs:
           if [ -f backend/requirements.txt ]; then pip install -r backend/requirements.txt; fi
           pip install -e ".[dev]"
 
-      - name: Run pytest test suite
+      - name: Run pytest test suite (Backend & CLI)
         run: |
-          python -m pytest tests -v --tb=short 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
+          python -m pytest tests cli/tests -v --tb=short 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
         env:
           PYTHONPATH: .
 
