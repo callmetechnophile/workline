@@ -20,10 +20,16 @@ app = FastAPI(
     version="1.0.0-rc1",
 )
 
-# CORS Middleware
+# CORS Configuration
+raw_origins = os.getenv(
+    "WORKLINE_CORS_ORIGINS",
+    "http://localhost:3000,http://127.0.0.1:3000,https://worklineai.netlify.app,http://localhost:10000,*"
+)
+allowed_origins = [origin.strip() for origin in raw_origins.split(",") if origin.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allowed_origins if "*" not in allowed_origins else ["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -112,4 +118,5 @@ async def proxy_to_r5(path: str, request: Request):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("backend.services.core.main:app", host="0.0.0.0", port=10000, reload=True)
+    port = int(os.getenv("PORT", 10000))
+    uvicorn.run("backend.services.core.main:app", host="0.0.0.0", port=port, reload=True)
