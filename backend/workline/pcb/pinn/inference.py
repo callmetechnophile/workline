@@ -1,6 +1,6 @@
 """Fast batch PINN inference over 2D board coordinates."""
 
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 import numpy as np
 from pydantic import BaseModel, Field
 
