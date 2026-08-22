@@ -67,13 +67,24 @@
 
 ---
 
-## 5. Security & Authentication
-- **Service-to-Service Token**: `WORKLINE_SERVICE_AUTH_KEY`
-- Requests from R1 to R2 must include the HTTP header:
-  ```http
-  X-Workline-Service-Token: <WORKLINE_SERVICE_AUTH_KEY>
-  ```
-- **CORS Policy**: Browser origins are strictly restricted. All public browser traffic must enter through R1 Gateway.
+## 5. Security & Internal Endpoints
+
+### 5.1 Internal Research Endpoint
+- **Path**: `POST /internal/research`
+- **Authentication**: `Authorization: Bearer <R2_SERVICE_TOKEN>`
+- **Request Headers**:
+  - `Authorization: Bearer <R2_SERVICE_TOKEN>`
+  - `X-Request-ID: <trace-id>` (optional, propagated for telemetry)
+- **Request Body**: [`ResearchRequest`](file:///C:/Users/worka/.gemini/antigravity/scratch/armourIQ-Workflow/backend/schemas/research_schemas.py) (`intent: str`, `target_days: int`)
+- **Response**: [`ResearchResponse`](file:///C:/Users/worka/.gemini/antigravity/scratch/armourIQ-Workflow/backend/schemas/research_schemas.py)
+- **Error Codes**:
+  - `401 Unauthorized`: Missing or invalid Bearer token
+  - `422 Unprocessable Entity`: Empty or malformed payload
+  - `500 Internal Server Error`: Controlled pipeline execution error without secret leakage
+
+### 5.2 CORS & Access Control
+- **CORS Policy**: Browser origins are strictly restricted. Public frontend clients cannot directly reach R2.
+- **R1 Boundary**: R1 Core Gateway proxies requests to R2 using internal service authentication.
 
 ---
 
@@ -83,7 +94,7 @@
 | :--- | :--- | :--- |
 | `PORT` | Dynamic listener port assigned by Render | System (10002) |
 | `WORKLINE_ENV` | Environment identifier (`production`) | Config |
-| `WORKLINE_SERVICE_AUTH_KEY` | Shared secret token for R1 $\to$ R2 authentication | Secret |
+| `R2_SERVICE_TOKEN` | Secret token for R1 $\to$ R2 authentication | Secret |
 | `GROQ_API_KEY` | API Key for Groq ultra-fast Llama-3 / Mixtral inference | Secret |
 | `SARVAM_API_KEY` | API Key for Sarvam speech-to-text transcription | Secret (Optional) |
 

@@ -17,6 +17,10 @@ services:
         value: "https://worklineai.netlify.app,http://localhost:3000"
       - key: WORKLINE_R2_URL
         value: http://workline-ai-agents:10002
+      - key: R2_INTERNAL_URL
+        value: http://workline-ai-agents:10002
+      - key: R2_SERVICE_TOKEN
+        sync: false
       - key: WORKLINE_R3_URL
         value: http://workline-knowledge-documents:10003
       - key: WORKLINE_R4_URL
@@ -40,6 +44,8 @@ services:
         value: 10002
       - key: WORKLINE_ENV
         value: production
+      - key: R2_SERVICE_TOKEN
+        sync: false
       - key: GROQ_API_KEY
         sync: false
 
