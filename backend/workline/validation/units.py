@@ -5,7 +5,7 @@ from typing import NamedTuple, Optional, Tuple
 
 
 class ConversionResult(NamedTuple):
-    success: boolean = True
+    success: bool = True
     converted_value: float = 0.0
     error: Optional[str] = None
 
