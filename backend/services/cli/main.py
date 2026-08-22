@@ -8,7 +8,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Dict, Any
 
-from cli.wline import __version__ as cli_current_version
+try:
+    from cli.wline import __version__ as cli_current_version
+except (ImportError, ModuleNotFoundError):
+    cli_current_version = "1.0.0-rc1"
 
 app = FastAPI(
     title="Workline R6 - CLI Release & Distribution Service",

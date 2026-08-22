@@ -1,5 +1,5 @@
 # ==============================================================================
-# Workline Root Docker Build Context Exclusions
+# Workline Docker Build Context Exclusions
 # ==============================================================================
 
 # Python caches and bytecode
@@ -46,4 +46,3 @@ node_modules/
 out/
 dist/
 frontend/
-cli/

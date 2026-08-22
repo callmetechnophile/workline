@@ -25,6 +25,7 @@ RUN pip install --no-cache-dir -r /app/backend/requirements.txt
 
 # Copy application source tree
 COPY backend /app/backend
+COPY cli /app/cli
 
 # Create unprivileged non-root runtime user for security compliance
 RUN useradd -m -u 1000 workline && \
