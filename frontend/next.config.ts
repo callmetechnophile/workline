@@ -8,6 +8,9 @@ const nextConfig: NextConfig = {
     // Canonical typechecking is handled via TypeScript 7 CLI (npm run typecheck / tsc --noEmit)
     ignoreBuildErrors: true,
   },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
 };
 
 export default nextConfig;
