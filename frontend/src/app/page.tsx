@@ -2,7 +2,7 @@
 // Vercel deployment rebuild trigger
 
 import React, { useState, useEffect, useRef } from 'react';
-import { SignInButton, SignUpButton, Show, UserButton, useAuth } from '@clerk/nextjs';
+import { SignInButton, SignUpButton, UserButton, useAuth } from '@clerk/nextjs';
 import { Search, Mic, Sparkles, Download, ShieldCheck, RefreshCw, Layers, GitBranch, BookOpen, Calendar, Key, AlertTriangle, FileText, Check, Moon, Sun, Presentation, X, Zap, Share2, Wifi, BarChart2, FlaskConical, Thermometer, ShoppingCart, Network, Users, History, MessageCircle, FolderOpen, Shield, Receipt, XCircle } from 'lucide-react';
 
 // Components
@@ -91,7 +91,7 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
-  const { getToken, userId } = useAuth();
+  const { getToken, userId, isSignedIn } = useAuth();
   const [savedHistory, setSavedHistory] = useState<any[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [isLightMode, setIsLightMode] = useState(false);
@@ -621,7 +621,7 @@ ${rawBackground.trim()}
 
         {/* Top Right Controls: Auth & Toggle */}
         <div className="flex items-center gap-3">
-          <Show when="signed-out">
+          {!isSignedIn && (
             <div className="flex items-center gap-2">
               <SignInButton mode="modal">
                 <button className="text-xs font-mono font-bold px-3.5 py-1.5 rounded border border-zinc-800 bg-zinc-950/40 hover:bg-zinc-900 text-slate-300 hover:text-white transition-all cursor-pointer">
@@ -634,12 +634,12 @@ ${rawBackground.trim()}
                 </button>
               </SignUpButton>
             </div>
-          </Show>
-          <Show when="signed-in">
+          )}
+          {isSignedIn && (
             <div className="flex items-center gap-2">
               <UserButton />
             </div>
-          </Show>
+          )}
           <button 
             onClick={() => setIsLightMode(!isLightMode)}
             className="p-2 rounded-full border border-zinc-800 bg-zinc-950/40 text-slate-300 hover:text-white hover:border-zinc-700 transition-all cursor-pointer"
@@ -765,28 +765,26 @@ ${rawBackground.trim()}
           </div>
 
           {/* Saved Specifications List (Signed In Only) */}
-          <Show when="signed-in">
-            {savedHistory.length > 0 && (
-              <div className="space-y-3 mb-6">
-                <span className="text-[10px] text-cyan-400 font-mono tracking-widest uppercase block">
-                  SAVED SPECIFICATIONS
-                </span>
-                <div className="flex flex-wrap justify-center gap-2 max-w-xl">
-                  {savedHistory.map((item, i) => (
-                    <button
-                      key={i}
-                      onClick={() => handleLoadHistory(item)}
-                      disabled={isProcessing}
-                      className="bg-zinc-950/90 border border-zinc-850 hover:border-cyan-900/50 text-slate-300 hover:text-white text-[10px] font-bold px-4 py-1.5 rounded-full transition-all tracking-wide flex items-center gap-1.5 cursor-pointer"
-                    >
-                      <Layers className="w-3 h-3 text-cyan-400" />
-                      {item.intent.toUpperCase()}
-                    </button>
-                  ))}
-                </div>
+          {isSignedIn && savedHistory.length > 0 && (
+            <div className="space-y-3 mb-6">
+              <span className="text-[10px] text-cyan-400 font-mono tracking-widest uppercase block">
+                SAVED SPECIFICATIONS
+              </span>
+              <div className="flex flex-wrap justify-center gap-2 max-w-xl">
+                {savedHistory.map((item, i) => (
+                  <button
+                    key={i}
+                    onClick={() => handleLoadHistory(item)}
+                    disabled={isProcessing}
+                    className="bg-zinc-950/90 border border-zinc-850 hover:border-cyan-900/50 text-slate-300 hover:text-white text-[10px] font-bold px-4 py-1.5 rounded-full transition-all tracking-wide flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Layers className="w-3 h-3 text-cyan-400" />
+                    {item.intent.toUpperCase()}
+                  </button>
+                ))}
               </div>
-            )}
-          </Show>
+            </div>
+          )}
 
           {/* Recent Searches */}
           {recentSearches.length > 0 && (
@@ -1098,7 +1096,7 @@ ${rawBackground.trim()}
             </div>
             
             <div className="flex flex-wrap gap-3">
-              <Show when="signed-in">
+              {isSignedIn && (
                 <button
                   onClick={handleSavePackage}
                   disabled={isSaving}
@@ -1107,7 +1105,7 @@ ${rawBackground.trim()}
                   <Check className="w-3.5 h-3.5" />
                   {isSaving ? "Saving..." : "Save Spec"}
                 </button>
-              </Show>
+              )}
               <button
                 onClick={handleGeneratePPT}
                 className="bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold px-4 py-2.5 rounded transition-all flex items-center gap-1.5 shadow-lg shadow-purple-500/10 cursor-pointer"
