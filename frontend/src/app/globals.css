@@ -1,212 +1,276 @@
 @import "tailwindcss";
 
+/* ==========================================================================
+   WORKLINE DESIGN SYSTEM TOKENS (DESIGN.md Reference)
+   ========================================================================== */
+
 :root {
-  --background: #030712; /* gray-950 */
-  --foreground: #f9fafb; /* gray-50 */
-  --card-bg: rgba(17, 24, 39, 0.7); /* gray-900 with opacity */
-  --card-border: rgba(59, 130, 246, 0.2); /* blue-500 with opacity */
-  --accent-cyan: #06b6d4; /* cyan-500 */
-  --accent-blue: #3b82f6; /* blue-500 */
-  --accent-amber: #f59e0b; /* amber-500 */
-  --accent-red: #ef4444; /* red-500 */
-  --accent-emerald: #10b981; /* emerald-500 */
+  /* Surface & Base */
+  --background: #030712;
+  --background-secondary: #090d16;
+  --foreground: #f8fafc;
+  --foreground-secondary: #cbd5e1;
+  --surface: #0f172a;
+  --surface-secondary: #1e293b;
+  --surface-tertiary: #334155;
+  
+  /* Borders */
+  --border: #1e293b;
+  --border-subtle: #172033;
+  --border-highlight: rgba(56, 189, 248, 0.4);
+  
+  /* Text & Muted */
+  --muted: #64748b;
+  --muted-foreground: #94a3b8;
+  
+  /* Primary & Brand Accents */
+  --primary: #6366f1;
+  --primary-hover: #4f46e5;
+  --primary-deep: #4338ca;
+  --primary-foreground: #ffffff;
+  --accent-cyan: #06b6d4;
+  --accent-cyan-hover: #0891b2;
+  --accent-blue: #3b82f6;
+  --accent-purple: #8b5cf6;
+  --accent-amber: #f59e0b;
+  --accent-emerald: #10b981;
+  --accent-rose: #f43f5e;
+  --ring: #6366f1;
+
+  /* Card & Glassmorphism */
+  --card-bg: rgba(15, 23, 42, 0.75);
+  --card-border: rgba(30, 41, 59, 0.8);
+
+  /* Engineering Status Semantic Tokens */
+  --status-pass: #10b981;
+  --status-pass-bg: rgba(16, 185, 129, 0.12);
+  --status-pass-border: rgba(16, 185, 129, 0.3);
+
+  --status-fail: #ef4444;
+  --status-fail-bg: rgba(239, 68, 68, 0.12);
+  --status-fail-border: rgba(239, 68, 68, 0.3);
+
+  --status-warning: #f59e0b;
+  --status-warning-bg: rgba(245, 158, 11, 0.12);
+  --status-warning-border: rgba(245, 158, 11, 0.3);
+
+  --status-running: #06b6d4;
+  --status-running-bg: rgba(6, 182, 212, 0.12);
+  --status-running-border: rgba(6, 182, 212, 0.3);
+
+  --status-pending: #6366f1;
+  --status-pending-bg: rgba(99, 102, 241, 0.12);
+  --status-pending-border: rgba(99, 102, 241, 0.3);
+
+  --status-blocked: #a855f7;
+  --status-blocked-bg: rgba(168, 85, 247, 0.12);
+  --status-blocked-border: rgba(168, 85, 247, 0.3);
+
+  --status-unknown: #64748b;
+  --status-unknown-bg: rgba(100, 116, 139, 0.12);
+  --status-unknown-border: rgba(100, 116, 139, 0.3);
+
+  --status-mocked: #d97706;
+  --status-mocked-bg: rgba(217, 119, 6, 0.12);
+  --status-mocked-border: rgba(217, 119, 6, 0.3);
+
+  --status-not-configured: #475569;
+  --status-not-configured-bg: rgba(71, 85, 105, 0.12);
+  --status-not-configured-border: rgba(71, 85, 105, 0.3);
 }
 
 @theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-cyan-glow: var(--accent-cyan);
-  --color-amber-glow: var(--accent-amber);
+  --color-surface: var(--surface);
+  --color-surface-secondary: var(--surface-secondary);
+  --color-surface-tertiary: var(--surface-tertiary);
+  --color-border: var(--border);
+  --color-border-subtle: var(--border-subtle);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
 }
+
+/* ==========================================================================
+   BASE TYPOGRAPHY & LAYOUT
+   ========================================================================== */
 
 body {
   background-color: var(--background);
   color: var(--foreground);
-  font-family: 'Outfit', 'Inter', system-ui, sans-serif;
+  font-family: var(--font-geist-sans), 'Inter', system-ui, -apple-system, sans-serif;
   overflow-x: hidden;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
 }
 
-/* Custom scrollbar */
+/* Tabular numbers for all engineering tables & data */
+.font-tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Custom engineering scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #030712;
+  background: var(--background);
 }
 ::-webkit-scrollbar-thumb {
-  background: #1f2937;
+  background: #1e293b;
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #374151;
+  background: #334155;
 }
 
-/* Custom glow utility classes */
-.glow-cyan {
-  text-shadow: 0 0 10px rgba(6, 182, 212, 0.5);
-}
-.glow-amber {
-  text-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
-}
-.glow-red {
-  text-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
-}
+/* ==========================================================================
+   WORKLINE UI COMPONENTS & GLASS PANELS
+   ========================================================================== */
 
-.glow-border-cyan {
-  box-shadow: 0 0 15px rgba(6, 182, 212, 0.15);
-  border-color: rgba(6, 182, 212, 0.3);
-}
-
-.glow-border-red {
-  box-shadow: 0 0 15px rgba(239, 68, 68, 0.25);
-  border-color: rgba(239, 68, 68, 0.4);
-}
-
-/* Glassmorphism panel styling */
 .glass-panel {
-  background: linear-gradient(135deg, rgba(10, 15, 30, 0.8) 0%, rgba(10, 15, 30, 0.5) 50%, rgba(6, 182, 212, 0.15) 100%);
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(15, 23, 42, 0.65) 50%, rgba(99, 102, 241, 0.08) 100%);
   background-size: 200% 200%;
   background-position: 0% 0%;
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(59, 130, 246, 0.15);
-  border-radius: 0.75rem;
-  transition: background-position 0.6s cubic-bezier(0.25, 0.8, 0.25, 1), border-color 0.4s ease, box-shadow 0.4s ease;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, background-position 0.4s ease;
 }
 
 .glass-panel:hover {
-  background-position: 100% 100%;
-  border-color: rgba(6, 182, 212, 0.4) !important;
-  box-shadow: 0 10px 25px -5px rgba(6, 182, 212, 0.12), 0 8px 10px -6px rgba(6, 182, 212, 0.12);
+  border-color: rgba(99, 102, 241, 0.35);
+  box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.5), 0 0 15px rgba(99, 102, 241, 0.1);
 }
 
-/* Cyber grid background decoration */
+.engineering-card {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
 .cyber-grid {
-  background-size: 40px 40px;
+  background-size: 32px 32px;
   background-image: 
-    linear-gradient(to right, rgba(59, 130, 246, 0.03) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(59, 130, 246, 0.03) 1px, transparent 1px);
+    linear-gradient(to right, rgba(99, 102, 241, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(99, 102, 241, 0.03) 1px, transparent 1px);
 }
 
-/* Scanning scanline animation */
-@keyframes scanline {
-  0% {
-    transform: translateY(-100%);
-  }
-  100% {
-    transform: translateY(100%);
-  }
+/* ==========================================================================
+   STATUS BADGE STYLES
+   ========================================================================== */
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-width: 1px;
 }
 
-.scanline::after {
-  content: " ";
-  display: block;
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(to bottom, transparent, rgba(6, 182, 212, 0.1) 50%, transparent);
-  animation: scanline 6s linear infinite;
-  pointer-events: none;
+.status-pass {
+  color: var(--status-pass);
+  background-color: var(--status-pass-bg);
+  border-color: var(--status-pass-border);
 }
 
-/* ==========================================
-   LIGHT MODE CONSOLE OVERRIDES
-   ========================================== */
+.status-fail {
+  color: var(--status-fail);
+  background-color: var(--status-fail-bg);
+  border-color: var(--status-fail-border);
+}
+
+.status-warning {
+  color: var(--status-warning);
+  background-color: var(--status-warning-bg);
+  border-color: var(--status-warning-border);
+}
+
+.status-running {
+  color: var(--status-running);
+  background-color: var(--status-running-bg);
+  border-color: var(--status-running-border);
+}
+
+.status-pending {
+  color: var(--status-pending);
+  background-color: var(--status-pending-bg);
+  border-color: var(--status-pending-border);
+}
+
+.status-blocked {
+  color: var(--status-blocked);
+  background-color: var(--status-blocked-bg);
+  border-color: var(--status-blocked-border);
+}
+
+.status-unknown {
+  color: var(--status-unknown);
+  background-color: var(--status-unknown-bg);
+  border-color: var(--status-unknown-border);
+}
+
+.status-mocked {
+  color: var(--status-mocked);
+  background-color: var(--status-mocked-bg);
+  border-color: var(--status-mocked-border);
+}
+
+.status-not-configured {
+  color: var(--status-not-configured);
+  background-color: var(--status-not-configured-bg);
+  border-color: var(--status-not-configured-border);
+}
+
+/* ==========================================================================
+   LIGHT MODE OVERRIDES
+   ========================================================================== */
+
 body.light-mode {
-  --background: #f8fafc; /* slate-50 */
-  --foreground: #0f172a; /* slate-900 */
-  --card-bg: rgba(255, 255, 255, 0.85); /* white/85 */
-  --card-border: rgba(59, 130, 246, 0.12); /* subtle blue-500 border */
-  --accent-cyan: #0891b2; /* cyan-600 */
-  --accent-blue: #2563eb; /* blue-600 */
+  --background: #f8fafc;
+  --background-secondary: #ffffff;
+  --foreground: #0f172a;
+  --foreground-secondary: #334155;
+  --surface: #ffffff;
+  --surface-secondary: #f1f5f9;
+  --surface-tertiary: #e2e8f0;
+  --border: #cbd5e1;
+  --border-subtle: #e2e8f0;
+  --border-highlight: rgba(99, 102, 241, 0.4);
+  --muted: #64748b;
+  --muted-foreground: #475569;
+  --card-bg: rgba(255, 255, 255, 0.95);
+  --card-border: #cbd5e1;
 }
 
 body.light-mode .glass-panel {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 50%, rgba(6, 182, 212, 0.1) 100%) !important;
-  background-size: 200% 200%;
-  background-position: 0% 0%;
-  border: 1px solid rgba(59, 130, 246, 0.15) !important;
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.02) !important;
-  transition: background-position 0.6s cubic-bezier(0.25, 0.8, 0.25, 1), border-color 0.4s ease, box-shadow 0.4s ease;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.85) 50%, rgba(99, 102, 241, 0.05) 100%) !important;
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04) !important;
 }
 
 body.light-mode .glass-panel:hover {
-  background-position: 100% 100% !important;
-  border-color: rgba(6, 182, 212, 0.3) !important;
-  box-shadow: 0 15px 35px rgba(15, 23, 42, 0.08), 0 2px 5px rgba(15, 23, 42, 0.04) !important;
+  border-color: rgba(99, 102, 241, 0.4) !important;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08) !important;
 }
 
-body.light-mode .scanline::after {
-  background: linear-gradient(to bottom, transparent, rgba(6, 182, 212, 0.02) 50%, transparent) !important;
-}
+/* ==========================================================================
+   ACCESSIBILITY & REDUCED MOTION
+   ========================================================================== */
 
-body.light-mode .text-slate-400 {
-  color: #475569 !important; /* slate-600 */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
-
-body.light-mode .text-slate-300 {
-  color: #334155 !important; /* slate-700 */
-}
-
-body.light-mode .text-slate-200 {
-  color: #1e293b !important; /* slate-800 */
-}
-
-body.light-mode .text-slate-100 {
-  color: #0f172a !important; /* slate-900 */
-}
-
-body.light-mode .text-slate-500 {
-  color: #64748b !important; /* slate-500 */
-}
-
-body.light-mode .bg-slate-900\/10 {
-  background-color: rgba(241, 245, 249, 0.6) !important; /* slate-100/60 */
-}
-
-body.light-mode .bg-zinc-950\/90 {
-  background-color: rgba(255, 255, 255, 0.95) !important;
-  border-color: #cbd5e1 !important;
-}
-
-body.light-mode .bg-zinc-950\/80 {
-  background-color: rgba(255, 255, 255, 0.9) !important;
-  border-color: #cbd5e1 !important;
-}
-
-body.light-mode .bg-zinc-950\/70 {
-  background-color: rgba(255, 255, 255, 0.8) !important;
-  border-color: #cbd5e1 !important;
-}
-
-body.light-mode .border-zinc-850 {
-  border-color: #cbd5e1 !important;
-}
-
-body.light-mode .border-zinc-800 {
-  border-color: #cbd5e1 !important;
-}
-
-body.light-mode .bg-slate-900 {
-  background-color: #f1f5f9 !important; /* slate-100 */
-  border-color: #cbd5e1 !important;
-}
-
-body.light-mode .border-slate-800 {
-  border-color: #e2e8f0 !important;
-}
-
-body.light-mode ::-webkit-scrollbar-track {
-  background: #f1f5f9 !important; /* slate-100 */
-}
-
-body.light-mode ::-webkit-scrollbar-thumb {
-  background: #cbd5e1 !important; /* slate-300 */
-}
-
-body.light-mode ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8 !important; /* slate-400 */
-}
-
