@@ -29,8 +29,14 @@ def test_zero_secret_storage_in_cache(tmp_path):
 
 
 def test_cache_graceful_fallback_on_unwritable_directory():
-    # Point cache to non-existent / invalid path
-    invalid_cache = KnowledgeCache(l2_base_dir="Z:\\invalid\\non_existent_mount\\cache")
+    # Point cache to non-existent / unwritable path across OS platforms
+    import sys
+    unwritable_path = (
+        "/proc/invalid_non_writable_dir/cache"
+        if sys.platform != "win32"
+        else "Z:\\invalid\\non_existent_mount\\cache"
+    )
+    invalid_cache = KnowledgeCache(l2_base_dir=unwritable_path)
 
     # Should not crash the process
     invalid_cache.set("k1", "data", CacheObjectType.RETRIEVAL, CacheOptions(project_id="p1"))
