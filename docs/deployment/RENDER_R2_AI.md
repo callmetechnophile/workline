@@ -84,7 +84,7 @@
 | `PORT` | Dynamic listener port assigned by Render | System (10002) |
 | `WORKLINE_ENV` | Environment identifier (`production`) | Config |
 | `WORKLINE_SERVICE_AUTH_KEY` | Shared secret token for R1 $\to$ R2 authentication | Secret |
-| `GOOGLE_GENAI_API_KEY` | API Key for Google Gemini model access | Secret (Optional) |
+| `GROQ_API_KEY` | API Key for Groq ultra-fast Llama-3 / Mixtral inference | Secret |
 | `SARVAM_API_KEY` | API Key for Sarvam speech-to-text transcription | Secret (Optional) |
 
 ---
