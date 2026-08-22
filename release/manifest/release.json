@@ -1,0 +1,21 @@
+{
+  "release_version": "v1.0.0-rc1",
+  "build_version": "1.0.0-rc1",
+  "commit_sha": "aeed410",
+  "test_status": "PASS (302/302 tests)",
+  "created_at": "2026-08-22T16:14:03.257303+00:00",
+  "artifacts": {
+    "release/snapshots/reference_rover_v1.0.0-rc1.wlipjt": "190a16b8801b11df550987250ed58b9c031245d2cd1ccb85af29078c11f60b53",
+    "release/environment/requirements-lock.txt": "1626dd2815279c213fdef1e627ef1bf4765e07c7073c4e2f10d4f45b56c0f610",
+    "package.json": "c6dfe487763459a19abd37cdc2eab43d7575e751b36615e97111da8fad4b8d6d",
+    "pyproject.toml": "062dc00e5b29cd88f4de9c58be13eb4eb05809b9f623351ad54aa42db3e85acf",
+    "README.md": "bd5053a2536fde276de4ecc7039ff8b764de86481ca5c92c3eb0a6ced39cee7f",
+    "CHANGELOG.md": "a8f3d0e48d6516a9fd15e6d587cf0d1dd02fe9cf7bb839e2dd696d726030b233"
+  },
+  "environment": {
+    "python": "3.14.5",
+    "node": "26.1.0",
+    "npm": "11.13.0",
+    "platform": "windows-amd64"
+  }
+}
