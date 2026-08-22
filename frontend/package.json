@@ -27,15 +27,5 @@
     "eslint-config-next": "16.2.9",
     "tailwindcss": "^4",
     "typescript": "7.0.2"
-  },
-  "allowScripts": {
-    "sharp": true,
-    "unrs-resolver": true
-  },
-  "lavamoat": {
-    "allowScripts": {
-      "sharp": true,
-      "unrs-resolver": true
-    }
   }
 }
