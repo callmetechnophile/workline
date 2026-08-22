@@ -23,6 +23,10 @@ services:
         sync: false
       - key: WORKLINE_R3_URL
         value: http://workline-knowledge-documents:10003
+      - key: R3_INTERNAL_URL
+        value: http://workline-knowledge-documents:10003
+      - key: R3_SERVICE_TOKEN
+        sync: false
       - key: WORKLINE_R4_URL
         value: http://workline-engineering-simulation:10004
       - key: WORKLINE_R5_URL
@@ -50,19 +54,33 @@ services:
         sync: false
 
   # ============================================================================
-  # R3: Workline Knowledge & Documents Service
+  # R3: Workline Knowledge & Documents Service (Docker Containerized)
   # ============================================================================
   - type: web
     name: workline-knowledge-documents
-    env: python
+    env: docker
+    dockerfilePath: backend/r3/Dockerfile
+    dockerContext: .
     region: oregon
     plan: standard
-    buildCommand: "pip install -r backend/requirements.txt"
-    startCommand: "uvicorn backend.services.knowledge.main:app --host 0.0.0.0 --port $PORT"
     healthCheckPath: /health
     envVars:
       - key: PORT
         value: 10003
+      - key: WORKLINE_ENV
+        value: production
+      - key: R3_SERVICE_TOKEN
+        sync: false
+      - key: QDRANT_URL
+        sync: false
+      - key: QDRANT_API_KEY
+        sync: false
+      - key: SURREALDB_URL
+        sync: false
+      - key: SURREALDB_USER
+        sync: false
+      - key: SURREALDB_PASSWORD
+        sync: false
 
   # ============================================================================
   # R4: Workline Engineering & Simulation Service
