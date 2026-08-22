@@ -18,16 +18,17 @@ def test_main_banner_and_help(runner):
 
 def test_version_command(runner):
     """Test 17: wline version and --version flag."""
+    from cli.wline import __version__
     res1 = runner.invoke(app, ["version"])
     assert res1.exit_code == 0
     assert "Workline" in res1.stdout
-    assert "0.1.0" in res1.stdout
+    assert __version__ in res1.stdout
     assert "Schema" in res1.stdout
 
     res2 = runner.invoke(app, ["--version"])
     assert res2.exit_code == 0
     assert "Workline" in res2.stdout
-    assert "0.1.0" in res2.stdout
+    assert __version__ in res2.stdout
 
 
 def test_init_command(runner, temp_env):
