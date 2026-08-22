@@ -14,8 +14,26 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ARMOURLINE",
-  description: "Automated hardware engineering workflow planner",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://worklineai.netlify.app"),
+  title: "Workline AI - Hardware Engineering Workflow Planner",
+  description: "Automated hardware engineering workflow planner, autonomous multi-agent research, and verified BOM optimization.",
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/icon.png",
+    apple: "/icon.png",
+  },
+  openGraph: {
+    title: "Workline AI",
+    description: "Automated hardware engineering workflow planner",
+    siteName: "Workline AI",
+    images: [{ url: "/icon.png" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Workline AI",
+    description: "Automated hardware engineering workflow planner",
+    images: ["/icon.png"],
+  },
   verification: {
     other: {
       "strix-verification": "strix-verify-bb442cfb256a19c1620df82777eac719",

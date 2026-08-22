@@ -111,7 +111,7 @@ export default function Home() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const count = parseInt(localStorage.getItem('armourline_guest_usage') || '0', 10);
+      const count = parseInt(localStorage.getItem('workline_guest_usage') || '0', 10);
       setUsageCount(count);
     }
     // Shuffle pool and select 4 suggestions on mount
@@ -123,7 +123,7 @@ export default function Home() {
     const newCount = usageCount + 1;
     setUsageCount(newCount);
     if (typeof window !== 'undefined') {
-      localStorage.setItem('armourline_guest_usage', newCount.toString());
+      localStorage.setItem('workline_guest_usage', newCount.toString());
     }
   };
   
@@ -309,7 +309,7 @@ export default function Home() {
   const handleGeneratePPT = () => {
     if (!pipelineData) return;
     
-    const projectName = (pipelineData.intent || intent || "ARMOURLINE AI").toUpperCase();
+    const projectName = (pipelineData.intent || intent || "WORKLINE AI").toUpperCase();
     const coreVibe = "Cyberpunk dark-mode blueprint tech console, glowing cyan and electric blue accents, neon red alerts";
     const targetAudience = "Investors, Product Managers, Engineers, Security Auditors";
     
@@ -363,7 +363,7 @@ ${rawBackground.trim()}
 
 [Column 2]
 **The Opportunity**
-* ARMOURLINE AI leverages 8 sequenced agents to automate research, optimize component sourcing, enforce runtime safety policies, and provide live design guidance.
+* WORKLINE AI leverages 8 sequenced agents to automate research, optimize component sourcing, enforce runtime safety policies, and provide live design guidance.
 
 *Visual Note: Use a split screen layout. High-contrast colors to separate the problem from the solution.*
 
@@ -655,7 +655,7 @@ ${rawBackground.trim()}
           {/* Brand Logo Icon */}
           <img 
             src="/icon.png" 
-            alt="Armourline AI Logo" 
+            alt="Workline AI Logo" 
             className="w-20 h-20 md:w-24 md:h-24 mb-3 object-contain" 
           />
 
@@ -663,7 +663,7 @@ ${rawBackground.trim()}
           <h1 className={`font-mono tracking-[0.25em] text-4xl md:text-6xl font-black uppercase transition-colors duration-300 ${
             isLightMode ? "text-slate-900" : "text-slate-100"
           }`}>
-            ARMOURLINE AI
+            WORKLINE AI
           </h1>
 
           {/* Subtitle */}
@@ -828,7 +828,7 @@ ${rawBackground.trim()}
           )}
 
           {/* Bottom Branding Center */}
-          <div className="absolute bottom-6 left-0 right-0 text-center space-y-1 select-none">
+          <div className="absolute bottom-6 left-0 right-0 text-center space-y-1 select-none pointer-events-none">
             <div className="text-[11px] font-black uppercase tracking-[0.2em] bg-gradient-to-r from-pink-500 to-indigo-400 bg-clip-text text-transparent">
               MULTI-MODEL WEB AGENT
             </div>
@@ -837,25 +837,26 @@ ${rawBackground.trim()}
             </div>
           </div>
 
-          {/* Bottom Left Social links */}
-          <div className="absolute bottom-6 left-6 flex items-center gap-2.5">
+          {/* Bottom Left Social Links Group: GitHub, LinkedIn, Instagram */}
+          <div className="absolute bottom-6 left-6 flex items-center gap-2.5 z-20">
             <a 
-              href="https://www.instagram.com/mr.devgenius" 
+              href="https://github.com/callmetechnophile/workline" 
               target="_blank" 
               rel="noreferrer"
-              className="p-2 rounded-full border border-zinc-800 bg-zinc-950/40 text-slate-400 hover:text-white transition-all"
+              aria-label="GitHub"
+              className="p-2 rounded-full border border-zinc-800 bg-zinc-950/40 text-slate-400 hover:text-white hover:border-zinc-700 transition-all cursor-pointer"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
-                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
-                <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"></path>
+                <path d="M9 18c-4.51 2-5-2-7-2"></path>
               </svg>
             </a>
             <a 
               href="https://www.linkedin.com/in/callmetechnophile" 
               target="_blank" 
               rel="noreferrer"
-              className="p-2 rounded-full border border-zinc-800 bg-zinc-950/40 text-slate-400 hover:text-white transition-all"
+              aria-label="LinkedIn"
+              className="p-2 rounded-full border border-zinc-800 bg-zinc-950/40 text-slate-400 hover:text-white hover:border-zinc-700 transition-all cursor-pointer"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
@@ -863,18 +864,24 @@ ${rawBackground.trim()}
                 <circle cx="4" cy="4" r="2"></circle>
               </svg>
             </a>
-          </div>
-
-          {/* Bottom Right GitHub Link */}
-          <div className="absolute bottom-6 right-6">
             <a 
-              href="https://www.github.com/callmetechnophile" 
+              href="https://www.instagram.com/mr.devgenius" 
               target="_blank" 
               rel="noreferrer"
-              className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs px-4 py-2.5 rounded-full shadow-lg shadow-indigo-600/25 transition-all flex items-center gap-1.5"
+              aria-label="Instagram"
+              className="p-2 rounded-full border border-zinc-800 bg-zinc-950/40 text-slate-400 hover:text-white hover:border-zinc-700 transition-all cursor-pointer"
             >
-              Star on GitHub ⭐
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+              </svg>
             </a>
+          </div>
+
+          {/* Bottom Right: Powered by Workline */}
+          <div className="absolute bottom-6 right-6 text-xs text-slate-500 font-mono z-20 select-none">
+            Powered by <span className="text-slate-300 font-bold">Workline</span>
           </div>
         </div>
       ) : (
@@ -884,7 +891,7 @@ ${rawBackground.trim()}
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-zinc-950/80 border border-zinc-850 p-4 rounded-lg backdrop-blur-md">
             <div>
               <div className="text-xs font-mono tracking-widest text-cyan-400 font-extrabold uppercase">
-                Armourline AI (ArmorIQ)
+                Workline AI
               </div>
               <h2 className="text-sm font-bold text-slate-100 mt-1">
                 Engineering Spec: <span className="text-slate-300 italic">"{pipelineData.intent}"</span>

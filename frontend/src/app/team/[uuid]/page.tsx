@@ -237,7 +237,7 @@ export default function TeamWorkspacePage({ params }: TeamPageProps) {
                     required
                     value={inviteEmail}
                     onChange={(e) => setInviteEmail(e.target.value)}
-                    placeholder="engineer@armourline.io"
+                    placeholder="engineer@workline.ai"
                     className="w-full bg-slate-900 border border-slate-800 rounded px-3 py-2 text-white outline-none focus:border-cyan-500"
                   />
                 </div>
