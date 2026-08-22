@@ -51,8 +51,22 @@ def test_r2_service_token_auth_enforced_when_set(client):
         assert response.status_code == 401
 
         # With valid header -> accepted through auth layer
-        with patch("backend.routes.research.run_agent_pipeline") as mock_pipeline:
-            mock_pipeline.return_value = {"status": "success", "intent": "test"}
+        with patch("backend.routes.research.run_engineering_pipeline") as mock_pipeline:
+            mock_pipeline.return_value = {
+                "intent": "test",
+                "components": [],
+                "projects": [],
+                "papers": [],
+                "paper_summary": {},
+                "validation": {"readiness_score": 80, "risk_score": 20},
+                "optimization": {},
+                "roadmap": [],
+                "gantt": [],
+                "exports": {},
+                "decision_trace": [],
+                "audit_trail": [],
+                "blocked_test_success": True
+            }
             response = client.post(
                 "/api/research",
                 json={"intent": "test", "target_days": 10},
