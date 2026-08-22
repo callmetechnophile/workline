@@ -40,6 +40,8 @@ services:
         value: 10002
       - key: WORKLINE_ENV
         value: production
+      - key: GROQ_API_KEY
+        sync: false
 
   # ============================================================================
   # R3: Workline Knowledge & Documents Service
