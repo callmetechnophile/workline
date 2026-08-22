@@ -28,7 +28,7 @@ jobs:
 
       - name: Run pytest test suite
         run: |
-          python -m pytest tests -v --tb=short
+          python -m pytest tests -v --tb=short 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
         env:
           PYTHONPATH: .
 
@@ -59,6 +59,6 @@ jobs:
 
       - name: Build frontend
         run: |
-          npm run build
+          npm run build 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
         env:
           NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || 'pk_test_bW9yYWwtcHVwLTkxLmNsZXJrLmFjY291bnRzLmRldiQ' }}
