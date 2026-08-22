@@ -1,6 +1,9 @@
 version: '3.8'
 
 services:
+  # ============================================================================
+  # Databases (Managed strictly by R3)
+  # ============================================================================
   surrealdb:
     image: surrealdb/surrealdb:latest
     container_name: workline-surrealdb
@@ -36,6 +39,90 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  # ============================================================================
+  # R1: Core & API Gateway Service
+  # ============================================================================
+  workline-r1:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: workline-r1-gateway
+    restart: unless-stopped
+    command: ["sh", "-c", "uvicorn backend.services.core.main:app --host 0.0.0.0 --port 10000"]
+    ports:
+      - "10000:10000"
+    environment:
+      - PORT=10000
+      - WORKLINE_R2_URL=http://workline-r2:10002
+      - WORKLINE_R3_URL=http://workline-r3:10003
+      - WORKLINE_R4_URL=http://workline-r4:10004
+      - WORKLINE_R5_URL=http://workline-r5:10005
+
+  # ============================================================================
+  # R2: AI / Agents / Research Service
+  # ============================================================================
+  workline-r2:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: workline-r2-ai
+    restart: unless-stopped
+    command: ["sh", "-c", "uvicorn backend.services.ai.main:app --host 0.0.0.0 --port 10002"]
+    ports:
+      - "10002:10002"
+    environment:
+      - PORT=10002
+
+  # ============================================================================
+  # R3: Knowledge / Documents Service
+  # ============================================================================
+  workline-r3:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: workline-r3-knowledge
+    restart: unless-stopped
+    command: ["sh", "-c", "uvicorn backend.services.knowledge.main:app --host 0.0.0.0 --port 10003"]
+    ports:
+      - "10003:10003"
+    environment:
+      - PORT=10003
+      - WORKLINE_SURREALDB_HOST=surrealdb
+      - WORKLINE_QDRANT_HOST=qdrant
+    depends_on:
+      - surrealdb
+      - qdrant
+
+  # ============================================================================
+  # R4: Engineering & Simulation Service
+  # ============================================================================
+  workline-r4:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: workline-r4-engineering
+    restart: unless-stopped
+    command: ["sh", "-c", "uvicorn backend.services.engineering.main:app --host 0.0.0.0 --port 10004"]
+    ports:
+      - "10004:10004"
+    environment:
+      - PORT=10004
+
+  # ============================================================================
+  # R5: Procurement & Collaboration Service
+  # ============================================================================
+  workline-r5:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: workline-r5-procurement
+    restart: unless-stopped
+    command: ["sh", "-c", "uvicorn backend.services.procurement.main:app --host 0.0.0.0 --port 10005"]
+    ports:
+      - "10005:10005"
+    environment:
+      - PORT=10005
 
 volumes:
   surrealdb_data:
