@@ -4,6 +4,8 @@ import React, { use } from 'react';
 import { SignIn } from '@clerk/nextjs';
 import { Key } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
+
 interface LoginPageProps {
   searchParams: Promise<{ redirect?: string }>;
 }

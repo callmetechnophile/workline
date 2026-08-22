@@ -4,6 +4,8 @@ import React, { use, useState, useEffect } from 'react';
 import { Users, Shield, MessageSquare, ListTodo, Plus, Info, Home, UserPlus, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '@clerk/nextjs';
 
+export const dynamic = 'force-dynamic';
+
 interface TeamPageProps {
   params: Promise<{ uuid: string }>;
 }

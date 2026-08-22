@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
     unoptimized: true,
   },
   typescript: {
-    // Canonical typechecking is handled via TypeScript 7 CLI (npm run typecheck / tsc --noEmit)
+    // Canonical typechecking is handled via TypeScript CLI
     ignoreBuildErrors: true,
   },
 };

@@ -4,6 +4,8 @@ import React, { use, useState, useEffect } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { Users, Shield, Calendar, Layers, Clock, AlertOctagon, CheckCircle2, ChevronRight } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
+
 interface InvitePageProps {
   params: Promise<{ token: string }>;
 }
