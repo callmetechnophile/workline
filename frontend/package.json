@@ -29,7 +29,13 @@
     "typescript": "7.0.2"
   },
   "allowScripts": {
-    "sharp": "node install/check.js || npm run build",
-    "unrs-resolver": "node postinstall.js"
+    "sharp": true,
+    "unrs-resolver": true
+  },
+  "lavamoat": {
+    "allowScripts": {
+      "sharp": true,
+      "unrs-resolver": true
+    }
   }
 }
