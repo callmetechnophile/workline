@@ -1,7 +1,7 @@
 """Configurable Neural Network Architecture for the PCB Thermal Physics-Informed Neural Network (PINN)."""
 
 import math
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 import numpy as np
 
 
