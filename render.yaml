@@ -25,19 +25,21 @@ services:
         value: http://workline-procurement-service:10005
 
   # ============================================================================
-  # R2: Workline AI & Research Agents Service
+  # R2: Workline AI & Research Agents Service (Docker Containerized)
   # ============================================================================
   - type: web
     name: workline-ai-agents
-    env: python
+    env: docker
+    dockerfilePath: backend/r2/Dockerfile
+    dockerContext: .
     region: oregon
     plan: starter
-    buildCommand: "pip install -r backend/requirements.txt"
-    startCommand: "uvicorn backend.services.ai.main:app --host 0.0.0.0 --port $PORT"
     healthCheckPath: /health
     envVars:
       - key: PORT
         value: 10002
+      - key: WORKLINE_ENV
+        value: production
 
   # ============================================================================
   # R3: Workline Knowledge & Documents Service

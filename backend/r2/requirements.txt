@@ -1,0 +1,21 @@
+# ==============================================================================
+# Workline R2 AI, Agents & Research Service Dependencies
+# Isolated closure (~65 MB footprint)
+# ==============================================================================
+
+fastapi>=0.100.0
+uvicorn>=0.22.0
+pydantic>=2.0
+google-genai>=0.1.0
+sarvamai>=0.1.28
+scrapling>=0.2.0
+httpx>=0.24.0
+python-dotenv>=1.0.0
+python-jose[cryptography]>=3.3.0
+python-multipart>=0.0.9
+aiosqlite>=0.19.0
+orjson>=3.9.0
+loguru>=0.7.0
+pytest>=8.0.0
+pytest-asyncio>=0.23.0
+pytest-mock>=3.12.0
