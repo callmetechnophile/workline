@@ -1,0 +1,49 @@
+# ==============================================================================
+# Workline Docker Build Context Exclusions
+# ==============================================================================
+
+# Python caches and bytecode
+__pycache__/
+*.py[cod]
+*.so
+.Python
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Environment files and credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials.*
+secrets.*
+
+# Git & IDE
+.git/
+.gitignore
+.github/
+.vscode/
+.idea/
+
+# Tests & Documentation
+tests/
+docs/
+*.md
+*.log
+
+# Frontend & node artifacts
+node_modules/
+.next/
+out/
+dist/
+frontend/
+cli/

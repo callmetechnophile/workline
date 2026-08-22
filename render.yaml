@@ -1,18 +1,20 @@
 services:
   # ============================================================================
-  # R1: Workline Core & API Gateway
+  # R1: Workline Core & API Gateway (Docker Containerized)
   # ============================================================================
   - type: web
     name: workline-core-gateway
-    env: python
+    env: docker
+    dockerfilePath: backend/Dockerfile
+    dockerContext: .
     region: oregon
     plan: starter
-    buildCommand: "pip install -r backend/requirements.txt"
-    startCommand: "uvicorn backend.services.core.main:app --host 0.0.0.0 --port $PORT"
     healthCheckPath: /health
     envVars:
       - key: PORT
         value: 10000
+      - key: WORKLINE_CORS_ORIGINS
+        value: "https://worklineai.netlify.app,http://localhost:3000"
       - key: WORKLINE_R2_URL
         value: http://workline-ai-agents:10002
       - key: WORKLINE_R3_URL
