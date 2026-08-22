@@ -1,5 +1,4 @@
 'use client';
-// Vercel deployment rebuild trigger
 
 import React, { useState, useEffect, useRef } from 'react';
 import { SignInButton, SignUpButton, UserButton, useAuth } from '@clerk/nextjs';
