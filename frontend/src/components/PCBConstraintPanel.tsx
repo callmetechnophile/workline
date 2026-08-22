@@ -4,7 +4,7 @@ import React from "react";
 import { ShieldCheck, Ruler, Activity, Layers, Tag } from "lucide-react";
 
 export interface ConstraintItemData {
-  name: str;
+  name: string;
   value: number;
   unit: string;
   source: "USER" | "DATASHEET" | "ENGINEERING_RULE" | "MANUFACTURING_RULE";

@@ -8,9 +8,9 @@ export interface ComponentItem {
   reference_designator: string;
   value: string;
   footprint_id: string;
-  x: float;
-  y: float;
-  rotation: float;
+  x: number;
+  y: number;
+  rotation: number;
   layer: string;
   locked: boolean;
 }
