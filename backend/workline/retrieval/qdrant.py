@@ -18,14 +18,21 @@ COLLECTION_PROJECTS = "workline_projects"
 COLLECTION_RESEARCH = "workline_research"
 
 
-def is_port_open(url: str, timeout: float = 0.1) -> bool:
+def is_port_open(url: str, timeout: float = 0.5) -> bool:
     """Fast non-blocking TCP socket check to determine if Qdrant port is open."""
     try:
         parsed = urlparse(url)
         host = parsed.hostname or "127.0.0.1"
         if host == "localhost":
             host = "127.0.0.1"
-        port = parsed.port or 6333
+        if parsed.port:
+            port = parsed.port
+        elif parsed.scheme == "https":
+            port = 443
+        elif parsed.scheme == "http":
+            port = 80
+        else:
+            port = 6333
         with socket.create_connection((host, port), timeout=timeout):
             return True
     except Exception:
@@ -39,8 +46,12 @@ class QdrantManager:
     """
 
     def __init__(self, embedder: Optional[EmbeddingProvider] = None):
-        self.url = os.environ.get("WORKLINE_QDRANT_URL", "http://127.0.0.1:6333").rstrip("/")
-        self.api_key = os.environ.get("WORKLINE_QDRANT_API_KEY")
+        self.url = os.environ.get("QDRANT_URL", os.environ.get("WORKLINE_QDRANT_URL", "http://127.0.0.1:6333")).rstrip("/")
+        api_key_raw = os.environ.get("QDRANT_API_KEY", os.environ.get("WORKLINE_QDRANT_API_KEY"))
+        if api_key_raw:
+            self.api_key = api_key_raw.strip().strip("<>").strip()
+        else:
+            self.api_key = None
         self.embedder = embedder or get_embedding_provider()
         self.client: Optional[QdrantClient] = None
 
@@ -57,19 +68,26 @@ class QdrantManager:
         if not is_port_open(self.url):
             return False
         try:
-            self.client = QdrantClient(url=self.url, api_key=self.api_key, timeout=1.0)
+            self.client = QdrantClient(url=self.url, api_key=self.api_key, timeout=5.0)
             return self.is_connected()
         except Exception:
             return False
 
     def is_connected(self) -> bool:
-        """Check if Qdrant service is online."""
+        """Check if Qdrant service is online and authenticated."""
         if not is_port_open(self.url):
             return False
         try:
-            with httpx.Client(timeout=0.3) as client:
-                res = client.get(f"{self.url}/healthz")
-                return res.status_code == 200
+            if self.client:
+                self.client.get_collections()
+                return True
+            else:
+                headers = {}
+                if self.api_key:
+                    headers["api-key"] = self.api_key
+                with httpx.Client(timeout=3.0) as client:
+                    res = client.get(f"{self.url}/collections", headers=headers)
+                    return res.status_code == 200
         except Exception:
             return False
 
