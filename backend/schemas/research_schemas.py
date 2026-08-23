@@ -16,10 +16,12 @@ class ExportResult(BaseModel):
     status: str
 
 class ResearchResponse(BaseModel):
+    model_config = {"extra": "allow"}
+
     project_id: str = "PROJ-DEFAULT"
     project_name: str = "Untitled Engineering Project"
     system_specification: str = ""
-    intent: str
+    intent: str = ""
     target_timeline_days: int = 30
     engineering_template: Optional[str] = None
     team_id: Optional[str] = None
@@ -27,18 +29,22 @@ class ResearchResponse(BaseModel):
     status: str = "active"
     created_at: Optional[str] = None
     updated_at: Optional[str] = None
-    components: List[Dict[str, Any]]
-    projects: List[Dict[str, Any]]
-    papers: List[Dict[str, Any]]
-    paper_summary: Dict[str, Any]
-    validation: Dict[str, Any]
-    optimization: Dict[str, Any]
-    roadmap: List[Dict[str, Any]]
-    gantt: List[Dict[str, Any]]
-    exports: Dict[str, ExportResult]
-    decision_trace: List[Dict[str, str]]
-    audit_trail: List[Dict[str, Any]]
-    blocked_test_success: bool
+    components: List[Dict[str, Any]] = []
+    bom: Optional[List[Dict[str, Any]]] = None
+    bom_items: Optional[List[Dict[str, Any]]] = None
+    projects: List[Dict[str, Any]] = []
+    papers: List[Dict[str, Any]] = []
+    research_papers: Optional[List[Dict[str, Any]]] = None
+    paper_summary: Dict[str, Any] = {}
+    research_summary: Optional[Any] = None
+    validation: Dict[str, Any] = {}
+    optimization: Dict[str, Any] = {}
+    roadmap: List[Dict[str, Any]] = []
+    gantt: List[Dict[str, Any]] = []
+    exports: Dict[str, Any] = {}
+    decision_trace: List[Dict[str, str]] = []
+    audit_trail: List[Dict[str, Any]] = []
+    blocked_test_success: bool = False
     cost_summary: Optional[Dict[str, Any]] = None
     alternatives: Optional[List[Dict[str, Any]]] = None
     voltage_risks: Optional[List[Dict[str, Any]]] = None
@@ -52,4 +58,5 @@ class ResearchResponse(BaseModel):
     thermal_analysis: Optional[List[Dict[str, Any]]] = None
     team_workspace: Optional[Dict[str, Any]] = None
     version_history: Optional[Dict[str, Any]] = None
+
 

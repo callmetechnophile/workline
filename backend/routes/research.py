@@ -33,7 +33,21 @@ def execute_research(payload: ResearchRequest):
             team_id=payload.team_id,
             project_id=payload.project_id,
         )
+        if isinstance(result, dict):
+            if "components" not in result and "bom" in result:
+                result["components"] = result["bom"]
+            if "papers" not in result and "research_papers" in result:
+                result["papers"] = result["research_papers"]
+            if "paper_summary" not in result and "research_summary" in result:
+                result["paper_summary"] = {"summary": result.get("research_summary", "")}
+            if "exports" not in result:
+                result["exports"] = {}
+            if "decision_trace" not in result:
+                result["decision_trace"] = []
+            if "blocked_test_success" not in result:
+                result["blocked_test_success"] = False
         return result
+
     except HTTPException:
         raise
     except Exception as e:
