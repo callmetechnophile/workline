@@ -78,3 +78,31 @@ def component_compare(
 
     console.print(table)
     console.print()
+
+
+@component_app.command("validate")
+def component_validate(
+    component_id: str = typer.Argument(..., help="Component ID to validate"),
+    requirement_id: str = typer.Option(..., "--requirement", "-r", help="Target requirement ID"),
+) -> None:
+    """Validate a component against an engineering requirement."""
+    from backend.workline.validation.models import ValidationStatus
+    from backend.workline.validation.service import validation_service
+
+    try:
+        val = validation_service.validate_candidate(requirement_id, component_id)
+    except ValueError as e:
+        console.print(f"[red]Error: {e}[/red]")
+        raise typer.Exit(1)
+
+    status_color = "green" if val.overall_status == ValidationStatus.PASS else "red" if val.overall_status == ValidationStatus.FAIL else "yellow"
+    console.print(
+        Panel.fit(
+            f"[bold cyan]Component:[/bold cyan] {component_id}\n"
+            f"[bold]Requirement:[/bold] {requirement_id}\n"
+            f"[bold]Status:[/bold] [{status_color}]{val.overall_status.value}[/{status_color}]\n"
+            f"[bold]Constraints Evaluated:[/bold] {len(val.constraint_results)}",
+            title="Component Validation Outcome",
+            border_style="cyan",
+        )
+    )

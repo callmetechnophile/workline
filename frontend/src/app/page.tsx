@@ -51,6 +51,7 @@ import { ComponentPlacement } from '@/components/ComponentPlacement';
 
 import { ConstraintPanel } from '@/components/ConstraintPanel';
 import { ConstraintEditor } from '@/components/ConstraintEditor';
+import { RequirementsWorkspace } from '@/components/RequirementsWorkspace';
 
 import ResearchPapers from '@/components/ResearchPapers';
 import ContradictionViewer from '@/components/ContradictionViewer';
@@ -278,10 +279,13 @@ function AuthenticatedWorkbench() {
 
       case 'requirements':
         return (
-          <div className="space-y-6">
-            <ConstraintEditor />
-            <ConstraintPanel />
-          </div>
+          <RequirementsWorkspace
+            projectId={projectData?.project_id || (hasProject ? projectName : undefined)}
+            projectName={projectName}
+            projectData={projectData}
+            apiBase={apiBase}
+            onOpenNewProject={() => setIsModalOpen(true)}
+          />
         );
 
       case 'research':
