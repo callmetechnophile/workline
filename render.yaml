@@ -29,6 +29,10 @@ services:
         sync: false
       - key: WORKLINE_R4_URL
         value: http://workline-engineering-simulation:10004
+      - key: R4_INTERNAL_URL
+        value: http://workline-engineering-simulation:10004
+      - key: R4_SERVICE_TOKEN
+        sync: false
       - key: WORKLINE_R5_URL
         value: http://workline-procurement-service:10005
 
@@ -83,19 +87,27 @@ services:
         sync: false
 
   # ============================================================================
-  # R4: Workline Engineering & Simulation Service
+  # R4: Workline Engineering & Simulation Service (Docker Containerized)
   # ============================================================================
   - type: web
     name: workline-engineering-simulation
-    env: python
+    env: docker
+    dockerfilePath: backend/r4/Dockerfile
+    dockerContext: .
     region: oregon
     plan: starter
-    buildCommand: "pip install -r backend/requirements.txt"
-    startCommand: "uvicorn backend.services.engineering.main:app --host 0.0.0.0 --port $PORT"
     healthCheckPath: /health
     envVars:
       - key: PORT
         value: 10004
+      - key: WORKLINE_ENV
+        value: production
+      - key: R4_SERVICE_TOKEN
+        sync: false
+      - key: R3_INTERNAL_URL
+        value: http://workline-knowledge-documents:10003
+      - key: R3_SERVICE_TOKEN
+        sync: false
 
   # ============================================================================
   # R5: Workline Procurement & Collaboration Service
