@@ -260,17 +260,56 @@ export const PaymentPanel: React.FC<PaymentPanelProps> = ({
         )}
       </div>
 
-      {/* Error Banner */}
+      {/* Error Banner & Testnet Guidance */}
       {errorMessage && (
-        <div className="p-3 bg-rose-950/60 border border-rose-800/60 rounded-lg text-rose-300 text-xs flex items-center gap-2">
-          <AlertCircle className="w-4 h-4 shrink-0" />
-          <span>{errorMessage}</span>
+        <div className="p-3.5 bg-rose-950/60 border border-rose-800/60 rounded-lg text-rose-300 text-xs space-y-2">
+          <div className="flex items-start gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+            <span>{errorMessage}</span>
+          </div>
+          {errorMessage.includes("Opt-In") && (
+            <div className="pt-2 border-t border-rose-900/50 flex flex-wrap items-center justify-between gap-2">
+              <span className="text-[11px] text-slate-300">
+                You can opt in directly via Pera or add ASA <strong>#10458941</strong> in your Pera mobile app.
+              </span>
+              <button
+                onClick={async () => {
+                  setErrorMessage(null);
+                  setSubmitting(true);
+                  try {
+                    await peraWallet.optInToAsset(payment.asset_id || 10458941);
+                    alert("Opt-in confirmed! You can now proceed with Sign & Pay.");
+                  } catch (e: any) {
+                    setErrorMessage(e.message || "Failed to opt in.");
+                  } finally {
+                    setSubmitting(false);
+                  }
+                }}
+                disabled={submitting}
+                className="px-2.5 py-1 bg-cyan-600 hover:bg-cyan-500 text-white rounded text-[11px] font-bold"
+              >
+                {submitting ? "Approving Opt-In..." : "Opt-In to USDC in Pera"}
+              </button>
+            </div>
+          )}
         </div>
       )}
 
       {/* Actions */}
       {!isSettled ? (
         <div className="space-y-3">
+          <div className="flex items-center justify-between text-[11px] text-slate-400 bg-slate-950/60 p-2 rounded border border-slate-800">
+            <span>Testnet USDC ASA: <strong>#10458941</strong></span>
+            <a
+              href="https://lora.algokit.io/testnet/asset/10458941"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-cyan-400 hover:underline flex items-center gap-1 text-[10px]"
+            >
+              View Asset in Lora <ExternalLink className="w-3 h-3" />
+            </a>
+          </div>
+
           <button
             onClick={handleSignAndPay}
             disabled={walletState !== "CONNECTED" || submitting || isProcessing}
@@ -282,7 +321,7 @@ export const PaymentPanel: React.FC<PaymentPanelProps> = ({
           >
             {submitting || isProcessing ? (
               <>
-                <RefreshCw className="w-4 h-4 animate-spin" /> Verifying On-Chain Settlement (Algod)...
+                <RefreshCw className="w-4 h-4 animate-spin" /> Processing with Pera Wallet & Algod...
               </>
             ) : walletState !== "CONNECTED" ? (
               <>
@@ -293,9 +332,9 @@ export const PaymentPanel: React.FC<PaymentPanelProps> = ({
                 <ShieldCheck className="w-4 h-4" /> Sign & Pay {payment.amount_usdc.toFixed(2)} USDC via Pera
               </>
             )}
-
           </button>
         </div>
+
       ) : (
         <div className="space-y-3 pt-2">
           <div className="p-4 bg-emerald-950/40 border border-emerald-800/60 rounded-lg space-y-2.5 text-xs">

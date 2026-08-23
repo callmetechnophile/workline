@@ -191,8 +191,64 @@ class PeraWalletClient {
   }
 
   /**
+   * Checks if the connected account is opted in to a specific asset on Testnet.
+   */
+  public async checkAssetOptIn(assetId: number = 10458941): Promise<boolean> {
+    if (!this._accountAddress) return false;
+    try {
+      const algosdk = await import("algosdk");
+      const algodClient = new algosdk.Algodv2("", "https://testnet-api.algonode.cloud", "");
+      await algodClient.accountAssetInformation(this._accountAddress, assetId).do();
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Prompts Pera Wallet to sign an Asset Opt-In transaction on Testnet.
+   */
+  public async optInToAsset(assetId: number = 10458941): Promise<string> {
+    if (!this.isConnected() || !this._accountAddress) {
+      throw new Error("Pera Wallet is not connected. Please connect your wallet first.");
+    }
+
+    try {
+      const algosdk = await import("algosdk");
+      const connector = await this._getConnector();
+      const algodClient = new algosdk.Algodv2("", "https://testnet-api.algonode.cloud", "");
+      const suggestedParams = await algodClient.getTransactionParams().do();
+
+      const optInTxn = algosdk.makeAssetTransferTxnWithSuggestedParamsFromObject({
+        sender: this._accountAddress,
+        receiver: this._accountAddress,
+        assetIndex: assetId,
+        amount: 0,
+        suggestedParams,
+        note: new Uint8Array(Buffer.from("workline:optin:usdc")),
+      });
+
+      if (!connector || typeof connector.signTransaction !== "function") {
+        throw new Error("Pera Wallet connector is not available.");
+      }
+
+      const signedOptInArray = await connector.signTransaction([[{ txn: optInTxn }]]);
+      if (signedOptInArray && signedOptInArray.length > 0) {
+        const optInSend = await algodClient.sendRawTransaction(signedOptInArray[0]).do();
+        const txId = optInSend.txid || (optInSend as any).txId || optInTxn.txID();
+        await algosdk.waitForConfirmation(algodClient, txId, 4);
+        return txId;
+      }
+      throw new Error("Opt-in signature was not returned by Pera Wallet.");
+    } catch (err: any) {
+      throw new Error(err.message || "Failed to opt into USDC in Pera Wallet.");
+    }
+  }
+
+  /**
    * Disconnects active Pera Wallet session.
    */
+
   public async disconnect(): Promise<void> {
     try {
       const connector = await this._getConnector();
