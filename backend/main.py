@@ -146,6 +146,13 @@ async def database_health():
     }
 
 
+@app.get("/health/cluster")
+async def cluster_health():
+    """Live health probes across all 5 Render microservices in the Workline mesh."""
+    from backend.workline.mesh.gateway import ServiceMeshGateway
+    return await ServiceMeshGateway.check_cluster_health()
+
+
 EXPORT_DIR = os.path.join(os.path.dirname(__file__), "exports")
 
 
