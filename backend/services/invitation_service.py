@@ -359,7 +359,7 @@ System Owner
 
 WorkflowGuide AI"""
 
-    # 4. Store team name, numeric team id, and invite link in AuraDB (Neo4j)
+    # 4. Store team name, numeric team id, and invite link in Knowledge Graph
     try:
         service = GraphService()
         with service.driver.session() as session:
@@ -382,7 +382,7 @@ WorkflowGuide AI"""
             )
     except Exception as e:
         import logging
-        logging.getLogger("GraphLoader").warning(f"Could not store team details in AuraDB EKG: {e}")
+        logging.getLogger("GraphLoader").warning(f"Could not store team details in Knowledge Graph: {e}")
         
     # Dispatch via SMTP
     send_email_via_smtp(email, invite["email_subject"], invite["email_body"])

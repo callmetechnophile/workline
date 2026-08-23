@@ -1,8 +1,7 @@
 """
 synthetic_graph.py
 ------------------
-Builds a live Knowledge Graph from SQLite pipeline data when
-AuraDB / Neo4j credentials are not configured.
+Builds a live Knowledge Graph from Qdrant/SQLite pipeline data.
 
 Produces the same {nodes, edges} shape that format_for_react_flow expects.
 """
