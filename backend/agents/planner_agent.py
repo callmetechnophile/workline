@@ -13,7 +13,17 @@ from backend.agents.export_agent import run_export
 from backend.agents.knowledge_graph_agent import run_knowledge_graph_agent
 from backend.services.collaboration_service import create_team, get_team_members, get_project_comments, fetch_activity_logs
 
-def run_engineering_pipeline(user_intent: str, target_days: int = 22) -> Dict[str, Any]:
+from datetime import datetime
+
+
+def run_engineering_pipeline(
+    user_intent: str,
+    target_days: int = 30,
+    project_name: str = None,
+    engineering_template: str = None,
+    team_id: str = None,
+    project_id: str = None,
+) -> Dict[str, Any]:
     # Clear previous audit logs for a fresh research run
     AUDIT_LOGS.clear()
     
@@ -313,7 +323,8 @@ def run_engineering_pipeline(user_intent: str, target_days: int = 22) -> Dict[st
 
     # 8c. [NEW] Versioning Engine
     from backend.mcp.tools.export_tools import generate_project_title
-    project_id = generate_project_title(user_intent).replace(" ", "_")
+    clean_p_name = (project_name or "").strip() or generate_project_title(user_intent)
+    actual_project_id = project_id or f"PROJ-{clean_p_name[:8].replace(' ', '_').upper()}"
     
     version_receipt = delegate(
         agent_name="VersionAgent",
@@ -324,11 +335,11 @@ def run_engineering_pipeline(user_intent: str, target_days: int = 22) -> Dict[st
         agent_name="VersionAgent",
         tool_name="save_version",
         args={
-            "project_id": project_id,
+            "project_id": actual_project_id,
             "version_num": 1,
             "data": package_data,
             "modified_by": "engineer_1",
-            "change_summary": f"Generated engineering blueprint for {project_id}"
+            "change_summary": f"Generated engineering blueprint for {clean_p_name}"
         },
         receipt_dict=version_receipt.model_dump()
     )
@@ -340,7 +351,8 @@ def run_engineering_pipeline(user_intent: str, target_days: int = 22) -> Dict[st
         parent_receipt=root_receipt_dict
     )
     # Ensure a default team exists
-    team_res = create_team(f"Team {project_id}")
+    active_team_name = team_id or f"Team {clean_p_name}"
+    team_res = create_team(active_team_name)
     invite_member_res = invoke_tool(
         agent_name="CollaborationAgent",
         tool_name="invite_member",
@@ -359,7 +371,7 @@ def run_engineering_pipeline(user_intent: str, target_days: int = 22) -> Dict[st
             agent_name="CollaborationAgent",
             tool_name="comment",
             args={
-                "project_id": project_id,
+                "project_id": actual_project_id,
                 "section": "Wiring",
                 "author": "engineer_1",
                 "content": "Verify PCA9685 I2C logic level conversion before physical assembly."
@@ -370,12 +382,12 @@ def run_engineering_pipeline(user_intent: str, target_days: int = 22) -> Dict[st
         pass
 
     team_members = get_team_members(team_res["id"])
-    comments = get_project_comments(project_id)
+    comments = get_project_comments(actual_project_id)
     activities = fetch_activity_logs(team_res["id"])
     
     # Fetch all project versions
     from backend.services.versioning_service import get_project_versions
-    all_versions = get_project_versions(project_id)
+    all_versions = get_project_versions(actual_project_id)
     
     # 9. Invoke Export Agent to build PDF bundle
     export_receipt = delegate(
@@ -391,14 +403,26 @@ def run_engineering_pipeline(user_intent: str, target_days: int = 22) -> Dict[st
     # Automatically Ingest generated project graph into Qdrant / Knowledge Graph
     try:
         from backend.graph.graph_service import GraphService
-        GraphService().ingest_project("engineer@armourline.io", "Engineering Team", project_id, package_data, list(AUDIT_LOGS))
+        GraphService().ingest_project("engineer@armourline.io", active_team_name, actual_project_id, package_data, list(AUDIT_LOGS))
     except Exception as e:
         import logging
         logging.getLogger("PlannerAgent").warning(f"Failed to ingest complete EKG project graph to Knowledge Graph: {e}")
     
+    now_iso = datetime.utcnow().isoformat()
+
     # 11. Compile final output payload
     return {
+        "project_id": actual_project_id,
+        "project_name": clean_p_name,
+        "system_specification": user_intent,
         "intent": user_intent,
+        "target_timeline_days": target_days,
+        "engineering_template": engineering_template or "",
+        "team_id": active_team_name,
+        "owner_id": "owner@workline.io",
+        "status": "active",
+        "created_at": now_iso,
+        "updated_at": now_iso,
         "components": components,
         "projects": retrieval_res.get("projects", []),
         "papers": ranked_papers,
@@ -436,7 +460,7 @@ def run_engineering_pipeline(user_intent: str, target_days: int = 22) -> Dict[st
             "activities": activities
         },
         "version_history": {
-            "project_id": project_id,
+            "project_id": actual_project_id,
             "versions": all_versions
         }
     }

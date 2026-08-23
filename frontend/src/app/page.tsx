@@ -203,8 +203,12 @@ function AuthenticatedWorkbench() {
 
   const {
     projectData,
+    projectId,
     projectName,
+    systemSpecification,
     targetDays,
+    teamName,
+    status,
     hasProject,
     error,
     apiBase,
@@ -217,7 +221,12 @@ function AuthenticatedWorkbench() {
   const { getToken } = useAuth();
   const [localError, setLocalError] = useState<string | null>(null);
 
-  const handleCreateProject = async (intent: string, days: number) => {
+  const handleCreateProject = async (
+    name: string,
+    specification: string,
+    days: number,
+    template?: string
+  ) => {
     setIsProcessing(true);
     setLocalError(null);
     try {
@@ -228,17 +237,29 @@ function AuthenticatedWorkbench() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ intent, target_days: days }),
+        body: JSON.stringify({
+          project_name: name.trim(),
+          system_specification: specification.trim(),
+          intent: specification.trim(),
+          target_days: days,
+          engineering_template: template,
+        }),
       });
 
       if (!response.ok) {
+        const errJson = await response.json().catch(() => null);
         throw new Error(
-          `Engineering analysis failed (HTTP ${response.status}). Ensure R1 Core Gateway is reachable.`
+          errJson?.detail ||
+            `Engineering analysis failed (HTTP ${response.status}). Ensure R1 Core Gateway is reachable.`
         );
       }
 
       const result = await response.json();
-      setProject(result, intent, days);
+      setProject(result, result.project_name || name, days, {
+        projectId: result.project_id,
+        systemSpecification: specification,
+        engineeringTemplate: template,
+      });
       setIsModalOpen(false);
       setActiveSection('overview');
     } catch (err: any) {
@@ -249,7 +270,17 @@ function AuthenticatedWorkbench() {
   };
 
   const handleLoadHistory = (item: any) => {
-    setProject(item.data, item.intent || 'Loaded Project', 30);
+    const loadedName = item.project_name || item.intent || 'Loaded Project';
+    const loadedSpec = item.system_specification || item.intent || '';
+    const loadedId = item.project_id || `PROJ-${loadedName.slice(0, 4).toUpperCase()}`;
+    const loadedDays = item.target_days || 30;
+    setProject(item.data, loadedName, loadedDays, {
+      projectId: loadedId,
+      systemSpecification: loadedSpec,
+      engineeringTemplate: item.engineering_template,
+      teamName: item.team_id || 'Hardware Engineering',
+      status: item.status || 'active',
+    });
     setActiveSection('overview');
   };
 
@@ -279,6 +310,12 @@ function AuthenticatedWorkbench() {
         return (
           <ProjectOverview
             projectData={projectData}
+            projectName={projectName}
+            projectId={projectId}
+            systemSpecification={systemSpecification}
+            targetDays={targetDays}
+            teamName={teamName}
+            status={status}
             onNavigate={(sec) => setActiveSection(sec)}
             onOpenNewProject={() => setIsModalOpen(true)}
           />
@@ -624,10 +661,12 @@ function AuthenticatedWorkbench() {
             activeSection !== 'settings' && (
               <ProjectHeader
                 projectName={projectName || 'Autonomous Engineering Project'}
+                teamName={teamName}
+                status={status as any}
                 targetDays={targetDays}
                 onSave={saveSpec}
                 isSaving={isSaving}
-                onRefresh={() => handleCreateProject(projectName, targetDays)}
+                onRefresh={() => handleCreateProject(projectName, systemSpecification, targetDays)}
               />
             )}
 
@@ -673,6 +712,7 @@ function AuthenticatedWorkbench() {
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleCreateProject}
         isProcessing={isProcessing}
+        errorMessage={localError}
       />
     </div>
   );

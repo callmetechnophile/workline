@@ -49,16 +49,23 @@ class InvitationModel(BaseModel):
 class ProjectModel(BaseModel):
     """Authoritative project entity."""
     id: Optional[str] = None
-    name: str
-    display_name: str
+    project_id: Optional[str] = None
+    name: str = "Untitled Engineering Project"
+    display_name: str = "Untitled Engineering Project"
+    project_name: Optional[str] = None
+    system_specification: Optional[str] = ""
     description: Optional[str] = ""
     domain: Optional[str] = "robotics"
     budget: Optional[Dict[str, Any]] = None
     timeline: Optional[Dict[str, Any]] = None
+    target_timeline_days: Optional[int] = 30
+    engineering_template: Optional[str] = None
+    team_id: Optional[str] = None
+    owner_id: Optional[str] = None
     complexity: Optional[str] = "medium"
     target_platform: Optional[Dict[str, Any]] = None
     current_stage: Optional[str] = "requirements"
-    status: Optional[str] = "not_started"
+    status: Optional[str] = "active"
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     bom: Optional[List[Dict[str, Any]]] = Field(default_factory=list)

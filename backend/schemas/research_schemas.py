@@ -2,8 +2,13 @@ from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
 
 class ResearchRequest(BaseModel):
-    intent: str
-    target_days: Optional[int] = 22
+    project_name: Optional[str] = None
+    system_specification: Optional[str] = None
+    intent: Optional[str] = None
+    target_days: Optional[int] = 30
+    engineering_template: Optional[str] = None
+    team_id: Optional[str] = None
+    project_id: Optional[str] = None
 
 class ExportResult(BaseModel):
     filename: str
@@ -11,7 +16,17 @@ class ExportResult(BaseModel):
     status: str
 
 class ResearchResponse(BaseModel):
+    project_id: str = "PROJ-DEFAULT"
+    project_name: str = "Untitled Engineering Project"
+    system_specification: str = ""
     intent: str
+    target_timeline_days: int = 30
+    engineering_template: Optional[str] = None
+    team_id: Optional[str] = None
+    owner_id: Optional[str] = None
+    status: str = "active"
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
     components: List[Dict[str, Any]]
     projects: List[Dict[str, Any]]
     papers: List[Dict[str, Any]]

@@ -213,7 +213,33 @@ def init_db():
         except Exception:
             pass
 
-    # Dynamic Schema Upgrades (Teams UUID & Team Invitations)
+    # Dynamic Schema Upgrades (Projects, Packages, Teams UUID & Team Invitations)
+    for table_name, columns in [
+        ("packages", [
+            ("project_name", "TEXT"),
+            ("system_specification", "TEXT"),
+            ("target_days", "INTEGER"),
+            ("engineering_template", "TEXT"),
+            ("team_id", "TEXT"),
+            ("project_id", "TEXT"),
+            ("status", "TEXT DEFAULT 'active'"),
+        ]),
+        ("projects", [
+            ("project_name", "TEXT"),
+            ("system_specification", "TEXT"),
+            ("target_timeline_days", "INTEGER"),
+            ("engineering_template", "TEXT"),
+            ("team_id", "TEXT"),
+            ("project_id", "TEXT"),
+            ("status", "TEXT DEFAULT 'active'"),
+        ]),
+    ]:
+        for col_name, col_type in columns:
+            try:
+                cursor.execute(f"ALTER TABLE {table_name} ADD COLUMN {col_name} {col_type}")
+            except Exception:
+                pass
+
     try:
         cursor.execute("ALTER TABLE teams ADD COLUMN uuid TEXT")
     except Exception:
@@ -298,36 +324,126 @@ def init_db():
     conn.commit()
     conn.close()
 
-def save_package(user_id: str, intent: str, readiness: int, risk: int, optimization: int, data: dict):
+def save_package(
+    user_id: str,
+    intent: str,
+    readiness: int,
+    risk: int,
+    optimization: int,
+    data: dict,
+    project_name: str = None,
+    system_specification: str = None,
+    target_days: int = 30,
+    engineering_template: str = None,
+    team_id: str = None,
+    project_id: str = None,
+    status: str = "active",
+):
     conn = get_db_connection()
     timestamp = datetime.utcnow().isoformat()
     data_str = json.dumps(data)
     
+    spec = system_specification or intent
+    p_name = (project_name or "").strip() or spec[:50].strip() or "Untitled Engineering Project"
+    
     query = """
-        INSERT INTO packages (user_id, intent, readiness_score, risk_score, optimization_score, data, timestamp)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO packages (
+            user_id, intent, readiness_score, risk_score, optimization_score, data, timestamp,
+            project_name, system_specification, target_days, engineering_template, team_id, project_id, status
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """
-    execute_query(conn, query, (user_id, intent, readiness, risk, optimization, data_str, timestamp))
+    execute_query(conn, query, (
+        user_id, intent, readiness, risk, optimization, data_str, timestamp,
+        p_name, spec, target_days, engineering_template or "", team_id or "", project_id or "", status
+    ))
     conn.commit()
     conn.close()
 
 def get_user_history(user_id: str):
     conn = get_db_connection()
     query = """
-        SELECT id, intent, readiness_score, risk_score, optimization_score, data, timestamp 
+        SELECT id, intent, readiness_score, risk_score, optimization_score, data, timestamp,
+               project_name, system_specification, target_days, engineering_template, team_id, project_id, status
         FROM packages 
         WHERE user_id = ? 
         ORDER BY timestamp DESC
     """
-    cursor = execute_query(conn, query, (user_id,))
-    rows = cursor.fetchall()
+    try:
+        cursor = execute_query(conn, query, (user_id,))
+        rows = cursor.fetchall()
+    except Exception:
+        # Fallback for legacy tables if columns are missing
+        query = """
+            SELECT id, intent, readiness_score, risk_score, optimization_score, data, timestamp 
+            FROM packages 
+            WHERE user_id = ? 
+            ORDER BY timestamp DESC
+        """
+        cursor = execute_query(conn, query, (user_id,))
+        rows = cursor.fetchall()
+
     conn.close()
     
     history = []
     for row in rows:
+        intent_val = row["intent"]
+        p_name = None
+        try:
+            p_name = row["project_name"]
+        except Exception:
+            pass
+        if not p_name or not str(p_name).strip():
+            p_name = "Untitled Engineering Project"
+
+        spec = None
+        try:
+            spec = row["system_specification"]
+        except Exception:
+            pass
+        if not spec:
+            spec = intent_val
+
+        t_days = 30
+        try:
+            t_days = row["target_days"] or 30
+        except Exception:
+            pass
+
+        t_id = None
+        try:
+            t_id = row["team_id"]
+        except Exception:
+            pass
+
+        p_id = None
+        try:
+            p_id = row["project_id"]
+        except Exception:
+            pass
+
+        template = None
+        try:
+            template = row["engineering_template"]
+        except Exception:
+            pass
+
+        st = "active"
+        try:
+            st = row["status"] or "active"
+        except Exception:
+            pass
+
         history.append({
             "id": row["id"],
-            "intent": row["intent"],
+            "project_id": p_id or f"PROJ-{row['id']:04d}",
+            "project_name": p_name,
+            "system_specification": spec,
+            "intent": intent_val,
+            "target_days": t_days,
+            "engineering_template": template,
+            "team_id": t_id,
+            "status": st,
             "readiness_score": row["readiness_score"],
             "risk_score": row["risk_score"],
             "optimization_score": row["optimization_score"],

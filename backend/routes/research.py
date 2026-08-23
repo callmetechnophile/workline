@@ -14,11 +14,28 @@ class ChatRequest(BaseModel):
 @router.post("/research", response_model=ResearchResponse)
 def execute_research(payload: ResearchRequest):
     try:
-        if not payload.intent.strip():
-            raise HTTPException(status_code=400, detail="Engineering intent cannot be empty")
+        spec = (payload.system_specification or payload.intent or "").strip()
+        if not spec:
+            raise HTTPException(status_code=400, detail="System specification & engineering goal cannot be empty")
+        
+        raw_name = payload.project_name
+        if raw_name is not None and not raw_name.strip():
+            raise HTTPException(status_code=400, detail="Project name cannot be empty or whitespace only")
             
-        result = run_engineering_pipeline(payload.intent, payload.target_days)
+        p_name = raw_name.strip() if raw_name else spec[:50].strip()
+        target_days = payload.target_days or 30
+
+        result = run_engineering_pipeline(
+            user_intent=spec,
+            target_days=target_days,
+            project_name=p_name,
+            engineering_template=payload.engineering_template,
+            team_id=payload.team_id,
+            project_id=payload.project_id,
+        )
         return result
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Engineering pipeline failed: {str(e)}")
 

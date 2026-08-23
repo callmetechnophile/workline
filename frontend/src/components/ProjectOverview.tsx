@@ -20,12 +20,24 @@ import EngineeringStatusBadge from './EngineeringStatusBadge';
 
 interface ProjectOverviewProps {
   projectData: any;
+  projectName?: string;
+  projectId?: string;
+  systemSpecification?: string;
+  targetDays?: number;
+  teamName?: string;
+  status?: string;
   onNavigate: (section: NavSection) => void;
   onOpenNewProject: () => void;
 }
 
 export default function ProjectOverview({
   projectData,
+  projectName,
+  projectId,
+  systemSpecification,
+  targetDays,
+  teamName,
+  status,
   onNavigate,
   onOpenNewProject,
 }: ProjectOverviewProps) {
@@ -51,6 +63,13 @@ export default function ProjectOverview({
       </div>
     );
   }
+
+  const resolvedProjectName = projectName || projectData.project_name || 'Untitled Engineering Project';
+  const resolvedProjectId = projectId || projectData.project_id || `PROJ-${resolvedProjectName.slice(0, 4).toUpperCase()}`;
+  const resolvedGoal = systemSpecification || projectData.system_specification || projectData.intent || 'High-speed engineering system specification';
+  const resolvedTargetDays = targetDays || projectData.target_timeline_days || 30;
+  const resolvedTeamName = teamName || projectData.team_id || 'Hardware Engineering';
+  const resolvedStatus = status || projectData.status || 'Active';
 
   const bomItems = projectData.bom || [];
   const papers = projectData.research_papers || [];
@@ -127,6 +146,51 @@ export default function ProjectOverview({
 
   return (
     <div className="space-y-6">
+      {/* Project Identity & Specification Header */}
+      <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-5 space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
+          <div>
+            <div className="text-[10px] font-mono font-bold tracking-wider text-slate-500 uppercase">
+              PROJECT IDENTITY
+            </div>
+            <h1 className="text-lg font-bold text-slate-100 tracking-tight">
+              {resolvedProjectName}
+            </h1>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] font-mono px-2.5 py-1 rounded bg-slate-950 border border-slate-800 text-slate-400">
+              ID: {resolvedProjectId}
+            </span>
+            <span className="text-[11px] font-mono px-2.5 py-1 rounded bg-cyan-950/40 border border-cyan-800/40 text-cyan-300 font-semibold">
+              TEAM: {resolvedTeamName}
+            </span>
+            <span className="text-[11px] font-mono px-2.5 py-1 rounded bg-emerald-950/40 border border-emerald-800/40 text-emerald-300 uppercase font-semibold">
+              {resolvedStatus}
+            </span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+          <div className="md:col-span-2 space-y-1">
+            <span className="text-[10px] font-mono text-slate-500 uppercase font-bold">
+              ENGINEERING GOAL & SPECIFICATION
+            </span>
+            <p className="text-slate-300 font-sans leading-relaxed text-xs">
+              {resolvedGoal}
+            </p>
+          </div>
+          <div className="space-y-1 md:border-l md:border-slate-800 md:pl-4">
+            <span className="text-[10px] font-mono text-slate-500 uppercase font-bold">
+              TARGET TIMELINE
+            </span>
+            <div className="text-sm font-bold font-mono text-indigo-400">
+              {resolvedTargetDays} Days
+            </div>
+            <div className="text-[11px] text-slate-500">Autonomous execution window</div>
+          </div>
+        </div>
+      </div>
+
       {/* High-Level Metric Tiles */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-slate-900/90 border border-slate-800 rounded-lg p-4 space-y-1">

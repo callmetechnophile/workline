@@ -54,18 +54,28 @@ export default function ConversationsWorkspace({
           >
             <div className="space-y-1 max-w-2xl">
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-950/80 text-indigo-300 border border-indigo-800/40">
-                  PROJECT SPEC
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-950/80 text-indigo-300 border border-indigo-800/40 font-bold">
+                  {item.project_id || (item.id ? `PROJ-${item.id}` : 'PROJECT SPEC')}
                 </span>
+                {item.team_id && (
+                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-cyan-950/60 text-cyan-300 border border-cyan-800/40">
+                    {item.team_id}
+                  </span>
+                )}
                 <span className="text-[11px] text-slate-500 font-mono flex items-center gap-1">
                   <Clock className="w-3 h-3" />
-                  <span>{item.created_at ? new Date(item.created_at).toLocaleDateString() : 'Recent'}</span>
+                  <span>{item.timestamp ? new Date(item.timestamp).toLocaleDateString() : (item.created_at ? new Date(item.created_at).toLocaleDateString() : 'Recent')}</span>
                 </span>
               </div>
-              <h3 className="text-xs font-bold text-slate-200 truncate">
-                {item.intent || 'Unnamed Engineering Project'}
+              <h3 className="text-xs font-bold text-slate-100 truncate">
+                {item.project_name || item.intent || 'Untitled Engineering Project'}
               </h3>
-              <div className="flex items-center gap-4 text-[11px] font-mono text-slate-400 pt-1">
+              {(item.system_specification || item.intent) && (
+                <p className="text-[11px] text-slate-400 line-clamp-1">
+                  {item.system_specification || item.intent}
+                </p>
+              )}
+              <div className="flex items-center gap-4 text-[11px] font-mono text-slate-400 pt-0.5">
                 <span>Readiness: <strong className="text-emerald-400">{item.readiness_score != null ? `${item.readiness_score}%` : '—'}</strong></span>
                 <span>Risk: <strong className="text-amber-400">{item.risk_score != null ? `${item.risk_score}%` : '—'}</strong></span>
                 <span>Optimization: <strong className="text-cyan-400">{item.optimization_score != null ? `${item.optimization_score}%` : '—'}</strong></span>

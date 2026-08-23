@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from backend.auth import get_current_user
 from backend.database import save_package, get_user_history
 
@@ -12,10 +12,24 @@ class SavePackageSchema(BaseModel):
     risk_score: int
     optimization_score: int
     data: Dict[str, Any]
+    project_name: Optional[str] = None
+    system_specification: Optional[str] = None
+    target_days: Optional[int] = 30
+    engineering_template: Optional[str] = None
+    team_id: Optional[str] = None
+    project_id: Optional[str] = None
+    status: Optional[str] = "active"
 
 class PackageResponseSchema(BaseModel):
     id: int
+    project_id: Optional[str] = None
+    project_name: Optional[str] = "Untitled Engineering Project"
+    system_specification: Optional[str] = None
     intent: str
+    target_days: Optional[int] = 30
+    engineering_template: Optional[str] = None
+    team_id: Optional[str] = None
+    status: Optional[str] = "active"
     readiness_score: int
     risk_score: int
     optimization_score: int
@@ -34,7 +48,14 @@ async def save_user_package(
             readiness=payload.readiness_score,
             risk=payload.risk_score,
             optimization=payload.optimization_score,
-            data=payload.data
+            data=payload.data,
+            project_name=payload.project_name,
+            system_specification=payload.system_specification,
+            target_days=payload.target_days or 30,
+            engineering_template=payload.engineering_template,
+            team_id=payload.team_id,
+            project_id=payload.project_id,
+            status=payload.status or "active",
         )
         return {"status": "SUCCESS", "message": "Package saved successfully"}
     except Exception as e:

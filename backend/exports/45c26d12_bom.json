@@ -1,0 +1,248 @@
+{
+  "bom_items": [
+    {
+      "name": "Pixhawk 6C Flight Controller with M8N GPS Module",
+      "cost": 222.19277108433735,
+      "notes": "Landed at Mouser Electronics India (Distance: 0 km, ETA: 2 Days)",
+      "component": "Pixhawk 6C Flight Controller with M8N GPS Module",
+      "category": "Electronics / Navigation",
+      "selected_vendor": "Mouser Electronics India",
+      "vendor_location": "Bengaluru",
+      "base_cost": 18442,
+      "shipping_cost": 0,
+      "distance": "0 km",
+      "final_cost": 18442,
+      "stock": "In Stock",
+      "eta": "2 Days",
+      "alternatives": [
+        {
+          "alternative": "Betaflight F405 flight controller",
+          "vendor": "element14 India",
+          "base_cost": 3087,
+          "shipping_cost": 90,
+          "final_cost": 3177,
+          "reason": "Lower cost, widely compatible with standard quadcopter frames."
+        },
+        {
+          "alternative": "Matek H743-WING",
+          "vendor": "Mouser Electronics India",
+          "base_cost": 4801,
+          "shipping_cost": 0,
+          "final_cost": 4801,
+          "reason": "Saves $90.00 while maintaining autonomous flight telemetry."
+        }
+      ],
+      "url": "https://www.mouser.in/search?q=Pixhawk+6C+Flight+Controller+with+M8N+GPS+Module"
+    },
+    {
+      "name": "620KV Brushless Motors (4x Set)",
+      "cost": 156.79518072289156,
+      "notes": "Landed at Mouser Electronics India (Distance: 0 km, ETA: 2 Days)",
+      "component": "620KV Brushless Motors (4x Set)",
+      "category": "Propulsion",
+      "selected_vendor": "Mouser Electronics India",
+      "vendor_location": "Bengaluru",
+      "base_cost": 13014,
+      "shipping_cost": 0,
+      "distance": "0 km",
+      "final_cost": 13014,
+      "stock": "In Stock",
+      "eta": "2 Days",
+      "alternatives": [
+        {
+          "alternative": "Budget alternative for 620KV Brushless Motors (4x Set)",
+          "vendor": "element14 India",
+          "base_cost": 365,
+          "shipping_cost": 90,
+          "final_cost": 455,
+          "reason": "Reduced specification replacement for low-cost project configurations."
+        },
+        {
+          "alternative": "Generic equivalent for 620KV Brushless Motors (4x Set)",
+          "vendor": "element14 India",
+          "base_cost": 738,
+          "shipping_cost": 90,
+          "final_cost": 828,
+          "reason": "Standard replacement option with similar power ratings and interface pins."
+        }
+      ],
+      "url": "https://www.mouser.in/search?q=620KV+Brushless+Motors+(4x+Set)"
+    },
+    {
+      "name": "40A DShot600 ESCs (4x Set)",
+      "cost": 77.59036144578313,
+      "notes": "Landed at Mouser Electronics India (Distance: 0 km, ETA: 2 Days)",
+      "component": "40A DShot600 ESCs (4x Set)",
+      "category": "Electronics / Control",
+      "selected_vendor": "Mouser Electronics India",
+      "vendor_location": "Bengaluru",
+      "base_cost": 6440,
+      "shipping_cost": 0,
+      "distance": "0 km",
+      "final_cost": 6440,
+      "stock": "In Stock",
+      "eta": "2 Days",
+      "alternatives": [
+        {
+          "alternative": "Budget alternative for 40A DShot600 ESCs (4x Set)",
+          "vendor": "element14 India",
+          "base_cost": 361,
+          "shipping_cost": 90,
+          "final_cost": 451,
+          "reason": "Reduced specification replacement for low-cost project configurations."
+        },
+        {
+          "alternative": "Generic equivalent for 40A DShot600 ESCs (4x Set)",
+          "vendor": "element14 India",
+          "base_cost": 730,
+          "shipping_cost": 90,
+          "final_cost": 820,
+          "reason": "Standard replacement option with similar power ratings and interface pins."
+        }
+      ],
+      "url": "https://www.mouser.in/search?q=40A+DShot600+ESCs+(4x+Set)"
+    },
+    {
+      "name": "22.2V 6S 10000mAh 25C LiPo Battery Pack",
+      "cost": 128.6987951807229,
+      "notes": "Landed at Tomson Electronics (Distance: 550 km, ETA: 3-4 Days)",
+      "component": "22.2V 6S 10000mAh 25C LiPo Battery Pack",
+      "category": "Energy Storage",
+      "selected_vendor": "Tomson Electronics",
+      "vendor_location": "Ernakulam",
+      "base_cost": 10582,
+      "shipping_cost": 100,
+      "distance": "550 km",
+      "final_cost": 10682,
+      "stock": "In Stock",
+      "eta": "3-4 Days",
+      "alternatives": [
+        {
+          "alternative": "Budget alternative for 22.2V 6S 10000mAh 25C LiPo Battery Pack",
+          "vendor": "element14 India",
+          "base_cost": 419,
+          "shipping_cost": 90,
+          "final_cost": 509,
+          "reason": "Reduced specification replacement for low-cost project configurations."
+        },
+        {
+          "alternative": "Generic equivalent for 22.2V 6S 10000mAh 25C LiPo Battery Pack",
+          "vendor": "element14 India",
+          "base_cost": 846,
+          "shipping_cost": 90,
+          "final_cost": 936,
+          "reason": "Standard replacement option with similar power ratings and interface pins."
+        }
+      ],
+      "url": "https://www.tomson.in/search?q=22.2V+6S+10000mAh+25C+LiPo+Battery+Pack"
+    },
+    {
+      "name": "650mm Carbon Fiber Quadcopter Frame",
+      "cost": 108.0,
+      "notes": "Landed at Mouser Electronics India (Distance: 0 km, ETA: 2 Days)",
+      "component": "650mm Carbon Fiber Quadcopter Frame",
+      "category": "Structure",
+      "selected_vendor": "Mouser Electronics India",
+      "vendor_location": "Bengaluru",
+      "base_cost": 8964,
+      "shipping_cost": 0,
+      "distance": "0 km",
+      "final_cost": 8964,
+      "stock": "In Stock",
+      "eta": "2 Days",
+      "alternatives": [
+        {
+          "alternative": "Budget alternative for 650mm Carbon Fiber Quadcopter Frame",
+          "vendor": "element14 India",
+          "base_cost": 456,
+          "shipping_cost": 90,
+          "final_cost": 546,
+          "reason": "Reduced specification replacement for low-cost project configurations."
+        },
+        {
+          "alternative": "Generic equivalent for 650mm Carbon Fiber Quadcopter Frame",
+          "vendor": "Pantronics India",
+          "base_cost": 730,
+          "shipping_cost": 90,
+          "final_cost": 820,
+          "reason": "Standard replacement option with similar power ratings and interface pins."
+        }
+      ],
+      "url": "https://www.mouser.in/search?q=650mm+Carbon+Fiber+Quadcopter+Frame"
+    },
+    {
+      "name": "PWM Controlled Servo Cargo Release Hook",
+      "cost": 32.9277108433735,
+      "notes": "Landed at element14 India (Distance: 0 km, ETA: 2 Days)",
+      "component": "PWM Controlled Servo Cargo Release Hook",
+      "category": "Actuators / Payload",
+      "selected_vendor": "element14 India",
+      "vendor_location": "Bengaluru",
+      "base_cost": 2643,
+      "shipping_cost": 90,
+      "distance": "0 km",
+      "final_cost": 2733,
+      "stock": "In Stock",
+      "eta": "2 Days",
+      "alternatives": [
+        {
+          "alternative": "Budget alternative for PWM Controlled Servo Cargo Release Hook",
+          "vendor": "element14 India",
+          "base_cost": 456,
+          "shipping_cost": 90,
+          "final_cost": 546,
+          "reason": "Reduced specification replacement for low-cost project configurations."
+        },
+        {
+          "alternative": "Generic equivalent for PWM Controlled Servo Cargo Release Hook",
+          "vendor": "Pantronics India",
+          "base_cost": 730,
+          "shipping_cost": 90,
+          "final_cost": 820,
+          "reason": "Standard replacement option with similar power ratings and interface pins."
+        }
+      ],
+      "url": "https://in.element14.com/search?q=PWM+Controlled+Servo+Cargo+Release+Hook"
+    },
+    {
+      "name": "915MHz 100mW Telemetry Link Transceiver Set",
+      "cost": 43.57831325301205,
+      "notes": "Landed at Pantronics India (Distance: 350 km, ETA: 3-4 Days)",
+      "component": "915MHz 100mW Telemetry Link Transceiver Set",
+      "category": "Communication",
+      "selected_vendor": "Pantronics India",
+      "vendor_location": "Chennai",
+      "base_cost": 3527,
+      "shipping_cost": 90,
+      "distance": "350 km",
+      "final_cost": 3617,
+      "stock": "In Stock",
+      "eta": "3-4 Days",
+      "alternatives": [
+        {
+          "alternative": "Budget alternative for 915MHz 100mW Telemetry Link Transceiver Set",
+          "vendor": "element14 India",
+          "base_cost": 402,
+          "shipping_cost": 90,
+          "final_cost": 492,
+          "reason": "Reduced specification replacement for low-cost project configurations."
+        },
+        {
+          "alternative": "Generic equivalent for 915MHz 100mW Telemetry Link Transceiver Set",
+          "vendor": "element14 India",
+          "base_cost": 813,
+          "shipping_cost": 90,
+          "final_cost": 903,
+          "reason": "Standard replacement option with similar power ratings and interface pins."
+        }
+      ],
+      "url": "https://www.pantronics.in/search?q=915MHz+100mW+Telemetry+Link+Transceiver+Set"
+    }
+  ],
+  "totals": {
+    "electronics_total": 41634,
+    "mechanical_total": 21978,
+    "shipping_total": 280,
+    "grand_total": 63892
+  }
+}

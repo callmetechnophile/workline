@@ -16,13 +16,37 @@ import { useAuth } from '@clerk/nextjs';
  *   - READY:      Project data loaded from backend
  */
 
+export interface ProjectMetadata {
+  projectId?: string;
+  projectName?: string;
+  systemSpecification?: string;
+  targetDays?: number;
+  engineeringTemplate?: string;
+  teamId?: string;
+  teamName?: string;
+  ownerId?: string;
+  status?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface ProjectState {
   /** Full pipeline data from /api/research */
   projectData: any | null;
-  /** Human-readable project name / intent */
+  /** Authoritative Project ID */
+  projectId: string;
+  /** Human-readable project name */
   projectName: string;
+  /** Technical System Specification & Engineering Goal */
+  systemSpecification: string;
   /** Target execution timeline in days */
   targetDays: number;
+  /** Optional engineering template used */
+  engineeringTemplate?: string;
+  /** Team context */
+  teamName: string;
+  /** Project status */
+  status: string;
   /** Whether a project is actively loaded */
   hasProject: boolean;
   /** Loading state for project operations */
@@ -32,7 +56,12 @@ export interface ProjectState {
   /** API base URL for R1 gateway */
   apiBase: string;
   /** Set active project data */
-  setProject: (data: any, name: string, days: number) => void;
+  setProject: (
+    data: any,
+    name: string,
+    days: number,
+    metadata?: ProjectMetadata
+  ) => void;
   /** Clear current project */
   clearProject: () => void;
   /** Saved session history */
@@ -61,8 +90,13 @@ interface ProjectProviderProps {
 
 export function ProjectProvider({ children }: ProjectProviderProps) {
   const [projectData, setProjectData] = useState<any | null>(null);
+  const [projectId, setProjectId] = useState<string>('PROJ-DEFAULT');
   const [projectName, setProjectName] = useState<string>('');
+  const [systemSpecification, setSystemSpecification] = useState<string>('');
   const [targetDays, setTargetDays] = useState<number>(30);
+  const [engineeringTemplate, setEngineeringTemplate] = useState<string>('');
+  const [teamName, setTeamName] = useState<string>('Hardware Engineering');
+  const [status, setStatus] = useState<string>('active');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [savedHistory, setSavedHistory] = useState<any[]>([]);
@@ -89,8 +123,18 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
           const parsed = JSON.parse(cached);
           if (parsed.data) {
             setProjectData(parsed.data);
-            setProjectName(parsed.name || '');
-            setTargetDays(parsed.days || 30);
+            const pName = parsed.projectName || parsed.name || (parsed.data.project_name) || 'Untitled Engineering Project';
+            const pId = parsed.projectId || parsed.data.project_id || `PROJ-${pName.slice(0, 4).toUpperCase()}`;
+            const pSpec = parsed.systemSpecification || parsed.data.system_specification || parsed.data.intent || '';
+            const tDays = parsed.targetDays || parsed.days || parsed.data.target_timeline_days || 30;
+
+            setProjectId(pId);
+            setProjectName(pName);
+            setSystemSpecification(pSpec);
+            setTargetDays(tDays);
+            setEngineeringTemplate(parsed.engineeringTemplate || parsed.data.engineering_template || '');
+            setTeamName(parsed.teamName || parsed.data.team_id || 'Hardware Engineering');
+            setStatus(parsed.status || parsed.data.status || 'active');
           }
         } catch (e) {
           console.error('Failed to parse cached project:', e);
@@ -111,8 +155,8 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
         const data = await res.json();
         setSavedHistory(data);
       }
-    } catch (err) {
-      console.error('Failed to fetch session history:', err);
+    } catch (e) {
+      console.error('Failed to fetch package history:', e);
     }
   }, [userId, apiBase, getToken]);
 
@@ -120,25 +164,60 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
     refreshHistory();
   }, [refreshHistory]);
 
-  const setProject = useCallback((data: any, name: string, days: number) => {
-    setProjectData(data);
-    setProjectName(name);
-    setTargetDays(days);
-    setError(null);
+  const setProject = useCallback(
+    (
+      data: any,
+      name: string,
+      days: number,
+      metadata?: ProjectMetadata
+    ) => {
+      const resolvedName = (name || metadata?.projectName || data?.project_name || '').trim() || 'Untitled Engineering Project';
+      const resolvedSpec = (metadata?.systemSpecification || data?.system_specification || data?.intent || '').trim();
+      const resolvedId = metadata?.projectId || data?.project_id || `PROJ-${resolvedName.slice(0, 4).toUpperCase()}`;
+      const resolvedDays = days || metadata?.targetDays || data?.target_timeline_days || 30;
+      const resolvedTemplate = metadata?.engineeringTemplate || data?.engineering_template || '';
+      const resolvedTeam = metadata?.teamName || metadata?.teamId || data?.team_id || 'Hardware Engineering';
+      const resolvedStatus = metadata?.status || data?.status || 'active';
 
-    // Cache to localStorage (supplemental)
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(
-        'workline_active_project',
-        JSON.stringify({ name, days, data })
-      );
-    }
-  }, []);
+      setProjectData(data);
+      setProjectId(resolvedId);
+      setProjectName(resolvedName);
+      setSystemSpecification(resolvedSpec);
+      setTargetDays(resolvedDays);
+      setEngineeringTemplate(resolvedTemplate);
+      setTeamName(resolvedTeam);
+      setStatus(resolvedStatus);
+      setError(null);
+
+      // Cache to localStorage (supplemental)
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(
+          'workline_active_project',
+          JSON.stringify({
+            projectId: resolvedId,
+            projectName: resolvedName,
+            systemSpecification: resolvedSpec,
+            targetDays: resolvedDays,
+            engineeringTemplate: resolvedTemplate,
+            teamName: resolvedTeam,
+            status: resolvedStatus,
+            data,
+          })
+        );
+      }
+    },
+    []
+  );
 
   const clearProject = useCallback(() => {
     setProjectData(null);
+    setProjectId('PROJ-DEFAULT');
     setProjectName('');
+    setSystemSpecification('');
     setTargetDays(30);
+    setEngineeringTemplate('');
+    setTeamName('Hardware Engineering');
+    setStatus('active');
     setError(null);
     if (typeof window !== 'undefined') {
       localStorage.removeItem('workline_active_project');
@@ -157,10 +236,17 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          intent: projectName || projectData.intent,
-          readiness_score: projectData.validation?.readiness_score,
-          risk_score: projectData.validation?.risk_score,
-          optimization_score: projectData.optimization?.optimization_score,
+          project_id: projectId,
+          project_name: projectName || 'Untitled Engineering Project',
+          system_specification: systemSpecification || projectData.intent,
+          intent: systemSpecification || projectData.intent,
+          target_days: targetDays,
+          engineering_template: engineeringTemplate,
+          team_id: teamName,
+          status,
+          readiness_score: projectData.validation?.readiness_score || 85,
+          risk_score: projectData.validation?.risk_score || 15,
+          optimization_score: projectData.optimization?.optimization_score || 90,
           data: projectData,
         }),
       });
@@ -175,12 +261,29 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
     } finally {
       setIsSaving(false);
     }
-  }, [projectData, projectName, apiBase, getToken, refreshHistory]);
+  }, [
+    projectData,
+    projectId,
+    projectName,
+    systemSpecification,
+    targetDays,
+    engineeringTemplate,
+    teamName,
+    status,
+    apiBase,
+    getToken,
+    refreshHistory,
+  ]);
 
   const value: ProjectState = {
     projectData,
+    projectId,
     projectName,
+    systemSpecification,
     targetDays,
+    engineeringTemplate,
+    teamName,
+    status,
     hasProject: Boolean(projectData),
     isLoading,
     error,
