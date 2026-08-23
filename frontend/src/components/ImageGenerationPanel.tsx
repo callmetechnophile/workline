@@ -31,8 +31,9 @@ import {
 
 type GenerationState = "IDLE" | "QUEUED" | "GENERATING" | "COMPLETED" | "FAILED";
 
-interface GeneratedArtifact {
+export interface GeneratedArtifact {
   image_id: string;
+  artifact_id?: string;
   project_id: string;
   image_type: string;
   filename: string;
@@ -46,6 +47,7 @@ interface GeneratedArtifact {
   created_at: string;
   content?: string; // SVG markup
   conversation_id?: string;
+  title?: string;
 }
 
 interface ImageGenerationPanelProps {

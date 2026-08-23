@@ -366,3 +366,5 @@ export const PaymentPanel: React.FC<PaymentPanelProps> = ({
     </div>
   );
 };
+
+export default PaymentPanel;

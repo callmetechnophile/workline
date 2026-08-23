@@ -26,18 +26,33 @@ export const GenerationPanel: React.FC<GenerationPanelProps> = ({ projectId = ""
     );
   }
 
-  const handleGenerateImage = async (params: any) => {
-    // Simulated or API dispatch
-    const newArt: GenerationArtifactSummary = {
-      artifact_id: `art_img_${Date.now().toString(36)}`,
+  const handleGenerateImage = async (params: any): Promise<any> => {
+    const artId = `art_img_${Date.now().toString(36)}`;
+    const newArt = {
+      image_id: artId,
+      artifact_id: artId,
       project_id: projectId,
+      image_type: params.purpose || "ARCHITECTURE",
+      filename: `${artId}.svg`,
       format: "svg",
+      width: 1280,
+      height: 720,
       provider: params.provider || "PaperBanana",
-      title: `${projectId} - ${params.purpose}`,
+      model: "amazon.nova-canvas-v1:0",
+      generation_version: 1,
       created_at: new Date().toISOString(),
       sha256: "8f480329ac6146b300909486ce962261b7f01e69b502432d0c0317d74f88c207",
     };
-    setArtifacts((prev) => [newArt, ...prev]);
+    const summary: GenerationArtifactSummary = {
+      artifact_id: artId,
+      project_id: projectId,
+      format: "svg",
+      provider: newArt.provider,
+      title: `${projectId} - ${params.purpose}`,
+      created_at: newArt.created_at,
+      sha256: newArt.sha256,
+    };
+    setArtifacts((prev) => [summary, ...prev]);
     return newArt;
   };
 

@@ -19,6 +19,7 @@ export type WalletConnectionState =
 export interface PeraSignedPaymentProof {
   tx_hash: string;
   signature: string;
+  signed_txn?: string;
   payer: string;
   signed_at: string;
   network: string;

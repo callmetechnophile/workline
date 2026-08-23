@@ -12,7 +12,7 @@ import {
   FileCheck,
 } from "lucide-react";
 import OrderPreview, { OrderPreviewData } from "./OrderPreview";
-import PaymentPanel, { PaymentDetails } from "./PaymentPanel";
+import { PaymentPanel, PaymentDetails } from "./PaymentPanel";
 import OrderStatus from "./OrderStatus";
 import ReceiptPanel, { ReceiptData } from "./ReceiptPanel";
 import OrderAuditTimeline, { AuditEventItem } from "./OrderAuditTimeline";
@@ -76,21 +76,26 @@ export const OrderPanel: React.FC<OrderPanelProps> = ({
     const order = orders.find((o) => o.order_id === orderId);
     if (!order) return;
 
+    const amountVal = Number((order.total / 86.50).toFixed(2));
     setActivePayment({
+      quote_id: orderId,
       payment_request_id: `req_${Math.random().toString(16).substring(2, 10)}`,
       order_id: orderId,
-      amount: Number((order.total / 86.50).toFixed(2)),
+      project_id: projectId || order.project_id,
+      amount_usd: amountVal,
+      amount_usdc: amountVal,
       currency: "USD",
-      network: "base-sepolia",
+      network: "algorand-mainnet",
       asset: "USDC",
-      recipient: "0xWorklineTreasuryRecipient402",
+      asset_id: 31566704,
+      recipient: "WORKLINE24EUSDCALGORANDTREASURYRECIPIENT402XXXXXXXXXXXXXX",
       expires_at: new Date(Date.now() + 30 * 60000).toISOString(),
       status: "REQUIRED",
     });
   };
 
   // 4. Authorize Payment & Execute
-  const handleAuthorizePayment = async (paymentId: string, proof: Record<string, any>) => {
+  const handleAuthorizePayment = async (quoteId: string, proof: any) => {
     if (!selectedOrder) return;
 
     // Transition Order to Confirmed / Manual Checkout
