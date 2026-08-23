@@ -14,7 +14,7 @@ interface Connection {
 }
 
 interface WiringDiagramProps {
-  data: {
+  data?: {
     connections: Connection[];
   };
 }
@@ -29,60 +29,20 @@ export default function WiringDiagram({ data }: WiringDiagramProps) {
   const isPanningRef = useRef<boolean>(false);
   const startPanRef = useRef({ x: 0, y: 0 });
 
-  if (!data || !data.connections) {
+  if (!data || !data.connections || data.connections.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center p-8 text-slate-400">
-        <Cpu className="w-12 h-12 mb-2 stroke-1 text-slate-600 animate-pulse" />
-        <p>No wiring diagrams compiled yet.</p>
+      <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-8 text-center">
+        <Cpu className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+        <p className="text-xs text-slate-400">No wiring data available.</p>
+        <p className="text-[10px] text-slate-500 mt-1">Create or select a project to view wiring diagram.</p>
       </div>
     );
   }
 
   const { connections } = data;
 
-  // Static Layout Coordinates for Chip Packages
-  const chips: { [key: string]: { x: number; y: number; w: number; h: number; pins: string[]; color: string } } = {
-    "LiPo Battery": {
-      x: 50, y: 150, w: 100, h: 80,
-      pins: ["V+ (7.4V)", "GND (-)"],
-      color: "#ef4444"
-    },
-    "ESP32 Board": {
-      x: 230, y: 40, w: 140, h: 200,
-      pins: ["3.3V", "5V", "GND", "GPIO 21 (SDA)", "GPIO 22 (SCL)", "GPIO 32 (ADC0)", "GPIO 33 (ADC1)", "GPIO 34 (ADC2)", "GPIO 35 (ADC3)", "GPIO 36 (ADC4)"],
-      color: "#3b82f6"
-    },
-    "PCA9685 Driver": {
-      x: 450, y: 120, w: 150, h: 180,
-      pins: ["VCC", "GND", "SDA", "SCL", "V+ Terminal", "GND Terminal", "Channel 0", "Channel 1", "Channel 2", "Channel 3", "Channel 4", "Channel 5"],
-      color: "#eab308"
-    },
-    "Flex Sensor Array": {
-      x: 50, y: 280, w: 120, h: 140,
-      pins: ["Sensor 0 Out", "Sensor 1 Out", "Sensor 2 Out", "Sensor 3 Out", "Sensor 4 Out"],
-      color: "#a855f7"
-    },
-    "SG90 Servo Array": {
-      x: 680, y: 60, w: 110, h: 160,
-      pins: ["Servo 0 PWM (Orange)", "Servo 1 PWM (Orange)", "Servo 2 PWM (Orange)", "Servo 3 PWM (Orange)", "Servo 4 PWM (Orange)"],
-      color: "#f97316"
-    },
-    "MG996R Servo": {
-      x: 680, y: 260, w: 110, h: 80,
-      pins: ["PWM Signal (Orange)"],
-      color: "#f97316"
-    },
-    "Core Controller": {
-      x: 230, y: 150, w: 120, h: 80,
-      pins: ["GPIO 2"],
-      color: "#10b981"
-    },
-    "RGB LED indicators": {
-      x: 500, y: 150, w: 120, h: 80,
-      pins: ["LED Input"],
-      color: "#10b981"
-    }
-  };
+  // Layout Coordinates for Chip Packages
+  const chips: { [key: string]: { x: number; y: number; w: number; h: number; pins: string[]; color: string } } = {};
 
   // Helper: calculate physical position coordinates for a pin
   const getPinCoords = (chipName: string, pinName: string) => {

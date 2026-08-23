@@ -36,19 +36,29 @@ interface AgentState {
 }
 
 interface AgentActivityProps {
-  projectId?: string;
+  projectId: string;
   executionId?: string;
   onApproval?: (decision: string) => void;
 }
 
 export const AgentActivity: React.FC<AgentActivityProps> = ({
-  projectId = "autonomous-rover",
+  projectId,
   executionId,
   onApproval,
 }) => {
   const [state, setState] = useState<AgentState | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [submitting, setSubmitting] = useState<boolean>(false);
+
+  if (!projectId && !executionId) {
+    return (
+      <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-8 text-center">
+        <Activity className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+        <p className="text-xs text-slate-400">No activity data.</p>
+        <p className="text-[10px] text-slate-500 mt-1">Create or select a project to view activity.</p>
+      </div>
+    );
+  }
 
   const fetchStatus = async () => {
     try {

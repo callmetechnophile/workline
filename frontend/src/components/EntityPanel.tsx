@@ -20,40 +20,18 @@ interface EntityPanelProps {
 }
 
 export const EntityPanel: React.FC<EntityPanelProps> = ({
-  entities = [
-    {
-      entityId: "ent_1",
-      entityType: "COMPONENT",
-      originalText: "TPS62130",
-      normalizedValue: "TPS62130",
-      pageNumber: 1,
-      section: "Device Overview",
-      confidence: 0.98,
-      sourceSpan: "The TPS62130 is an easy-to-use synchronous step-down DC-DC converter.",
-    },
-    {
-      entityId: "ent_2",
-      entityType: "CURRENT",
-      originalText: "3A",
-      normalizedValue: "3 A",
-      pageNumber: 3,
-      section: "Electrical Characteristics",
-      confidence: 0.95,
-      sourceSpan: "Output current continuous: 3A maximum across all specified conditions.",
-    },
-    {
-      entityId: "ent_3",
-      entityType: "VOLTAGE",
-      originalText: "3V3",
-      normalizedValue: "3.3 V",
-      pageNumber: 4,
-      section: "Application Information",
-      confidence: 0.96,
-      sourceSpan: "Typical 3V3 power rail configuration with external inductor.",
-    },
-  ],
+  entities = [],
   onSelectEntity,
 }) => {
+  if (!entities || (Array.isArray(entities) && entities.length === 0)) {
+    return (
+      <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-8 text-center">
+        <Cpu className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+        <p className="text-xs text-slate-400">No entities available.</p>
+        <p className="text-[10px] text-slate-500 mt-1">Create or select a project to view entities.</p>
+      </div>
+    );
+  }
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-5 flex flex-col gap-4 text-zinc-100">
       <div className="flex items-center justify-between pb-2 border-b border-zinc-800">

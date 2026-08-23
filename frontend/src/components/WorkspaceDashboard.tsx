@@ -50,7 +50,7 @@ export default function WorkspaceDashboard({
   const [isSaving, setIsSaving]             = useState(false);
   const [msg, setMsg]                       = useState<{ text: string; ok: boolean } | null>(null);
 
-  const base = apiBase || 'http://localhost:8000';
+  const base = apiBase || 'https://workline-core-gateway.onrender.com';
 
   const showMsg = (text: string, ok: boolean) => {
     setMsg({ text, ok });

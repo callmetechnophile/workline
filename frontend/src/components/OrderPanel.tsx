@@ -17,16 +17,18 @@ import OrderStatus from "./OrderStatus";
 import ReceiptPanel, { ReceiptData } from "./ReceiptPanel";
 import OrderAuditTimeline, { AuditEventItem } from "./OrderAuditTimeline";
 
-interface OrderPanelProps {
-  projectId: string;
-  bomId: string;
+export interface OrderPanelProps {
+  projectId?: string;
+  bomId?: string;
   initialOrders?: OrderPreviewData[];
+  onCreateOrderPlan?: () => Promise<void> | void;
 }
 
 export const OrderPanel: React.FC<OrderPanelProps> = ({
   projectId,
   bomId,
   initialOrders = [],
+  onCreateOrderPlan,
 }) => {
   const [orders, setOrders] = useState<OrderPreviewData[]>(initialOrders);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(
@@ -41,63 +43,15 @@ export const OrderPanel: React.FC<OrderPanelProps> = ({
 
   // 1. Create Order Plan
   const handleCreateOrderPlan = async () => {
-    setLoading(true);
-    try {
-      // Create mock preview order if API not reachable
-      const newOrder: OrderPreviewData = {
-        order_id: `WL-ORD-${Math.random().toString(16).substring(2, 8).toUpperCase()}`,
-        project_id: projectId,
-        vendor: "Robu",
-        currency: "INR",
-        subtotal: 701.0,
-        shipping_cost: 90.0,
-        tax: 126.18,
-        fees: 0.0,
-        total: 917.18,
-        status: "READY_FOR_APPROVAL",
-        execution_mode: "MANUAL",
-        items: [
-          {
-            order_item_id: "item_1",
-            manufacturer: "Espressif Systems",
-            mpn: "ESP32-S3-WROOM-1",
-            quantity: 1,
-            unit_price: 385.0,
-            extended_price: 385.0,
-            currency: "INR",
-            vendor_name: "Robu",
-            stock_at_validation: 45,
-          },
-          {
-            order_item_id: "item_2",
-            manufacturer: "Texas Instruments",
-            mpn: "DRV8833",
-            quantity: 1,
-            unit_price: 115.0,
-            extended_price: 115.0,
-            currency: "INR",
-            vendor_name: "Robu",
-            stock_at_validation: 85,
-          },
-          {
-            order_item_id: "item_3",
-            manufacturer: "Texas Instruments",
-            mpn: "LM2596S-3.3",
-            quantity: 2,
-            unit_price: 89.0,
-            extended_price: 178.0,
-            currency: "INR",
-            vendor_name: "Robu",
-            stock_at_validation: 350,
-          },
-        ],
-      };
-      setOrders([newOrder, ...orders]);
-      setSelectedOrderId(newOrder.order_id);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
+    if (onCreateOrderPlan) {
+      setLoading(true);
+      try {
+        await onCreateOrderPlan();
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -217,7 +171,13 @@ export const OrderPanel: React.FC<OrderPanelProps> = ({
       )}
 
       {/* Main Content Area */}
-      {selectedOrder ? (
+      {!orders || orders.length === 0 ? (
+        <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-8 text-center">
+          <ShoppingCart className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+          <p className="text-xs text-slate-400">No orders placed.</p>
+          <p className="text-[10px] text-slate-500 mt-1">Create or select a project to view orders.</p>
+        </div>
+      ) : selectedOrder ? (
         <div className="space-y-6">
           {/* 1. Order Preview & Approval */}
           <OrderPreview
@@ -255,11 +215,7 @@ export const OrderPanel: React.FC<OrderPanelProps> = ({
           {/* 4. Receipt Panel */}
           {activeReceipt && <ReceiptPanel receipt={activeReceipt} />}
         </div>
-      ) : (
-        <div className="bg-slate-900/40 border border-slate-800/80 rounded-xl p-8 text-center text-slate-500 text-xs">
-          No orders created yet. Click <strong>"Create Order Plan from BOM"</strong> to start.
-        </div>
-      )}
+      ) : null}
     </div>
   );
 };

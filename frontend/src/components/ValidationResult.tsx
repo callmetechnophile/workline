@@ -25,46 +25,22 @@ export interface ValidationResultProps {
 }
 
 export const ValidationResult: React.FC<ValidationResultProps> = ({
-  candidateId = "TPS62130",
-  requirementId = "REQ-3V3-RAIL",
-  overallStatus = "PASS",
+  candidateId,
+  requirementId,
+  overallStatus = "UNKNOWN",
   ruleVersion = "electrical_rules_v1",
-  constraintResults = [
-    {
-      constraintId: "c1",
-      property: "input_voltage",
-      requiredValue: "= 5V",
-      actualValue: "5V",
-      operator: "=",
-      status: "PASS",
-      reason: "5V matches required 5V",
-      sourceDocument: "TPS62130_Datasheet.pdf",
-      page: 1,
-    },
-    {
-      constraintId: "c2",
-      property: "output_voltage",
-      requiredValue: "= 3.3V",
-      actualValue: "3.3V",
-      operator: "=",
-      status: "PASS",
-      reason: "3.3V matches required 3.3V",
-      sourceDocument: "TPS62130_Datasheet.pdf",
-      page: 1,
-    },
-    {
-      constraintId: "c3",
-      property: "output_current",
-      requiredValue: ">= 2A",
-      actualValue: "3A",
-      operator: ">=",
-      status: "PASS",
-      reason: "3A >= 2A",
-      sourceDocument: "TPS62130_Datasheet.pdf",
-      page: 1,
-    },
-  ],
+  constraintResults = [],
 }) => {
+  if (!candidateId || constraintResults.length === 0) {
+    return (
+      <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-8 text-center">
+        <Bookmark className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+        <p className="text-xs text-slate-400">No validation results.</p>
+        <p className="text-[10px] text-slate-500 mt-1">Create or select a project to view validation results.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-surface border border-border rounded-lg p-5 flex flex-col gap-4 text-foreground">
       <div className="flex items-center justify-between pb-3 border-b border-border">

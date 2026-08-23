@@ -20,13 +20,18 @@ export interface ComponentPlacementProps {
 }
 
 export const ComponentPlacement: React.FC<ComponentPlacementProps> = ({
-  components = [
-    { ref: "U1", part: "TPS62130", package: "VQFN-16", x: 25.0, y: 30.0, rotation: 0, layer: "Top", status: "PLACED" },
-    { ref: "C1", part: "10uF 0805", package: "0805", x: 38.0, y: 32.0, rotation: 90, layer: "Top", status: "PLACED" },
-    { ref: "L1", part: "2.2uH Inductor", package: "IND_SMD_6x6", x: 45.0, y: 28.0, rotation: 0, layer: "Top", status: "PLACED" },
-  ],
+  components,
   onMoveComponent,
 }) => {
+  if (!components || components.length === 0) {
+    return (
+      <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-8 text-center">
+        <Crosshair className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+        <p className="text-xs text-slate-400">No placement data available.</p>
+        <p className="text-[10px] text-slate-500 mt-1">Create or select a project to view placement data.</p>
+      </div>
+    );
+  }
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-5 flex flex-col gap-4 text-zinc-100">
       <div className="flex items-center gap-2 pb-2 border-b border-zinc-800">

@@ -23,14 +23,18 @@ export interface BoardCanvasProps {
 export const BoardCanvas: React.FC<BoardCanvasProps> = ({
   widthMm = 100,
   heightMm = 80,
-  components = [
-    { ref: "U1", x: 25, y: 30, width: 8, height: 8, rotation: 0, isHotspot: true },
-    { ref: "C1", x: 38, y: 32, width: 3, height: 2, rotation: 90 },
-    { ref: "L1", x: 45, y: 28, width: 10, height: 10, rotation: 0 },
-    { ref: "MCU1", x: 65, y: 45, width: 15, height: 15, rotation: 0 },
-  ],
+  components,
   onSelectComponent,
 }) => {
+  if (!components || components.length === 0) {
+    return (
+      <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-8 text-center">
+        <Layout className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+        <p className="text-xs text-slate-400">No PCB layout data available.</p>
+        <p className="text-[10px] text-slate-500 mt-1">Create or select a project to view PCB layout.</p>
+      </div>
+    );
+  }
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-5 flex flex-col gap-4 text-zinc-100">
       <div className="flex items-center justify-between pb-2 border-b border-zinc-800">

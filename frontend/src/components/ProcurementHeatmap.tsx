@@ -1,18 +1,14 @@
 import React, { useState } from "react";
 import { MapPin, Plane, Truck, Calendar, ShoppingBag, ShieldAlert } from "lucide-react";
 
-interface Component {
+export interface Component {
   component: string;
   selected_vendor: string;
   final_cost: number;
   stock?: string;
 }
 
-interface ProcurementHeatmapProps {
-  components?: Component[];
-}
-
-interface VendorLocation {
+export interface VendorLocation {
   name: string;
   city: string;
   coords: { x: number; y: number }; // SVG Map Coordinates
@@ -23,72 +19,26 @@ interface VendorLocation {
   status: "In Stock" | "Low Stock" | "Out of Stock";
 }
 
-export default function ProcurementHeatmap({ components = [] }: ProcurementHeatmapProps) {
+export interface ProcurementHeatmapProps {
+  components?: Component[];
+  vendorLocations?: Record<string, VendorLocation>;
+}
+
+export default function ProcurementHeatmap({
+  components = [],
+  vendorLocations = {},
+}: ProcurementHeatmapProps) {
   const [selectedVendor, setSelectedVendor] = useState<string | null>(null);
 
-  // Map locations to geographic vendor profiles (Bengaluru, Pune, Chennai, Delhi, Kerala, US)
-  const vendorLocations: Record<string, VendorLocation> = {
-    "element14 India": {
-      name: "element14 India",
-      city: "Bengaluru",
-      coords: { x: 230, y: 310 },
-      distance: "240 km",
-      shippingCost: "₹90",
-      eta: "2 Days",
-      regionType: "local",
-      status: "In Stock"
-    },
-    "DigiKey Electronics": {
-      name: "DigiKey Electronics",
-      city: "US",
-      coords: { x: 80, y: 120 },
-      distance: "14,500 km",
-      shippingCost: "₹1,250",
-      eta: "5 Days",
-      regionType: "long-distance",
-      status: "In Stock"
-    },
-    "Mouser Electronics India": {
-      name: "Mouser Electronics India",
-      city: "Pune",
-      coords: { x: 190, y: 240 },
-      distance: "820 km",
-      shippingCost: "₹250",
-      eta: "3 Days",
-      regionType: "regional",
-      status: "In Stock"
-    },
-    "RS Components India": {
-      name: "RS Components India",
-      city: "Delhi",
-      coords: { x: 210, y: 110 },
-      distance: "1,740 km",
-      shippingCost: "₹150",
-      eta: "3 Days",
-      regionType: "regional",
-      status: "Low Stock"
-    },
-    "Kochi Tech Sourcing": {
-      name: "Kochi Tech Sourcing",
-      city: "Kerala",
-      coords: { x: 215, y: 360 },
-      distance: "410 km",
-      shippingCost: "₹80",
-      eta: "1 Day",
-      regionType: "local",
-      status: "In Stock"
-    },
-    "Chennai Micro Lab": {
-      name: "Chennai Micro Lab",
-      city: "Chennai",
-      coords: { x: 260, y: 300 },
-      distance: "320 km",
-      shippingCost: "₹90",
-      eta: "2 Days",
-      regionType: "local",
-      status: "In Stock"
-    }
-  };
+  if ((!components || components.length === 0) && (!vendorLocations || Object.keys(vendorLocations).length === 0)) {
+    return (
+      <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-8 text-center">
+        <MapPin className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+        <p className="text-xs text-slate-400">No procurement activity.</p>
+        <p className="text-[10px] text-slate-500 mt-1">Create or select a project to view procurement heatmap.</p>
+      </div>
+    );
+  }
 
   const getRegionColor = (type: string) => {
     switch (type) {
@@ -103,13 +53,12 @@ export default function ProcurementHeatmap({ components = [] }: ProcurementHeatm
 
   // Assign components to vendor keys
   const getVendorKey = (vendorName: string): string => {
+    if (!vendorName) return "";
     const name = vendorName.toLowerCase();
-    if (name.includes("element14")) return "element14 India";
-    if (name.includes("digikey")) return "DigiKey Electronics";
-    if (name.includes("mouser")) return "Mouser Electronics India";
-    if (name.includes("rs")) return "RS Components India";
-    if (name.includes("kochi") || name.includes("kerala")) return "Kochi Tech Sourcing";
-    return "Chennai Micro Lab";
+    const match = Object.keys(vendorLocations).find(
+      (k) => k.toLowerCase().includes(name) || name.includes(k.toLowerCase())
+    );
+    return match || vendorName;
   };
 
   const activeVendor = selectedVendor ? vendorLocations[selectedVendor] : null;

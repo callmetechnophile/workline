@@ -27,15 +27,15 @@ export interface AgentTaskItem {
 }
 
 interface AgentTaskPanelProps {
-  tasks: AgentTaskItem[];
+  tasks?: AgentTaskItem[];
   selectedAgent?: ExternalAgentItem | null;
   selectedCapability?: AgentCapabilityItem | null;
-  onSubmitTask?: (agentId: string, capabilityId: string, payload: any) => Promise<void>;
+  onSubmitTask?: (agentId: string, capabilityId: string, payload?: any) => Promise<void>;
   onCancelTask?: (taskId: string) => Promise<void>;
 }
 
 export const AgentTaskPanel: React.FC<AgentTaskPanelProps> = ({
-  tasks,
+  tasks = [],
   selectedAgent,
   selectedCapability,
   onSubmitTask,
@@ -47,15 +47,21 @@ export const AgentTaskPanel: React.FC<AgentTaskPanelProps> = ({
     if (!selectedAgent || !selectedCapability || !onSubmitTask) return;
     setSubmitting(true);
     try {
-      await onSubmitTask(selectedAgent.agent_id, selectedCapability.capability_id, {
-        board_width: 100.0,
-        board_height: 80.0,
-        components: [{ name: "U1", power_dissipation_watts: 1.2 }],
-      });
+      await onSubmitTask(selectedAgent.agent_id, selectedCapability.capability_id, {});
     } finally {
       setSubmitting(false);
     }
   };
+
+  if (!tasks || tasks.length === 0) {
+    return (
+      <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-8 text-center">
+        <Clock className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+        <p className="text-xs text-slate-400">No agent tasks.</p>
+        <p className="text-[10px] text-slate-500 mt-1">Create or select a project to view agent tasks.</p>
+      </div>
+    );
+  }
 
   const getStatusIcon = (status: string) => {
     switch (status) {

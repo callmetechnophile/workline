@@ -17,14 +17,19 @@ export interface DecisionCriteriaProps {
 }
 
 export const DecisionCriteria: React.FC<DecisionCriteriaProps> = ({
-  criteria = [
-    { id: "tech", name: "Technical Fit", weight: 0.4, direction: "MAXIMIZE", mandatory: true },
-    { id: "cost", name: "Unit Cost", weight: 0.2, direction: "MINIMIZE", mandatory: false },
-    { id: "avail", name: "Supplier Availability", weight: 0.2, direction: "MAXIMIZE", mandatory: false },
-    { id: "risk", name: "Supply Chain Risk", weight: 0.2, direction: "MINIMIZE", mandatory: false },
-  ],
+  criteria = [],
   onWeightChange,
 }) => {
+  if (!criteria || criteria.length === 0) {
+    return (
+      <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-8 text-center">
+        <Sliders className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+        <p className="text-xs text-slate-400">No criteria defined.</p>
+        <p className="text-[10px] text-slate-500 mt-1">Create or select a project to view criteria.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-5 flex flex-col gap-4 text-zinc-100">
       <div className="flex items-center justify-between pb-2 border-b border-zinc-800">

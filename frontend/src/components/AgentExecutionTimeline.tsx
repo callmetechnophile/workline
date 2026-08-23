@@ -16,48 +16,38 @@ interface TimelineStep {
 
 interface AgentExecutionTimelineProps {
   internalStage?: string;
-  externalTasks: AgentTaskItem[];
+  externalTasks?: AgentTaskItem[];
 }
 
 export const AgentExecutionTimeline: React.FC<AgentExecutionTimelineProps> = ({
-  internalStage = "PCB Validation & Placement",
-  externalTasks,
+  internalStage,
+  externalTasks = [],
 }) => {
-  const steps: TimelineStep[] = [
-    {
-      id: "step-1",
-      source: "INTERNAL_ADK",
-      agent: "DomainResearcherAgent",
-      action: "Identify thermal dissipation constraints and layer stackup requirements",
-      status: "COMPLETED",
-      timestamp: "10:14:02",
-      duration: 1.2,
-    },
-    {
-      id: "step-2",
-      source: "INTERNAL_ADK",
-      agent: "PCBAgent",
-      action: `Synthesized PCB representation in ${internalStage}`,
-      status: "COMPLETED",
-      timestamp: "10:14:05",
-      duration: 2.1,
-    },
-    ...externalTasks.map((t, idx) => ({
-      id: `ext-${t.task_id}`,
-      source: "EXTERNAL_INTEROP" as const,
-      agent: `${t.target_agent} (${t.capability})`,
-      action: t.error ? `Failed: ${t.error}` : `Executed ${t.capability}`,
-      status: (t.status === "COMPLETED"
-        ? "COMPLETED"
-        : t.status === "RUNNING"
-        ? "RUNNING"
-        : t.status === "FAILED" || t.status === "REJECTED"
-        ? "FAILED"
-        : "PENDING") as TimelineStep["status"],
-      timestamp: t.created_at.slice(11, 19),
-      duration: t.provenance?.execution_duration,
-    })),
-  ];
+  if (!externalTasks || externalTasks.length === 0) {
+    return (
+      <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-8 text-center">
+        <GitCommit className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+        <p className="text-xs text-slate-400">No execution history.</p>
+        <p className="text-[10px] text-slate-500 mt-1">Create or select a project to view execution history.</p>
+      </div>
+    );
+  }
+
+  const steps: TimelineStep[] = externalTasks.map((t) => ({
+    id: `ext-${t.task_id}`,
+    source: "EXTERNAL_INTEROP" as const,
+    agent: `${t.target_agent} (${t.capability})`,
+    action: t.error ? `Failed: ${t.error}` : `Executed ${t.capability}`,
+    status: (t.status === "COMPLETED"
+      ? "COMPLETED"
+      : t.status === "RUNNING"
+      ? "RUNNING"
+      : t.status === "FAILED" || t.status === "REJECTED"
+      ? "FAILED"
+      : "PENDING") as TimelineStep["status"],
+    timestamp: t.created_at ? t.created_at.slice(11, 19) : "",
+    duration: t.provenance?.execution_duration,
+  }));
 
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-5 flex flex-col gap-4">

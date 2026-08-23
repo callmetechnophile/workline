@@ -21,31 +21,22 @@ interface EntityExplorerProps {
 }
 
 export const EntityExplorer: React.FC<EntityExplorerProps> = ({
-  entities = [
-    {
-      entityId: "ENT-TPS62130",
-      entityType: "COMPONENT",
-      canonicalName: "TPS62130",
-      aliases: ["TPS62130RGTR", "TPS62130RGTT"],
-      manufacturer: "Texas Instruments",
-      status: "ACTIVE",
-      confidence: 1.0,
-    },
-    {
-      entityId: "ENT-STM32F401",
-      entityType: "COMPONENT",
-      canonicalName: "STM32F401",
-      aliases: ["STM32F401RCT6"],
-      manufacturer: "STMicroelectronics",
-      status: "ACTIVE",
-      confidence: 0.98,
-    },
-  ],
-  selectedEntityId = "ENT-TPS62130",
+  entities = [],
+  selectedEntityId,
   onSelectEntity,
   onSearch,
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
+
+  if (!entities || (Array.isArray(entities) && entities.length === 0)) {
+    return (
+      <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-8 text-center">
+        <Cpu className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+        <p className="text-xs text-slate-400">No entities extracted.</p>
+        <p className="text-[10px] text-slate-500 mt-1">Create or select a project to view entities.</p>
+      </div>
+    );
+  }
 
   const filtered = entities.filter(
     (e) =>

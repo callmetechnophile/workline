@@ -21,42 +21,27 @@ export interface SupplierOffersProps {
 }
 
 export const SupplierOffers: React.FC<SupplierOffersProps> = ({
-  partNumber = "TPS62130",
-  offers = [
-    {
-      supplier: "DigiKey",
-      sku: "296-30232-1-ND",
-      unitPrice: 180.0,
-      breaks: [
-        { qty: 1, price: 180.0 },
-        { qty: 10, price: 160.0 },
-        { qty: 100, price: 140.0 },
-      ],
-      stock: 500,
-      leadTimeDays: 3,
-      moq: 1,
-      isPreferred: true,
-    },
-    {
-      supplier: "Mouser",
-      sku: "595-TPS62130RGTR",
-      unitPrice: 175.0,
-      breaks: [
-        { qty: 1, price: 175.0 },
-        { qty: 10, price: 155.0 },
-      ],
-      stock: 120,
-      leadTimeDays: 5,
-      moq: 1,
-    },
-  ],
+  partNumber,
+  offers = [],
   onSelectOffer,
 }) => {
+  if (!offers || (Array.isArray(offers) && offers.length === 0)) {
+    return (
+      <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-8 text-center">
+        <Store className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+        <p className="text-xs text-slate-400">No supplier offers available.</p>
+        <p className="text-[10px] text-slate-500 mt-1">Create or select a project to view supplier offers.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-5 flex flex-col gap-4 text-zinc-100">
       <div className="flex items-center gap-2 pb-2 border-b border-zinc-800">
         <Store className="w-5 h-5 text-indigo-400" />
-        <h3 className="text-base font-bold text-zinc-100">Supplier Offers: {partNumber}</h3>
+        <h3 className="text-base font-bold text-zinc-100">
+          Supplier Offers{partNumber ? `: ${partNumber}` : ""}
+        </h3>
       </div>
 
       <div className="grid grid-cols-2 gap-4">

@@ -20,20 +20,18 @@ interface ConflictPanelProps {
 }
 
 export const ConflictPanel: React.FC<ConflictPanelProps> = ({
-  conflicts = [
-    {
-      conflictId: "CONF-101",
-      entityId: "ENT-TPS62130",
-      property: "Output Current",
-      valueA: "3 A",
-      sourceA: "TPS62130_Datasheet.pdf (P.1)",
-      valueB: "2 A",
-      sourceB: "Thermal_Architecture_Paper.pdf (P.4)",
-      status: "OPEN",
-    },
-  ],
+  conflicts = [],
   onResolve,
 }) => {
+  if (!conflicts || (Array.isArray(conflicts) && conflicts.length === 0)) {
+    return (
+      <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-8 text-center">
+        <AlertTriangle className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+        <p className="text-xs text-slate-400">No conflicts detected.</p>
+        <p className="text-[10px] text-slate-500 mt-1">Create or select a project to view conflicts.</p>
+      </div>
+    );
+  }
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-5 flex flex-col gap-4 text-zinc-100">
       <div className="flex items-center justify-between pb-2 border-b border-zinc-800">

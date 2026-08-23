@@ -103,7 +103,7 @@ export default function GoogleCalendarExportModal({
 
     setLoading(true);
     try {
-      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'https://workline-core-gateway.onrender.com';
       const res = await fetch(`${apiBase}/api/calendar/generate-links`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

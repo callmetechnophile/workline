@@ -66,9 +66,9 @@ export default function ConversationsWorkspace({
                 {item.intent || 'Unnamed Engineering Project'}
               </h3>
               <div className="flex items-center gap-4 text-[11px] font-mono text-slate-400 pt-1">
-                <span>Readiness: <strong className="text-emerald-400">{item.readiness_score || 85}%</strong></span>
-                <span>Risk: <strong className="text-amber-400">{item.risk_score || 25}%</strong></span>
-                <span>Optimization: <strong className="text-cyan-400">{item.optimization_score || 90}%</strong></span>
+                <span>Readiness: <strong className="text-emerald-400">{item.readiness_score != null ? `${item.readiness_score}%` : '—'}</strong></span>
+                <span>Risk: <strong className="text-amber-400">{item.risk_score != null ? `${item.risk_score}%` : '—'}</strong></span>
+                <span>Optimization: <strong className="text-cyan-400">{item.optimization_score != null ? `${item.optimization_score}%` : '—'}</strong></span>
               </div>
             </div>
 

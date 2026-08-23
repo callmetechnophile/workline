@@ -16,23 +16,33 @@ export interface BOMWorkspaceProps {
 }
 
 export const BOMWorkspace: React.FC<BOMWorkspaceProps> = ({
-  bomId = "BOM-001",
-  projectId = "rover_v2",
+  bomId,
+  projectId,
   version = 1,
   status = "READY_FOR_PROCUREMENT",
-  totalCost = 180.0,
-  itemCount = 1,
+  totalCost,
+  itemCount,
   onRefresh,
   onValidate,
   onGeneratePackage,
 }) => {
+  if (!bomId && !projectId) {
+    return (
+      <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-8 text-center">
+        <Layers className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+        <p className="text-xs text-slate-400">No BOM workspace data available.</p>
+        <p className="text-[10px] text-slate-500 mt-1">Create or select a project to view BOM workspace.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-5 flex flex-col gap-5 text-zinc-100">
       <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
         <div className="flex items-center gap-2">
           <Layers className="w-5 h-5 text-indigo-400" />
           <h3 className="text-base font-bold text-zinc-100">Bill of Materials & Procurement</h3>
-          <span className="text-xs font-mono text-zinc-500">[{bomId} v{version}]</span>
+          <span className="text-xs font-mono text-zinc-500">[{bomId || "—"} v{version}]</span>
         </div>
         <div className="flex items-center gap-2">
           <span
@@ -52,15 +62,15 @@ export const BOMWorkspace: React.FC<BOMWorkspaceProps> = ({
       <div className="grid grid-cols-3 gap-3">
         <div className="p-3 bg-zinc-950/60 border border-zinc-800 rounded-lg flex flex-col gap-1">
           <span className="text-xs text-zinc-400">Total Line Items</span>
-          <span className="text-base font-mono font-bold text-zinc-100">{itemCount} Parts</span>
+          <span className="text-base font-mono font-bold text-zinc-100">{itemCount ?? 0} Parts</span>
         </div>
         <div className="p-3 bg-zinc-950/60 border border-zinc-800 rounded-lg flex flex-col gap-1">
           <span className="text-xs text-zinc-400">Estimated Subtotal</span>
-          <span className="text-base font-mono font-bold text-emerald-400">₹{totalCost.toFixed(2)}</span>
+          <span className="text-base font-mono font-bold text-emerald-400">₹{(totalCost ?? 0).toFixed(2)}</span>
         </div>
         <div className="p-3 bg-zinc-950/60 border border-zinc-800 rounded-lg flex flex-col gap-1">
           <span className="text-xs text-zinc-400">Target Project</span>
-          <span className="text-base font-mono font-bold text-indigo-300">{projectId}</span>
+          <span className="text-base font-mono font-bold text-indigo-300">{projectId || "—"}</span>
         </div>
       </div>
 

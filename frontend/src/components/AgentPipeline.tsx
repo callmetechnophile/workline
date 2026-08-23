@@ -15,24 +15,23 @@ interface AuditLog {
 }
 
 interface AgentPipelineProps {
-  logs: AuditLog[];
-  activeAgent: string | null;
-  isProcessing: boolean;
+  logs?: AuditLog[];
+  activeAgent?: string | null;
+  isProcessing?: boolean;
+  agents?: { name: string; desc: string }[];
 }
 
-const AGENTS = [
-  { name: "Planner Agent", desc: "Root plan capture & sub-delegation" },
-  { name: "Retrieval Agent", desc: "Search repositories & technical sources" },
-  { name: "Extraction Agent", desc: "Extract components & build structured BOM" },
-  { name: "BOM Optimization Engine", desc: "Scored platform ranking, landed shipping & alternatives" },
-  { name: "Research Agent", desc: "Search papers & synthesize literature" },
-  { name: "Validation Agent", desc: "Assess constraints & electrical safety checks" },
-  { name: "Optimization Agent", desc: "Refine costs, materials & configurations" },
-  { name: "Planning Agent", desc: "Generate roadmap milestones & timelines" },
-  { name: "Export Agent", desc: "Generate execution bundle (PDF/CSV/MD)" }
-];
+export default function AgentPipeline({ logs = [], activeAgent = null, isProcessing = false, agents = [] }: AgentPipelineProps) {
+  if (!agents || agents.length === 0) {
+    return (
+      <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-8 text-center">
+        <Cpu className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+        <p className="text-xs text-slate-400">No pipeline configured.</p>
+        <p className="text-[10px] text-slate-500 mt-1">Create or select a project to view pipeline.</p>
+      </div>
+    );
+  }
 
-export default function AgentPipeline({ logs, activeAgent, isProcessing }: AgentPipelineProps) {
   // Determine the status of an agent based on audit logs
   const getAgentStatus = (agentName: string) => {
     if (activeAgent === agentName && isProcessing) {
@@ -74,7 +73,7 @@ export default function AgentPipeline({ logs, activeAgent, isProcessing }: Agent
 
       {/* Grid of Agent Nodes */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {AGENTS.map((agent) => {
+        {agents.map((agent) => {
           const status = getAgentStatus(agent.name);
           
           let cardBorder = "border-slate-800/80";

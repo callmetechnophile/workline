@@ -1,14 +1,24 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
-// Define public routes that don't require authentication to view
+/**
+ * Workline AI — Next.js Edge Middleware (Clerk Authentication)
+ *
+ * PUBLIC ROUTES (no auth required):
+ *   /              Landing page (branding only)
+ *   /login         Custom Clerk login page
+ *   /sign-in       Clerk sign-in catch-all
+ *   /sign-up       Clerk sign-up catch-all
+ *   /invite        Team invitation acceptance
+ *
+ * ALL OTHER ROUTES require Clerk authentication.
+ * Unauthenticated requests are redirected to /sign-in.
+ */
 const isPublicRoute = createRouteMatcher([
   "/",
   "/login(.*)",
   "/sign-in(.*)",
   "/sign-up(.*)",
   "/invite(.*)",
-  "/api/research(.*)",
-  "/api/exports/(.*)",
 ]);
 
 export default clerkMiddleware(async (auth, request) => {

@@ -17,25 +17,18 @@ interface SourceTraceabilityProps {
 }
 
 export const SourceTraceability: React.FC<SourceTraceabilityProps> = ({
-  citations = [
-    {
-      citationId: "cit_1",
-      documentTitle: "TPS62130 Datasheet",
-      filename: "TPS62130.pdf",
-      pageNumber: 3,
-      section: "Electrical Characteristics",
-      quote: "Output current continuous: 3A maximum across all specified conditions.",
-    },
-    {
-      citationId: "cit_2",
-      documentTitle: "Power Architecture Spec",
-      filename: "Power_Architecture.md",
-      pageNumber: 1,
-      section: "5V Rail Requirements",
-      quote: "The primary 5V system rail requires up to 2.8A peak during telemetry transmissions.",
-    },
-  ],
+  citations = [],
 }) => {
+  if (!citations || citations.length === 0) {
+    return (
+      <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-8 text-center">
+        <ShieldCheck className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+        <p className="text-xs text-slate-400">No source citations.</p>
+        <p className="text-[10px] text-slate-500 mt-1">Create or select a project to view source traceability.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-5 flex flex-col gap-4 text-zinc-100">
       <div className="flex items-center justify-between pb-2 border-b border-zinc-800">

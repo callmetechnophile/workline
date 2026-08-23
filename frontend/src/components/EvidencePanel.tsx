@@ -18,26 +18,18 @@ interface EvidencePanelProps {
 }
 
 export const EvidencePanel: React.FC<EvidencePanelProps> = ({
-  entityName = "TPS62130",
-  evidence = [
-    {
-      property: "Output Current",
-      value: "3 A",
-      document: "TPS62130_Datasheet.pdf",
-      page: 1,
-      section: "Features",
-      confidence: 1.0,
-    },
-    {
-      property: "Input Voltage",
-      value: "3V to 17V",
-      document: "TPS62130_Datasheet.pdf",
-      page: 3,
-      section: "Electrical Characteristics",
-      confidence: 0.98,
-    },
-  ],
+  entityName,
+  evidence = [],
 }) => {
+  if (!evidence || (Array.isArray(evidence) && evidence.length === 0)) {
+    return (
+      <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-8 text-center">
+        <ShieldCheck className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+        <p className="text-xs text-slate-400">No evidence available.</p>
+        <p className="text-[10px] text-slate-500 mt-1">Create or select a project to view evidence.</p>
+      </div>
+    );
+  }
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-5 flex flex-col gap-4 text-zinc-100">
       <div className="flex items-center justify-between pb-2 border-b border-zinc-800">

@@ -10,15 +10,16 @@ interface ChatMessage {
 }
 
 interface ConnectionChatbotProps {
-  projectContext: {
-    bom: any[];
-    wiring: any;
-    power: any;
-    datasheets: any[];
+  projectContext?: {
+    bom?: any[];
+    wiring?: any;
+    power?: any;
+    datasheets?: any[];
   };
+  apiBase?: string;
 }
 
-export default function ConnectionChatbot({ projectContext }: ConnectionChatbotProps) {
+export default function ConnectionChatbot({ projectContext = { bom: [], wiring: {}, power: {}, datasheets: [] }, apiBase = '' }: ConnectionChatbotProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -63,7 +64,7 @@ export default function ConnectionChatbot({ projectContext }: ConnectionChatbotP
     setPlayingMessageIndex(idx);
 
     try {
-      const res = await fetch("http://localhost:8000/api/speech/tts", {
+      const res = await fetch(`${apiBase}/api/speech/tts`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text })
@@ -104,16 +105,16 @@ export default function ConnectionChatbot({ projectContext }: ConnectionChatbotP
     setIsLoading(true);
 
     try {
-      const response = await fetch("http://localhost:8000/api/workspace/chat", {
+      const response = await fetch(`${apiBase}/api/workspace/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: queryText,
           context: {
-            bom: projectContext.bom || [],
-            wiring: projectContext.wiring || [],
-            power: projectContext.power || {},
-            datasheets: projectContext.datasheets || []
+            bom: projectContext?.bom || [],
+            wiring: projectContext?.wiring || [],
+            power: projectContext?.power || {},
+            datasheets: projectContext?.datasheets || []
           }
         })
       });

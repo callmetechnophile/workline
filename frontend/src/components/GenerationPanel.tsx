@@ -8,23 +8,23 @@ import { GenerationHistory, GenerationArtifactSummary } from "./GenerationHistor
 import { ArtifactPreview } from "./ArtifactPreview";
 
 interface GenerationPanelProps {
-  projectId: string;
+  projectId?: string;
 }
 
-export const GenerationPanel: React.FC<GenerationPanelProps> = ({ projectId }) => {
+export const GenerationPanel: React.FC<GenerationPanelProps> = ({ projectId = "" }) => {
   const [activeTab, setActiveTab] = useState<"visuals" | "presentations" | "history">("visuals");
-  const [artifacts, setArtifacts] = useState<GenerationArtifactSummary[]>([
-    {
-      artifact_id: "art_img_rover_arch",
-      project_id: projectId,
-      format: "svg",
-      provider: "PaperBanana",
-      title: "Rover Autonomous Architecture",
-      created_at: "2026-08-22T10:15:00Z",
-      sha256: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    },
-  ]);
+  const [artifacts, setArtifacts] = useState<GenerationArtifactSummary[]>([]);
   const [previewArtifact, setPreviewArtifact] = useState<any | null>(null);
+
+  if (!projectId) {
+    return (
+      <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-8 text-center">
+        <Sparkles className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+        <p className="text-xs text-slate-400">No artifacts generated.</p>
+        <p className="text-[10px] text-slate-500 mt-1">Create or select a project to view generated artifacts.</p>
+      </div>
+    );
+  }
 
   const handleGenerateImage = async (params: any) => {
     // Simulated or API dispatch
@@ -124,13 +124,21 @@ export const GenerationPanel: React.FC<GenerationPanelProps> = ({ projectId }) =
         )}
 
         {activeTab === "history" && (
-          <GenerationHistory
-            artifacts={artifacts}
-            onSelectArtifact={(id) => {
-              const found = artifacts.find((a) => a.artifact_id === id);
-              if (found) setPreviewArtifact(found);
-            }}
-          />
+          artifacts.length === 0 ? (
+            <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-8 text-center">
+              <Sparkles className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+              <p className="text-xs text-slate-400">No artifacts generated.</p>
+              <p className="text-[10px] text-slate-500 mt-1">Create or select a project to view generated artifacts.</p>
+            </div>
+          ) : (
+            <GenerationHistory
+              artifacts={artifacts}
+              onSelectArtifact={(id) => {
+                const found = artifacts.find((a) => a.artifact_id === id);
+                if (found) setPreviewArtifact(found);
+              }}
+            />
+          )
         )}
       </div>
 

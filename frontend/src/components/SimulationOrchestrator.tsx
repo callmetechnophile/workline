@@ -26,72 +26,51 @@ export interface SimulationOrchestratorProps {
 }
 
 export const SimulationOrchestrator: React.FC<SimulationOrchestratorProps> = ({
-  runId = "SIM-1724330000",
-  projectVersion = 1,
-  overallStatus = "PASS",
-  mae = 0.85,
-  rmse = 1.12,
-  maxDiscrepancy = 0.025,
-  metrics = [
-    {
-      name: "Peak_Temperature",
-      domain: "THERMAL",
-      referenceValue: 76.5,
-      surrogateValue: 78.4,
-      unit: "°C",
-      discrepancy: 0.0248,
-      status: "PASS",
-    },
-    {
-      name: "Avg_Board_Temperature",
-      domain: "THERMAL",
-      referenceValue: 41.8,
-      surrogateValue: 42.1,
-      unit: "°C",
-      discrepancy: 0.0072,
-      status: "PASS",
-    },
-    {
-      name: "3V3_Rail_Voltage",
-      domain: "ELECTRICAL",
-      referenceValue: 3.28,
-      surrogateValue: 3.27,
-      unit: "V",
-      discrepancy: 0.003,
-      status: "PASS",
-    },
-    {
-      name: "USB_Diff_Impedance",
-      domain: "SIGNAL_INTEGRITY",
-      referenceValue: 91.2,
-      surrogateValue: 91.2,
-      unit: "Ω",
-      discrepancy: 0.0,
-      status: "PASS",
-    },
-  ],
+  runId,
+  projectVersion,
+  overallStatus,
+  mae,
+  rmse,
+  maxDiscrepancy,
+  metrics = [],
   onRunSimulation,
   onApproveResults,
 }) => {
+  if (!runId && (!metrics || metrics.length === 0)) {
+    return (
+      <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-8 text-center">
+        <Activity className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+        <p className="text-xs text-slate-400">No simulation has been run.</p>
+        <p className="text-[10px] text-slate-500 mt-1">Create or select a project to view simulation results.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-5 flex flex-col gap-5 text-zinc-100">
       <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
         <div className="flex items-center gap-2">
           <Activity className="w-5 h-5 text-indigo-400" />
           <h3 className="text-base font-bold text-zinc-100">Multi-Physics Simulation Orchestrator</h3>
-          <span className="text-xs font-mono text-zinc-500">[{runId} - v{projectVersion}]</span>
+          {runId && (
+            <span className="text-xs font-mono text-zinc-500">
+              [{runId}{projectVersion !== undefined ? ` - v${projectVersion}` : ""}]
+            </span>
+          )}
         </div>
-        <span
-          className={`px-2.5 py-0.5 rounded text-xs font-mono font-bold border ${
-            overallStatus === "PASS"
-              ? "bg-emerald-950/60 text-emerald-300 border-emerald-800"
-              : overallStatus === "WARNING"
-              ? "bg-amber-950/60 text-amber-300 border-amber-800"
-              : "bg-rose-950/60 text-rose-300 border-rose-800"
-          }`}
-        >
-          CROSS-VALIDATION: {overallStatus}
-        </span>
+        {overallStatus && (
+          <span
+            className={`px-2.5 py-0.5 rounded text-xs font-mono font-bold border ${
+              overallStatus === "PASS"
+                ? "bg-emerald-950/60 text-emerald-300 border-emerald-800"
+                : overallStatus === "WARNING"
+                ? "bg-amber-950/60 text-amber-300 border-amber-800"
+                : "bg-rose-950/60 text-rose-300 border-rose-800"
+            }`}
+          >
+            CROSS-VALIDATION: {overallStatus}
+          </span>
+        )}
       </div>
 
       {/* Solver Grid */}
@@ -127,7 +106,7 @@ export const SimulationOrchestrator: React.FC<SimulationOrchestratorProps> = ({
         <div className="flex items-center justify-between">
           <span className="text-xs font-bold text-zinc-400">Numerical Reference vs. PINN Surrogate Cross-Validation</span>
           <span className="text-xs font-mono text-zinc-500">
-            MAE: <strong className="text-zinc-200">{mae}</strong> | RMSE: <strong className="text-zinc-200">{rmse}</strong> | Max Discrepancy: <strong className="text-emerald-400">{(maxDiscrepancy * 100).toFixed(2)}%</strong>
+            MAE: <strong className="text-zinc-200">{mae !== undefined ? mae : "-"}</strong> | RMSE: <strong className="text-zinc-200">{rmse !== undefined ? rmse : "-"}</strong> | Max Discrepancy: <strong className="text-emerald-400">{maxDiscrepancy !== undefined ? `${(maxDiscrepancy * 100).toFixed(2)}%` : "-"}</strong>
           </span>
         </div>
 

@@ -17,12 +17,18 @@ export interface NetExplorerProps {
 }
 
 export const NetExplorer: React.FC<NetExplorerProps> = ({
-  nets = [
-    { netId: "net_3v3", name: "+3V3", type: "POWER", voltage: 3.3, current: 2.0, pins: ["U1.VOUT", "C1.1", "MCU1.VDD"] },
-    { netId: "net_gnd", name: "GND", type: "GROUND", voltage: 0.0, current: 2.0, pins: ["U1.GND", "C1.2", "MCU1.GND"] },
-    { netId: "net_usb_dp", name: "USB_DP", type: "DIFFERENTIAL", pins: ["MCU1.USB_DP", "J1.D+"] },
-  ],
+  nets = [],
 }) => {
+  if (!nets || (Array.isArray(nets) && nets.length === 0)) {
+    return (
+      <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-8 text-center">
+        <GitBranch className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+        <p className="text-xs text-slate-400">No net data available.</p>
+        <p className="text-[10px] text-slate-500 mt-1">Create or select a project to view net data.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-5 flex flex-col gap-4 text-zinc-100">
       <div className="flex items-center gap-2 pb-2 border-b border-zinc-800">

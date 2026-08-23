@@ -23,22 +23,20 @@ export interface BOMTableProps {
 }
 
 export const BOMTable: React.FC<BOMTableProps> = ({
-  items = [
-    {
-      ref: "U1",
-      component: "TPS62130",
-      partNumber: "TPS62130",
-      orderingCode: "TPS62130RGTR",
-      qty: 1,
-      supplier: "DigiKey",
-      unitPrice: 180.0,
-      stock: 500,
-      status: "RESOLVED",
-    },
-  ],
+  items,
   onSelectPart,
 }) => {
   const [filter, setFilter] = useState("");
+
+  if (!items || items.length === 0) {
+    return (
+      <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-8 text-center">
+        <Table className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+        <p className="text-xs text-slate-400">No BOM data available.</p>
+        <p className="text-[10px] text-slate-500 mt-1">Create or select a project to view BOM data.</p>
+      </div>
+    );
+  }
 
   const filtered = items.filter(
     (item) =>

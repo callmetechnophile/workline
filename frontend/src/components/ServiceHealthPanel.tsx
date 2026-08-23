@@ -13,7 +13,7 @@ export default function ServiceHealthPanel() {
       endpoint: 'https://workline-core-gateway.onrender.com/health',
       runtime: 'Docker (Python 3.12)',
       status: 'PASS' as const,
-      latency: '24ms',
+      latency: 'Checking...',
       icon: Server,
     },
     {
@@ -23,7 +23,7 @@ export default function ServiceHealthPanel() {
       endpoint: 'Internal (Bearer Authenticated)',
       runtime: 'Docker (Python 3.12)',
       status: 'PASS' as const,
-      latency: '112ms',
+      latency: 'Checking...',
       icon: Cpu,
     },
     {
@@ -33,7 +33,7 @@ export default function ServiceHealthPanel() {
       endpoint: 'Internal (Bearer Authenticated)',
       runtime: 'Docker (Python 3.12)',
       status: 'PASS' as const,
-      latency: '48ms',
+      latency: 'Checking...',
       icon: Database,
     },
     {
@@ -43,7 +43,7 @@ export default function ServiceHealthPanel() {
       endpoint: 'Internal (Bearer Authenticated)',
       runtime: 'Docker (Python 3.12)',
       status: 'PASS' as const,
-      latency: '449ms (PINN inference)',
+      latency: 'Checking...',
       icon: Activity,
     },
     {
@@ -53,7 +53,7 @@ export default function ServiceHealthPanel() {
       endpoint: 'Internal (Bearer Authenticated)',
       runtime: 'Docker (Python 3.12)',
       status: 'PASS' as const,
-      latency: '68ms',
+      latency: 'Checking...',
       icon: ShoppingCart,
     },
   ];

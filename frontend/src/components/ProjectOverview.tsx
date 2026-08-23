@@ -55,8 +55,8 @@ export default function ProjectOverview({
   const bomItems = projectData.bom || [];
   const papers = projectData.research_papers || [];
   const conflicts = projectData.contradictions || [];
-  const readiness = projectData.validation?.readiness_score || 85;
-  const risk = projectData.validation?.risk_score || 25;
+  const readiness = projectData.validation?.readiness_score ?? '—';
+  const risk = projectData.validation?.risk_score ?? '—';
 
   const modules = [
     {
@@ -81,47 +81,47 @@ export default function ProjectOverview({
       count: `${bomItems.length} Parts`,
       desc: 'Pin mapping, voltage risk, and candidate alternatives',
       icon: Cpu,
-      status: 'PASS' as const,
+      status: bomItems.length > 0 ? ('PASS' as const) : ('PENDING' as const),
     },
     {
       id: 'bom' as NavSection,
       title: 'Bill of Materials',
-      count: `₹${projectData.optimization?.total_cost_inr || '14,250'}`,
+      count: projectData.optimization?.total_cost_inr ? `₹${projectData.optimization.total_cost_inr}` : '—',
       desc: 'Multi-vendor consolidation (DigiKey, Mouser, Robu)',
       icon: Layers,
-      status: 'PASS' as const,
+      status: bomItems.length > 0 ? ('PASS' as const) : ('PENDING' as const),
     },
     {
       id: 'pcb' as NavSection,
       title: 'PCB & Layout',
-      count: '4-Layer Ready',
+      count: projectData.pcb ? 'Layout Ready' : '—',
       desc: 'DRC geometric checks, layer stackup & pin routing',
       icon: CircuitBoard,
-      status: 'PASS' as const,
+      status: projectData.pcb ? ('PASS' as const) : ('PENDING' as const),
     },
     {
       id: 'simulation' as NavSection,
       title: 'Simulation & Physics',
-      count: 'Thermal Pass',
+      count: projectData.power_analysis ? 'Analyzed' : '—',
       desc: 'PINN surrogate neural loss & power tree dissipation',
       icon: Zap,
-      status: 'PASS' as const,
+      status: projectData.power_analysis ? ('PASS' as const) : ('PENDING' as const),
     },
     {
       id: 'procurement' as NavSection,
       title: 'Procurement & Orders',
-      count: 'Quote Ready',
+      count: projectData.procurement ? 'Quote Ready' : '—',
       desc: 'Non-custodial x402 payment challenge & settlement',
       icon: ShoppingCart,
-      status: 'PASS' as const,
+      status: projectData.procurement ? ('PASS' as const) : ('PENDING' as const),
     },
     {
       id: 'release' as NavSection,
       title: 'Release Readiness',
-      count: `${readiness}% Score`,
+      count: typeof readiness === 'number' ? `${readiness}% Score` : '—',
       desc: 'Deterministic gates & tamper-evident packaging',
       icon: PackageCheck,
-      status: risk < 35 ? ('PASS' as const) : ('WARNING' as const),
+      status: typeof risk === 'number' && risk < 35 ? ('PASS' as const) : ('PENDING' as const),
     },
   ];
 

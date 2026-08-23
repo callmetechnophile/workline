@@ -19,27 +19,19 @@ interface CandidateValidationProps {
 }
 
 export const CandidateValidation: React.FC<CandidateValidationProps> = ({
-  requirementId = "REQ-3V3-RAIL",
-  candidates = [
-    {
-      candidateId: "ENT-TPS62130",
-      name: "TPS62130",
-      manufacturer: "Texas Instruments",
-      overallStatus: "PASS",
-      specsMatchCount: 3,
-      totalConstraints: 3,
-    },
-    {
-      candidateId: "ENT-LM2596",
-      name: "LM2596",
-      manufacturer: "Texas Instruments",
-      overallStatus: "FAIL",
-      specsMatchCount: 1,
-      totalConstraints: 3,
-    },
-  ],
+  requirementId,
+  candidates,
   onSelectCandidate,
 }) => {
+  if (!candidates || candidates.length === 0) {
+    return (
+      <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-8 text-center">
+        <Cpu className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+        <p className="text-xs text-slate-400">No validation data available.</p>
+        <p className="text-[10px] text-slate-500 mt-1">Create or select a project to view validation data.</p>
+      </div>
+    );
+  }
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-5 flex flex-col gap-4 text-zinc-100">
       <div className="flex items-center justify-between pb-2 border-b border-zinc-800">

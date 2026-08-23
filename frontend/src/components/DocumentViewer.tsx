@@ -28,35 +28,19 @@ export interface DocumentViewerProps {
 }
 
 export const DocumentViewer: React.FC<DocumentViewerProps> = ({
-  documentId = "DOC-101",
-  title = "TPS62130 3A Step-Down Converter Datasheet",
-  sections = [
-    {
-      sectionId: "sec_1",
-      heading: "Electrical Characteristics",
-      level: 1,
-      pageNumber: 3,
-      paragraphs: [
-        "Operating junction temperature range: -40°C to 125°C. Supply voltage range VIN = 3V to 17V.",
-        "Output current continuous: 3A maximum across all specified conditions.",
-      ],
-      tables: [
-        {
-          tableId: "tbl_1",
-          pageNumber: 3,
-          sectionTitle: "Electrical Characteristics",
-          headers: ["Parameter", "Min", "Typ", "Max", "Unit"],
-          rows: [
-            ["Input Voltage (VIN)", "3.0", "-", "17.0", "V"],
-            ["Output Current (IOUT)", "-", "-", "3.0", "A"],
-            ["Quiescent Current", "-", "17", "30", "uA"],
-          ],
-          caption: "Electrical Specifications (VIN = 12V, TA = 25°C)",
-        },
-      ],
-    },
-  ],
+  documentId,
+  title,
+  sections = [],
 }) => {
+  if (!documentId || !sections || (Array.isArray(sections) && sections.length === 0)) {
+    return (
+      <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-8 text-center">
+        <FileText className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+        <p className="text-xs text-slate-400">Select a document to view.</p>
+        <p className="text-[10px] text-slate-500 mt-1">Create or select a project to view document details.</p>
+      </div>
+    );
+  }
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-5 flex flex-col gap-5 text-zinc-100">
       <div className="flex items-center justify-between pb-3 border-b border-zinc-800">

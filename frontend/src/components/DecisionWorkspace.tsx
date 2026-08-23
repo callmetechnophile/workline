@@ -15,19 +15,25 @@ export interface DecisionWorkspaceProps {
 }
 
 export const DecisionWorkspace: React.FC<DecisionWorkspaceProps> = ({
-  decisionId = "DEC-3V3-REG",
-  requirementTitle = "3.3V Output Regulator (>=2A, 5V input)",
-  recommendedCandidate = "TPS62130",
-  candidates = [
-    { name: "TPS62130", eligibility: "PASS", score: 0.91, risk: "LOW" },
-    { name: "LM2596-5", eligibility: "PASS", score: 0.84, risk: "MED" },
-    { name: "UnknownReg", eligibility: "UNKNOWN", score: 0.0, risk: "HIGH" },
-  ],
+  decisionId,
+  requirementTitle,
+  recommendedCandidate,
+  candidates = [],
   stability = "ROBUST",
   status = "RECOMMENDED",
   onApprove,
   onReject,
 }) => {
+  if (!decisionId || candidates.length === 0) {
+    return (
+      <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-8 text-center">
+        <GitPullRequest className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+        <p className="text-xs text-slate-400">No decision pending.</p>
+        <p className="text-[10px] text-slate-500 mt-1">Create or select a project to view decision workspace.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-5 flex flex-col gap-5 text-zinc-100">
       <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
@@ -101,7 +107,7 @@ export const DecisionWorkspace: React.FC<DecisionWorkspaceProps> = ({
         </div>
         <p className="text-sm font-bold text-zinc-100">{recommendedCandidate}</p>
         <p className="text-xs text-zinc-400">
-          Selected based on highest deterministic multi-criteria score (0.91), passing all mandatory electrical constraints with verified datasheet evidence.
+          Selected based on highest deterministic multi-criteria score, passing all mandatory electrical constraints with verified datasheet evidence.
         </p>
 
         {status !== "APPROVED" && (

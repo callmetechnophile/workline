@@ -24,35 +24,24 @@ interface DocumentLibraryProps {
 }
 
 export const DocumentLibrary: React.FC<DocumentLibraryProps> = ({
-  documents = [
-    {
-      documentId: "DOC-101",
-      projectId: "rover_v2",
-      filename: "TPS62130_Datasheet.pdf",
-      title: "TPS62130 3A Step-Down Converter",
-      sourceType: "DATASHEET",
-      status: "INDEXED",
-      sectionsCount: 14,
-      updatedAt: Date.now() - 3600000,
-    },
-    {
-      documentId: "DOC-102",
-      projectId: "rover_v2",
-      filename: "Thermal_Architecture_Paper.pdf",
-      title: "PINN Thermal Physics for High-Power PCBs",
-      sourceType: "RESEARCH_PAPER",
-      status: "INDEXED",
-      sectionsCount: 8,
-      updatedAt: Date.now() - 7200000,
-    },
-  ],
-  selectedDocId = "DOC-101",
+  documents = [],
+  selectedDocId,
   onSelectDocument,
   onIngestFile,
   onReindex,
   onDelete,
 }) => {
   const [isUploading, setIsUploading] = useState(false);
+
+  if (!documents || (Array.isArray(documents) && documents.length === 0)) {
+    return (
+      <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-8 text-center">
+        <FileText className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+        <p className="text-xs text-slate-400">No documents indexed.</p>
+        <p className="text-[10px] text-slate-500 mt-1">Create or select a project to view documents.</p>
+      </div>
+    );
+  }
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

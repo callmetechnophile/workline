@@ -18,34 +18,19 @@ interface RelationshipPanelProps {
 }
 
 export const RelationshipPanel: React.FC<RelationshipPanelProps> = ({
-  entityId = "ENT-TPS62130",
-  relationships = [
-    {
-      relationshipId: "REL-1",
-      fromEntity: "ENT-TPS62130",
-      relationshipType: "MANUFACTURED_BY",
-      toEntity: "ENT-TEXAS-INSTRUMENTS",
-      sourceType: "DOCUMENT_EVIDENCE",
-      confidence: 1.0,
-    },
-    {
-      relationshipId: "REL-2",
-      fromEntity: "ENT-TPS62130",
-      relationshipType: "HAS_DATASHEET",
-      toEntity: "DOC-TPS62130",
-      sourceType: "DOCUMENT_EVIDENCE",
-      confidence: 1.0,
-    },
-    {
-      relationshipId: "REL-3",
-      fromEntity: "REQ-3V3-RAIL",
-      relationshipType: "SATISFIED_BY",
-      toEntity: "ENT-TPS62130",
-      sourceType: "DETERMINISTIC_RULE",
-      confidence: 0.98,
-    },
-  ],
+  entityId,
+  relationships = [],
 }) => {
+  if (!relationships || relationships.length === 0) {
+    return (
+      <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-8 text-center">
+        <Layers className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+        <p className="text-xs text-slate-400">No relationships available.</p>
+        <p className="text-[10px] text-slate-500 mt-1">Create or select a project to view relationships.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-5 flex flex-col gap-4 text-zinc-100">
       <div className="flex items-center justify-between pb-2 border-b border-zinc-800">

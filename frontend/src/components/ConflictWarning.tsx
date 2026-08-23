@@ -9,7 +9,7 @@ interface ConflictWarningProps {
 }
 
 export const ConflictWarning: React.FC<ConflictWarningProps> = ({
-  conflicts = ["Output Current: 3A (TPS62130.pdf) vs 2A (Thermal_Paper.pdf)"],
+  conflicts = [],
   onReview,
 }) => {
   if (!conflicts || conflicts.length === 0) return null;

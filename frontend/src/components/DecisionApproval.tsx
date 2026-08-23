@@ -11,14 +11,24 @@ export interface DecisionApprovalProps {
 }
 
 export const DecisionApproval: React.FC<DecisionApprovalProps> = ({
-  decisionId = "DEC-3V3-REG",
-  candidateName = "TPS62130",
+  decisionId,
+  candidateName,
   onConfirmApprove,
   onReject,
 }) => {
   const [actorName, setActorName] = useState("lead_engineer");
   const [role, setRole] = useState("ENGINEER");
   const [rejectionReason, setRejectionReason] = useState("");
+
+  if (!decisionId || !candidateName) {
+    return (
+      <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-8 text-center">
+        <ShieldCheck className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+        <p className="text-xs text-slate-400">No approval pending.</p>
+        <p className="text-[10px] text-slate-500 mt-1">Create or select a project to view pending approvals.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-5 flex flex-col gap-4 text-zinc-100">

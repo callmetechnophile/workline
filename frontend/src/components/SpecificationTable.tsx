@@ -20,46 +20,25 @@ interface SpecificationTableProps {
 }
 
 export const SpecificationTable: React.FC<SpecificationTableProps> = ({
-  entityName = "TPS62130",
-  specifications = [
-    {
-      specificationId: "SPEC-1",
-      property: "Output Current",
-      value: "3 A",
-      unit: "A",
-      sourceDocument: "TPS62130.pdf",
-      page: 1,
-      section: "Features",
-      confidence: 1.0,
-    },
-    {
-      specificationId: "SPEC-2",
-      property: "Input Voltage Range",
-      value: "3V to 17V",
-      unit: "V",
-      sourceDocument: "TPS62130.pdf",
-      page: 3,
-      section: "Electrical Characteristics",
-      confidence: 0.98,
-    },
-    {
-      specificationId: "SPEC-3",
-      property: "Quiescent Current",
-      value: "17 uA",
-      unit: "uA",
-      sourceDocument: "TPS62130.pdf",
-      page: 3,
-      section: "Electrical Characteristics",
-      confidence: 0.95,
-    },
-  ],
+  entityName,
+  specifications = [],
 }) => {
+  if (!specifications || specifications.length === 0) {
+    return (
+      <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-8 text-center">
+        <Sliders className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+        <p className="text-xs text-slate-400">No specifications available.</p>
+        <p className="text-[10px] text-slate-500 mt-1">Create or select a project to view specifications.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-5 flex flex-col gap-4 text-zinc-100">
       <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
         <div className="flex items-center gap-2">
           <Sliders className="w-5 h-5 text-indigo-400" />
-          <h3 className="text-base font-bold text-zinc-100">Specifications for {entityName}</h3>
+          <h3 className="text-base font-bold text-zinc-100">Specifications{entityName ? ` for ${entityName}` : ""}</h3>
         </div>
         <span className="text-xs font-mono text-zinc-400">{specifications.length} Grounded Specs</span>
       </div>

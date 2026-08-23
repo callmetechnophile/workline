@@ -18,24 +18,20 @@ export interface PartResolutionPanelProps {
 }
 
 export const PartResolutionPanel: React.FC<PartResolutionPanelProps> = ({
-  canonicalPart = "TPS62130",
-  variants = [
-    {
-      orderingCode: "TPS62130RGTR",
-      package: "VQFN-16",
-      packaging: "Tape & Reel (3000)",
-      manufacturer: "Texas Instruments",
-    },
-    {
-      orderingCode: "TPS62130RGTT",
-      package: "VQFN-16",
-      packaging: "Cut Tape / Mini-Reel (250)",
-      manufacturer: "Texas Instruments",
-    },
-  ],
-  selectedCode = "TPS62130RGTR",
+  canonicalPart,
+  variants = [],
+  selectedCode,
   onSelectVariant,
 }) => {
+  if (!variants || (Array.isArray(variants) && variants.length === 0)) {
+    return (
+      <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-8 text-center">
+        <Cpu className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+        <p className="text-xs text-slate-400">No part resolution data.</p>
+        <p className="text-[10px] text-slate-500 mt-1">Create or select a project to view part resolution data.</p>
+      </div>
+    );
+  }
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-5 flex flex-col gap-4 text-zinc-100">
       <div className="flex items-center gap-2 pb-2 border-b border-zinc-800">

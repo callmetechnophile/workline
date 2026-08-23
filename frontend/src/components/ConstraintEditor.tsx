@@ -10,15 +10,12 @@ interface ConstraintEditorProps {
 }
 
 export const ConstraintEditor: React.FC<ConstraintEditorProps> = ({
-  constraints = [
-    { constraintId: "c_1", property: "output_voltage", operator: "=", requiredValue: "3.3V", dimension: "VOLTAGE" },
-    { constraintId: "c_2", property: "output_current", operator: ">=", requiredValue: "2A", dimension: "CURRENT" },
-  ],
+  constraints = [],
   onChangeConstraints,
 }) => {
-  const [property, setProperty] = useState("output_voltage");
-  const [operator, setOperator] = useState("=");
-  const [value, setValue] = useState("3.3V");
+  const [property, setProperty] = useState("");
+  const [operator, setOperator] = useState("");
+  const [value, setValue] = useState("");
 
   const handleAdd = () => {
     if (!value.trim()) return;

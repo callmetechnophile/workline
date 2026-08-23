@@ -1,24 +1,19 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '@clerk/nextjs';
-import { 
-  FolderKanban, 
-  Plus, 
-  Layers, 
-  Sparkles, 
-  X, 
-  AlertCircle, 
+import { SignInButton, SignUpButton } from '@clerk/nextjs';
+import {
+  Sparkles,
+  X,
+  AlertCircle,
   Loader2,
+  ExternalLink,
+  ArrowRight,
+  Shield,
   Cpu,
+  Layers,
   Zap,
-  CircuitBoard,
-  ShoppingCart,
-  PackageCheck,
-  CheckSquare,
-  BookOpen,
-  Database,
-  Network
 } from 'lucide-react';
 
 // Layout Primitives
@@ -26,6 +21,9 @@ import Sidebar, { NavSection } from '@/components/layout/Sidebar';
 import Topbar from '@/components/layout/Topbar';
 import ProjectHeader from '@/components/layout/ProjectHeader';
 import NewProjectModal from '@/components/layout/NewProjectModal';
+
+// Project Context
+import { ProjectProvider, useProject } from '@/lib/ProjectContext';
 
 // Workspace & Engineering Panels
 import ProjectOverview from '@/components/ProjectOverview';
@@ -78,148 +76,174 @@ import { AgentExecutionTimeline } from '@/components/AgentExecutionTimeline';
 // Contextual Copilot
 import ConnectionChatbot from '@/components/ConnectionChatbot';
 
-export default function Home() {
+/* ================================================================
+   PUBLIC LANDING PAGE — Shown to unauthenticated visitors.
+   No engineering data. No sidebar. No project context.
+   ================================================================ */
+function PublicLandingPage() {
+  return (
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
+      {/* Header */}
+      <header className="border-b border-slate-800 bg-slate-950/80 backdrop-blur-md">
+        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <img src="/icon.png" alt="Workline Logo" className="w-7 h-7 object-contain" />
+            <span className="font-mono text-sm font-black tracking-widest text-slate-100 uppercase">
+              WORKLINE AI
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <SignInButton mode="modal">
+              <button className="text-xs font-mono font-semibold px-4 py-2 rounded border border-slate-700 bg-slate-900 hover:bg-slate-800 text-slate-200 transition-all cursor-pointer">
+                Sign In
+              </button>
+            </SignInButton>
+            <SignUpButton mode="modal">
+              <button className="text-xs font-mono font-semibold px-4 py-2 rounded bg-indigo-600 hover:bg-indigo-500 text-white transition-all cursor-pointer">
+                Get Started
+              </button>
+            </SignUpButton>
+          </div>
+        </div>
+      </header>
+
+      {/* Hero Section */}
+      <main className="flex-1 flex flex-col items-center justify-center px-6 py-20">
+        <div className="max-w-2xl text-center space-y-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-950/60 border border-indigo-700/40 text-indigo-300 text-xs font-mono">
+            <Shield className="w-3.5 h-3.5" />
+            <span>Hardware Engineering Intelligence Platform</span>
+          </div>
+
+          <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white leading-tight">
+            From Idea to<br />
+            <span className="text-indigo-400">Production-Ready Hardware</span>
+          </h1>
+
+          <p className="text-sm text-slate-400 max-w-lg mx-auto leading-relaxed">
+            Workline AI guides engineers through the complete hardware lifecycle —
+            requirements, research, BOM optimization, PCB validation,
+            multi-physics simulation, and autonomous procurement —
+            with deterministic verification at every gate.
+          </p>
+
+          <div className="flex items-center justify-center gap-4 pt-4">
+            <SignUpButton mode="modal">
+              <button className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-semibold shadow-lg transition-all cursor-pointer flex items-center gap-2">
+                <span>Start Engineering</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </SignUpButton>
+            <SignInButton mode="modal">
+              <button className="px-6 py-2.5 border border-slate-700 bg-slate-900 hover:bg-slate-800 text-slate-200 rounded-lg text-sm font-medium transition-all cursor-pointer">
+                Sign In
+              </button>
+            </SignInButton>
+          </div>
+
+          {/* Feature Highlights */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-12 max-w-xl mx-auto">
+            <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-4 text-center space-y-2">
+              <Cpu className="w-5 h-5 text-indigo-400 mx-auto" />
+              <h3 className="text-xs font-bold text-slate-200">Component Intelligence</h3>
+              <p className="text-[11px] text-slate-400">Autonomous BOM sourcing & datasheet extraction</p>
+            </div>
+            <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-4 text-center space-y-2">
+              <Zap className="w-5 h-5 text-amber-400 mx-auto" />
+              <h3 className="text-xs font-bold text-slate-200">Multi-Physics PINN</h3>
+              <p className="text-[11px] text-slate-400">Neural thermal solvers & power tree verification</p>
+            </div>
+            <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-4 text-center space-y-2">
+              <Layers className="w-5 h-5 text-emerald-400 mx-auto" />
+              <h3 className="text-xs font-bold text-slate-200">x402 Procurement</h3>
+              <p className="text-[11px] text-slate-400">Non-custodial cryptographic order settlement</p>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="border-t border-slate-800 py-6">
+        <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
+          <span className="text-[11px] text-slate-500 font-mono">
+            © 2026 Workline AI — Engineering Intelligence Platform
+          </span>
+          <div className="flex items-center gap-4 text-xs text-slate-500 font-mono">
+            <a href="https://github.com/callmetechnophile/workline" target="_blank" rel="noopener noreferrer" className="hover:text-slate-300 transition-colors flex items-center gap-1">
+              <span>GitHub</span>
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+/* ================================================================
+   AUTHENTICATED ENGINEERING WORKBENCH — Shown after Clerk sign-in.
+   All data comes from ProjectContext. No inline mock data.
+   ================================================================ */
+function AuthenticatedWorkbench() {
   const [activeSection, setActiveSection] = useState<NavSection>('overview');
   const [isLightMode, setIsLightMode] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCopilotOpen, setIsCopilotOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  const [pipelineData, setPipelineData] = useState<any>(null);
-  const [currentProjectName, setCurrentProjectName] = useState<string>('');
-  const [targetDays, setTargetDays] = useState<number>(30);
-  const [savedHistory, setSavedHistory] = useState<any[]>([]);
-  const [isSaving, setIsSaving] = useState(false);
+  const {
+    projectData,
+    projectName,
+    targetDays,
+    hasProject,
+    error,
+    apiBase,
+    setProject,
+    savedHistory,
+    isSaving,
+    saveSpec,
+  } = useProject();
 
-  const { getToken, userId } = useAuth();
-  const [apiBase, setApiBase] = useState('');
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      if (process.env.NEXT_PUBLIC_API_URL) {
-        setApiBase(process.env.NEXT_PUBLIC_API_URL);
-      } else if (window.location.port === '3000') {
-        setApiBase('http://localhost:8000');
-      } else {
-        setApiBase('https://workline-core-gateway.onrender.com');
-      }
-
-      // Load cached project if present
-      const cached = localStorage.getItem('workline_active_project');
-      if (cached) {
-        try {
-          const parsed = JSON.parse(cached);
-          setPipelineData(parsed.data);
-          setCurrentProjectName(parsed.name || 'Synchronous Buck Converter');
-          setTargetDays(parsed.days || 30);
-        } catch (e) {
-          console.error(e);
-        }
-      }
-    }
-  }, []);
-
-  // Fetch session history
-  useEffect(() => {
-    async function fetchHistory() {
-      if (!userId || !apiBase) return;
-      try {
-        const token = await getToken();
-        const res = await fetch(`${apiBase}/api/packages/history`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setSavedHistory(data);
-        }
-      } catch (err) {
-        console.error("Failed to fetch session history:", err);
-      }
-    }
-    fetchHistory();
-  }, [userId, apiBase, getToken]);
+  const { getToken } = useAuth();
+  const [localError, setLocalError] = useState<string | null>(null);
 
   const handleCreateProject = async (intent: string, days: number) => {
     setIsProcessing(true);
-    setError(null);
+    setLocalError(null);
     try {
+      const token = await getToken();
       const response = await fetch(`${apiBase}/api/research`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ intent, target_days: days })
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ intent, target_days: days }),
       });
 
       if (!response.ok) {
-        throw new Error(`Engineering analysis failed (HTTP ${response.status}). Ensure R1 Core Gateway is reachable.`);
+        throw new Error(
+          `Engineering analysis failed (HTTP ${response.status}). Ensure R1 Core Gateway is reachable.`
+        );
       }
 
       const result = await response.json();
-      setPipelineData(result);
-      setCurrentProjectName(intent);
-      setTargetDays(days);
+      setProject(result, intent, days);
       setIsModalOpen(false);
       setActiveSection('overview');
-
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('workline_active_project', JSON.stringify({
-          name: intent,
-          days,
-          data: result
-        }));
-      }
     } catch (err: any) {
-      setError(err?.message || "Failed to initialize project.");
+      setLocalError(err?.message || 'Failed to initialize project.');
     } finally {
       setIsProcessing(false);
     }
   };
 
-  const handleSaveSpec = async () => {
-    if (!pipelineData) return;
-    setIsSaving(true);
-    try {
-      const token = await getToken();
-      const response = await fetch(`${apiBase}/api/packages/save`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          intent: currentProjectName || pipelineData.intent,
-          readiness_score: pipelineData.validation?.readiness_score || 85,
-          risk_score: pipelineData.validation?.risk_score || 25,
-          optimization_score: pipelineData.optimization?.optimization_score || 90,
-          data: pipelineData
-        })
-      });
-
-      if (response.ok) {
-        const updated = await fetch(`${apiBase}/api/packages/history`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (updated.ok) {
-          const list = await updated.json();
-          setSavedHistory(list);
-        }
-        alert("Engineering specification package saved to your profile.");
-      } else {
-        alert("Failed to save specification.");
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Error connecting to Workline API.");
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
   const handleLoadHistory = (item: any) => {
-    setPipelineData(item.data);
-    setCurrentProjectName(item.intent || 'Loaded Project');
+    setProject(item.data, item.intent || 'Loaded Project', 30);
     setActiveSection('overview');
   };
+
+  const displayError = localError || error;
 
   const renderActiveWorkspace = () => {
     if (isProcessing) {
@@ -227,9 +251,12 @@ export default function Home() {
         <div className="flex flex-col items-center justify-center p-16 space-y-4 text-center">
           <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
           <div className="space-y-1">
-            <h2 className="text-sm font-bold text-slate-100">Running Autonomous Engineering Analysis</h2>
+            <h2 className="text-sm font-bold text-slate-100">
+              Running Autonomous Engineering Analysis
+            </h2>
             <p className="text-xs text-slate-400 max-w-sm">
-              Synthesizing requirements, querying literature vectors, calculating BOM costs, and solving thermal PINN models...
+              Synthesizing requirements, querying literature vectors, calculating
+              BOM costs, and solving thermal PINN models...
             </p>
           </div>
         </div>
@@ -241,7 +268,7 @@ export default function Home() {
       case 'projects':
         return (
           <ProjectOverview
-            projectData={pipelineData}
+            projectData={projectData}
             onNavigate={(sec) => setActiveSection(sec)}
             onOpenNewProject={() => setIsModalOpen(true)}
           />
@@ -256,19 +283,16 @@ export default function Home() {
         );
 
       case 'research':
+        if (!hasProject) {
+          return <EmptyProjectState onOpenNewProject={() => setIsModalOpen(true)} label="research" />;
+        }
         return (
           <div className="space-y-6">
-            <ResearchPapers 
-              papers={pipelineData?.research_papers || []} 
-              summary={pipelineData?.research_summary || {
-                paper_id: 'lit_01',
-                title: 'Literature Overview',
-                summary: 'Academic synthesis for hardware component topology and constraints.',
-                conclusions: ['Validated topology', 'Meets thermal specs'],
-                recommendations: 'Proceed with selected architecture.'
-              }}
+            <ResearchPapers
+              papers={projectData?.research_papers || []}
+              summary={projectData?.research_summary}
             />
-            <ContradictionViewer contradictions={pipelineData?.contradictions || []} />
+            <ContradictionViewer contradictions={projectData?.contradictions || []} />
           </div>
         );
 
@@ -277,28 +301,34 @@ export default function Home() {
           <div className="space-y-6">
             <DatasheetPanel />
             <DocumentLibrary />
-            <GraphExplorer 
-              projectName={currentProjectName || 'Active Engineering Project'} 
-              apiBase={apiBase} 
+            <GraphExplorer
+              projectName={projectName || 'Active Engineering Project'}
+              apiBase={apiBase}
             />
           </div>
         );
 
       case 'architecture':
+        if (!hasProject) {
+          return <EmptyProjectState onOpenNewProject={() => setIsModalOpen(true)} label="architecture" />;
+        }
         return (
           <div className="space-y-6">
-            <DependencyGraph data={pipelineData?.dependency_graph || { nodes: [], edges: [] }} />
-            <WiringDiagram data={pipelineData?.wiring_diagram || { connections: [] }} />
+            <DependencyGraph data={projectData?.dependency_graph || { nodes: [], edges: [] }} />
+            <WiringDiagram data={projectData?.wiring_diagram || { connections: [] }} />
           </div>
         );
 
       case 'components':
+        if (!hasProject) {
+          return <EmptyProjectState onOpenNewProject={() => setIsModalOpen(true)} label="components" />;
+        }
         return (
           <div className="space-y-6">
-            <ComponentTable components={pipelineData?.bom || []} />
+            <ComponentTable components={projectData?.bom || []} />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <CandidateComparison />
-              <AlternativeComponents components={pipelineData?.bom || []} />
+              <AlternativeComponents components={projectData?.bom || []} />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <PinMappingTable />
@@ -308,21 +338,27 @@ export default function Home() {
         );
 
       case 'bom':
+        if (!hasProject) {
+          return <EmptyProjectState onOpenNewProject={() => setIsModalOpen(true)} label="BOM" />;
+        }
         return (
           <div className="space-y-6">
-            <BOMTable />
+            <BOMTable items={projectData?.bom_items} />
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2">
-                <CostBreakdown components={pipelineData?.bom || []} />
+                <CostBreakdown components={projectData?.bom || []} />
               </div>
               <div>
-                <BOMExportPanel apiBase={apiBase} exports={pipelineData?.exports} />
+                <BOMExportPanel apiBase={apiBase} exports={projectData?.exports} />
               </div>
             </div>
           </div>
         );
 
       case 'pcb':
+        if (!hasProject) {
+          return <EmptyProjectState onOpenNewProject={() => setIsModalOpen(true)} label="PCB layout" />;
+        }
         return (
           <div className="space-y-6">
             <BoardCanvas />
@@ -331,27 +367,20 @@ export default function Home() {
         );
 
       case 'simulation':
+        if (!hasProject) {
+          return <EmptyProjectState onOpenNewProject={() => setIsModalOpen(true)} label="simulation" />;
+        }
         return (
           <div className="space-y-6">
             <ThermalRiskPanel />
-            <PowerAnalysis data={pipelineData?.power_analysis || { 
-              power_items: [], 
-              summary: { 
-                total_power_load_w: 12.5, 
-                peak_current_a: 2.1, 
-                peak_power_load_w: 24.0, 
-                standby_load_ma: 15, 
-                battery_voltage_v: 12, 
-                battery_capacity_ah: 5, 
-                estimated_runtime_hours: 4.8, 
-                voltage_domains_count: 3 
-              }, 
-              warnings: [] 
-            }} />
+            <PowerAnalysis data={projectData?.power_analysis} />
           </div>
         );
 
       case 'procurement':
+        if (!hasProject) {
+          return <EmptyProjectState onOpenNewProject={() => setIsModalOpen(true)} label="procurement" />;
+        }
         return (
           <div className="space-y-6">
             <ProcurementHeatmap />
@@ -360,19 +389,22 @@ export default function Home() {
         );
 
       case 'release':
+        if (!hasProject) {
+          return <EmptyProjectState onOpenNewProject={() => setIsModalOpen(true)} label="release readiness" />;
+        }
         return (
           <div className="space-y-6">
-            <ExecutionReadiness 
-              readiness={pipelineData?.validation?.readiness_score || 85}
-              risk={pipelineData?.validation?.risk_score || 25}
-              optimization={pipelineData?.optimization?.optimization_score || 90}
+            <ExecutionReadiness
+              readiness={projectData?.validation?.readiness_score}
+              risk={projectData?.validation?.risk_score}
+              optimization={projectData?.optimization?.optimization_score}
             />
-            <GanttRoadmap 
-              roadmap={pipelineData?.roadmap || []}
-              gantt={pipelineData?.gantt || []}
-              projectName={currentProjectName}
+            <GanttRoadmap
+              roadmap={projectData?.roadmap || []}
+              gantt={projectData?.gantt || []}
+              projectName={projectName}
             />
-            <AuditTrail logs={pipelineData?.audit_trail || []} />
+            <AuditTrail logs={projectData?.audit_trail || []} />
           </div>
         );
 
@@ -385,38 +417,15 @@ export default function Home() {
           />
         );
 
-      case 'agents': {
-        const sampleAgent = {
-          agent_id: "agent_r2_research",
-          name: "R2 Research & Sourcing Agent",
-          description: "Datasheet extraction, constraint resolution, and component discovery.",
-          provider: "Workline AI Cluster",
-          protocol: "WORKLINE_IPC",
-          version: "1.0.0-rc1",
-          status: "AVAILABLE" as const,
-          capabilities: [
-            {
-              capability_id: "cap_research",
-              name: "Autonomous Datasheet Synthesis",
-              description: "Extracts electrical tolerances and pin constraints.",
-              capability_type: "RESEARCH",
-              estimated_cost: 0.05,
-              risk_level: "LOW" as const,
-              availability: true,
-              version: "1.0.0"
-            }
-          ]
-        };
-
+      case 'agents':
         return (
           <div className="space-y-6">
-            <AgentRegistry agents={[sampleAgent]} />
-            <AgentCapabilityPanel agent={sampleAgent} />
+            <AgentRegistry agents={[]} />
+            <AgentCapabilityPanel agent={null} />
             <AgentTaskPanel tasks={[]} />
             <AgentExecutionTimeline externalTasks={[]} />
           </div>
         );
-      }
 
       case 'health':
         return <ServiceHealthPanel />;
@@ -427,10 +436,14 @@ export default function Home() {
       case 'settings':
         return (
           <div className="bg-slate-900/80 border border-slate-800 rounded-lg p-6 space-y-4 max-w-2xl">
-            <h2 className="text-sm font-bold text-slate-100 uppercase font-mono">Workspace Settings</h2>
+            <h2 className="text-sm font-bold text-slate-100 uppercase font-mono">
+              Workspace Settings
+            </h2>
             <div className="space-y-3 text-xs text-slate-300">
               <div>
-                <label className="block text-slate-500 font-mono mb-1">R1 CORE GATEWAY URL</label>
+                <label className="block text-slate-500 font-mono mb-1">
+                  R1 CORE GATEWAY URL
+                </label>
                 <input
                   type="text"
                   disabled
@@ -439,7 +452,9 @@ export default function Home() {
                 />
               </div>
               <div>
-                <label className="block text-slate-500 font-mono mb-1">PAYMENT PROTOCOL NETWORK</label>
+                <label className="block text-slate-500 font-mono mb-1">
+                  PAYMENT PROTOCOL NETWORK
+                </label>
                 <input
                   type="text"
                   disabled
@@ -463,8 +478,8 @@ export default function Home() {
         activeSection={activeSection}
         onSelectSection={(sec) => setActiveSection(sec)}
         onOpenNewProject={() => setIsModalOpen(true)}
-        projectName={currentProjectName}
-        hasProject={Boolean(pipelineData)}
+        projectName={projectName}
+        hasProject={hasProject}
       />
 
       {/* Main Execution Workspace Shell */}
@@ -472,37 +487,41 @@ export default function Home() {
         <Topbar
           isLightMode={isLightMode}
           onToggleTheme={() => setIsLightMode(!isLightMode)}
-          projectName={currentProjectName}
+          projectName={projectName}
           onOpenNewProject={() => setIsModalOpen(true)}
           onOpenCopilot={() => setIsCopilotOpen(true)}
         />
 
         <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
-          {error && (
+          {displayError && (
             <div className="bg-red-950/30 border border-red-500/40 rounded-lg p-4 text-xs text-red-300 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 flex-shrink-0 text-red-400" />
-                <span>{error}</span>
+                <span>{displayError}</span>
               </div>
               <button
-                onClick={() => setError(null)}
-                className="text-red-400 hover:text-red-200 text-xs font-mono"
+                onClick={() => setLocalError(null)}
+                className="text-red-400 hover:text-red-200 text-xs font-mono cursor-pointer"
               >
                 Dismiss
               </button>
             </div>
           )}
 
-          {/* Project Context Header (Rendered on engineering modules if project active) */}
-          {pipelineData && activeSection !== 'conversations' && activeSection !== 'health' && activeSection !== 'integrations' && activeSection !== 'settings' && (
-            <ProjectHeader
-              projectName={currentProjectName || 'Autonomous Engineering Project'}
-              targetDays={targetDays}
-              onSave={handleSaveSpec}
-              isSaving={isSaving}
-              onRefresh={() => handleCreateProject(currentProjectName, targetDays)}
-            />
-          )}
+          {/* Project Context Header */}
+          {hasProject &&
+            activeSection !== 'conversations' &&
+            activeSection !== 'health' &&
+            activeSection !== 'integrations' &&
+            activeSection !== 'settings' && (
+              <ProjectHeader
+                projectName={projectName || 'Autonomous Engineering Project'}
+                targetDays={targetDays}
+                onSave={saveSpec}
+                isSaving={isSaving}
+                onRefresh={() => handleCreateProject(projectName, targetDays)}
+              />
+            )}
 
           {/* Active Workspace View */}
           {renderActiveWorkspace()}
@@ -515,7 +534,9 @@ export default function Home() {
           <div className="h-14 px-4 border-b border-slate-800 flex items-center justify-between bg-slate-950">
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-indigo-400" />
-              <span className="text-xs font-bold text-slate-100 uppercase font-mono">Workline Copilot</span>
+              <span className="text-xs font-bold text-slate-100 uppercase font-mono">
+                Workline Copilot
+              </span>
             </div>
             <button
               onClick={() => setIsCopilotOpen(false)}
@@ -525,13 +546,14 @@ export default function Home() {
             </button>
           </div>
           <div className="flex-1 overflow-y-auto p-4">
-            <ConnectionChatbot 
+            <ConnectionChatbot
               projectContext={{
-                bom: pipelineData?.bom || [],
-                wiring: pipelineData?.wiring_diagram || {},
-                power: pipelineData?.power_analysis || {},
-                datasheets: pipelineData?.datasheets || []
+                bom: projectData?.bom || [],
+                wiring: projectData?.wiring_diagram || {},
+                power: projectData?.power_analysis || {},
+                datasheets: projectData?.datasheets || [],
               }}
+              apiBase={apiBase}
             />
           </div>
         </div>
@@ -545,5 +567,65 @@ export default function Home() {
         isProcessing={isProcessing}
       />
     </div>
+  );
+}
+
+/* ================================================================
+   EMPTY PROJECT STATE — Shown on engineering modules when no
+   project is selected. Never renders fabricated data.
+   ================================================================ */
+function EmptyProjectState({
+  onOpenNewProject,
+  label,
+}: {
+  onOpenNewProject: () => void;
+  label: string;
+}) {
+  return (
+    <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-12 text-center max-w-xl mx-auto my-8 space-y-4">
+      <div className="w-10 h-10 rounded-full bg-slate-800 text-slate-500 flex items-center justify-center mx-auto">
+        <Layers className="w-5 h-5" />
+      </div>
+      <div className="space-y-1">
+        <h3 className="text-sm font-bold text-slate-200">No Project Selected</h3>
+        <p className="text-xs text-slate-400">
+          Create or select a project to view {label} data.
+        </p>
+      </div>
+      <button
+        onClick={onOpenNewProject}
+        className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-md text-xs font-semibold shadow transition-all cursor-pointer inline-flex items-center gap-1.5"
+      >
+        <span>Create Project</span>
+        <ArrowRight className="w-3.5 h-3.5" />
+      </button>
+    </div>
+  );
+}
+
+/* ================================================================
+   ROOT HOME COMPONENT — Auth gate.
+   Unauthenticated → PublicLandingPage
+   Authenticated   → ProjectProvider → AuthenticatedWorkbench
+   ================================================================ */
+export default function Home() {
+  const { isSignedIn, isLoaded } = useAuth();
+
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <Loader2 className="w-6 h-6 text-indigo-400 animate-spin" />
+      </div>
+    );
+  }
+
+  if (!isSignedIn) {
+    return <PublicLandingPage />;
+  }
+
+  return (
+    <ProjectProvider>
+      <AuthenticatedWorkbench />
+    </ProjectProvider>
   );
 }

@@ -15,14 +15,20 @@ export interface SensitivityPanelProps {
 }
 
 export const SensitivityPanel: React.FC<SensitivityPanelProps> = ({
-  currentWinner = "TPS62130",
+  currentWinner,
   stability = "SENSITIVE",
-  perturbations = [
-    { criterion: "Unit Cost", weightChange: "0.20 → 0.30", winner: "TPS62130", isShift: false },
-    { criterion: "Unit Cost", weightChange: "0.20 → 0.40", winner: "LM2596-5", isShift: true },
-    { criterion: "Supply Risk", weightChange: "0.20 → 0.35", winner: "TPS62130", isShift: false },
-  ],
+  perturbations = [],
 }) => {
+  if (!perturbations || perturbations.length === 0) {
+    return (
+      <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-8 text-center">
+        <Activity className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+        <p className="text-xs text-slate-400">No sensitivity data.</p>
+        <p className="text-[10px] text-slate-500 mt-1">Create or select a project to view sensitivity analysis.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-5 flex flex-col gap-4 text-zinc-100">
       <div className="flex items-center justify-between pb-2 border-b border-zinc-800">

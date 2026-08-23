@@ -13,48 +13,60 @@ export interface ProcurementSummaryProps {
 }
 
 export const ProcurementSummary: React.FC<ProcurementSummaryProps> = ({
-  packageId = "PKG-001",
-  bomId = "BOM-001 v1",
-  subtotal = 180.0,
+  packageId,
+  bomId,
+  subtotal,
   currency = "INR",
-  supplierBreakdown = [
-    { supplier: "DigiKey", items: 1, subtotal: 180.0 },
-  ],
+  supplierBreakdown = [],
   onHandoffToX402,
 }) => {
+  if (!packageId && subtotal === undefined && (!supplierBreakdown || supplierBreakdown.length === 0)) {
+    return (
+      <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-8 text-center">
+        <Package className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+        <p className="text-xs text-slate-400">No procurement summary available.</p>
+        <p className="text-[10px] text-slate-500 mt-1">Create or select a project to view procurement summary.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-5 flex flex-col gap-5 text-zinc-100">
       <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
         <div className="flex items-center gap-2">
           <Package className="w-5 h-5 text-indigo-400" />
           <h3 className="text-base font-bold text-zinc-100">Procurement Package Overview</h3>
-          <span className="text-xs font-mono text-zinc-500">[{packageId}]</span>
+          {packageId && <span className="text-xs font-mono text-zinc-500">[{packageId}]</span>}
         </div>
         <span className="px-2.5 py-0.5 rounded text-xs font-mono font-bold bg-emerald-950/60 text-emerald-300 border border-emerald-800">
           STATUS: READY
         </span>
       </div>
 
-      <div className="flex flex-col gap-2">
-        <span className="text-xs font-bold text-zinc-400">Supplier Sourcing Breakdown</span>
-        <div className="flex flex-col gap-2 font-mono text-xs">
-          {supplierBreakdown.map((s) => (
-            <div key={s.supplier} className="p-3 bg-zinc-950/60 border border-zinc-800 rounded-lg flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Store className="w-3.5 h-3.5 text-indigo-400" />
-                <span className="font-bold text-zinc-200">{s.supplier}</span>
-                <span className="text-zinc-500">({s.items} line item)</span>
+      {supplierBreakdown && supplierBreakdown.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <span className="text-xs font-bold text-zinc-400">Supplier Sourcing Breakdown</span>
+          <div className="flex flex-col gap-2 font-mono text-xs">
+            {supplierBreakdown.map((s) => (
+              <div key={s.supplier} className="p-3 bg-zinc-950/60 border border-zinc-800 rounded-lg flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Store className="w-3.5 h-3.5 text-indigo-400" />
+                  <span className="font-bold text-zinc-200">{s.supplier}</span>
+                  <span className="text-zinc-500">({s.items} line item{s.items !== 1 ? "s" : ""})</span>
+                </div>
+                <span className="font-bold text-emerald-400">₹{s.subtotal.toFixed(2)}</span>
               </div>
-              <span className="font-bold text-emerald-400">₹{s.subtotal.toFixed(2)}</span>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="p-4 bg-zinc-950/80 border border-zinc-800 rounded-lg flex items-center justify-between">
         <div>
           <span className="text-xs text-zinc-400 block">Total Landed Estimate:</span>
-          <span className="text-xl font-mono font-bold text-emerald-400">₹{subtotal.toFixed(2)} {currency}</span>
+          <span className="text-xl font-mono font-bold text-emerald-400">
+            ₹{subtotal !== undefined ? subtotal.toFixed(2) : "0.00"} {currency}
+          </span>
         </div>
 
         <button

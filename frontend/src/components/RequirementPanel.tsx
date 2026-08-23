@@ -29,26 +29,22 @@ interface RequirementPanelProps {
 }
 
 export const RequirementPanel: React.FC<RequirementPanelProps> = ({
-  requirements = [
-    {
-      requirementId: "REQ-3V3-RAIL",
-      projectId: "rover_v2",
-      category: "POWER",
-      description: "Need a 3.3V regulator from 5V input capable of at least 2A.",
-      constraints: [
-        { constraintId: "C1", property: "input_voltage", operator: "=", requiredValue: "5V", dimension: "VOLTAGE" },
-        { constraintId: "C2", property: "output_voltage", operator: "=", requiredValue: "3.3V", dimension: "VOLTAGE" },
-        { constraintId: "C3", property: "output_current", operator: ">=", requiredValue: "2A", dimension: "CURRENT" },
-      ],
-      priority: "CRITICAL",
-      status: "ACTIVE",
-    },
-  ],
-  selectedReqId = "REQ-3V3-RAIL",
+  requirements = [],
+  selectedReqId,
   onSelectRequirement,
   onCreateRequirement,
 }) => {
   const [newDesc, setNewDesc] = useState("");
+
+  if (!requirements || requirements.length === 0) {
+    return (
+      <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-8 text-center">
+        <CheckSquare className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+        <p className="text-xs text-slate-400">No requirements defined.</p>
+        <p className="text-[10px] text-slate-500 mt-1">Create or select a project to view requirements.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-5 flex flex-col gap-4 text-zinc-100">

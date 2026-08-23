@@ -11,35 +11,19 @@ interface DocumentStructureProps {
 }
 
 export const DocumentStructure: React.FC<DocumentStructureProps> = ({
-  documentId = "DOC-101",
-  sections = [
-    {
-      sectionId: "sec_1",
-      heading: "1. Device Overview",
-      level: 1,
-      pageNumber: 1,
-      paragraphs: ["Intro paragraph"],
-      tables: [],
-    },
-    {
-      sectionId: "sec_2",
-      heading: "2. Electrical Characteristics",
-      level: 1,
-      pageNumber: 3,
-      paragraphs: ["Ratings paragraph"],
-      tables: [
-        {
-          tableId: "tbl_1",
-          pageNumber: 3,
-          sectionTitle: "Electrical Characteristics",
-          headers: ["Parameter", "Value"],
-          rows: [["IOUT", "3A"]],
-        },
-      ],
-    },
-  ],
+  documentId,
+  sections = [],
   onSelectSection,
 }) => {
+  if (!sections || (Array.isArray(sections) && sections.length === 0)) {
+    return (
+      <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-8 text-center">
+        <Layers className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+        <p className="text-xs text-slate-400">No document structure available.</p>
+        <p className="text-[10px] text-slate-500 mt-1">Create or select a project to view document structure.</p>
+      </div>
+    );
+  }
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-5 flex flex-col gap-4 text-zinc-100">
       <div className="flex items-center gap-2 pb-2 border-b border-zinc-800">

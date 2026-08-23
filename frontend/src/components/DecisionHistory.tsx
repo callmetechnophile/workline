@@ -19,18 +19,19 @@ export interface DecisionHistoryProps {
 }
 
 export const DecisionHistory: React.FC<DecisionHistoryProps> = ({
-  decisionId = "DEC-3V3-REG",
-  history = [
-    {
-      version: 1,
-      title: "Select 3.3V Switching Regulator",
-      selectedCandidate: "TPS62130",
-      status: "APPROVED",
-      actor: "lead_engineer (ENGINEER)",
-      timestamp: "2026-08-22 10:30 UTC",
-    },
-  ],
+  decisionId,
+  history = [],
 }) => {
+  if (!history || history.length === 0) {
+    return (
+      <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-8 text-center">
+        <History className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+        <p className="text-xs text-slate-400">No decision history.</p>
+        <p className="text-[10px] text-slate-500 mt-1">Create or select a project to view decision history.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-5 flex flex-col gap-4 text-zinc-100">
       <div className="flex items-center gap-2 pb-2 border-b border-zinc-800">

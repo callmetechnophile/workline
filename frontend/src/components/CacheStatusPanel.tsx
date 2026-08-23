@@ -24,18 +24,7 @@ interface CacheStatusPanelProps {
 }
 
 export const CacheStatusPanel: React.FC<CacheStatusPanelProps> = ({
-  metrics = {
-    status: "HEALTHY",
-    l1Entries: 128,
-    l2Entries: 642,
-    l2SizeBytes: 3145728, // ~3 MB
-    hits: 1840,
-    misses: 260,
-    hitRate: 87.6,
-    missRate: 12.4,
-    expired: 48,
-    invalidations: 12,
-  },
+  metrics,
   onCleanExpired,
   onClearCache,
   onRefresh,
@@ -43,6 +32,16 @@ export const CacheStatusPanel: React.FC<CacheStatusPanelProps> = ({
   const [cleaning, setCleaning] = useState(false);
   const [clearing, setClearing] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+
+  if (!metrics) {
+    return (
+      <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-8 text-center">
+        <Database className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+        <p className="text-xs text-slate-400">No cache metrics available.</p>
+        <p className="text-[10px] text-slate-500 mt-1">Create or select a project to view cache metrics.</p>
+      </div>
+    );
+  }
 
   const handleClean = async () => {
     if (!onCleanExpired) return;
