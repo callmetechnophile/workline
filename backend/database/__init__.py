@@ -9,7 +9,7 @@ DATABASE_URL = os.environ.get("DATABASE_URL")
 
 def get_db_connection():
     DB_PATH = os.path.join(os.path.dirname(__file__), "..", "user_storage.db")
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(DB_PATH, timeout=30.0)
     conn.row_factory = sqlite3.Row
     return conn
 
@@ -31,6 +31,12 @@ def init_db():
     conn = get_db_connection()
     is_postgres = hasattr(conn, "cursor_factory")
     cursor = conn.cursor()
+    
+    if not is_postgres:
+        try:
+            cursor.execute("PRAGMA journal_mode=WAL;")
+        except Exception:
+            pass
     
     if is_postgres:
         cursor.execute("""
@@ -118,6 +124,36 @@ def init_db():
                 timestamp TEXT NOT NULL
             )
         """)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS pipeline_runs (
+                run_id TEXT PRIMARY KEY,
+                project_id TEXT NOT NULL,
+                status TEXT NOT NULL,
+                current_stage TEXT,
+                requirements_revision INTEGER DEFAULT 0,
+                research_revision INTEGER DEFAULT 0,
+                architecture_revision INTEGER DEFAULT 0,
+                bom_revision INTEGER DEFAULT 0,
+                created_at TEXT NOT NULL,
+                completed_at TEXT,
+                error TEXT
+            )
+        """)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS pipeline_stage_runs (
+                id SERIAL PRIMARY KEY,
+                run_id TEXT NOT NULL,
+                project_id TEXT NOT NULL,
+                stage TEXT NOT NULL,
+                status TEXT NOT NULL,
+                input_revision_ids TEXT,
+                output_revision_id INTEGER,
+                stage_data TEXT,
+                started_at TEXT NOT NULL,
+                completed_at TEXT,
+                error TEXT
+            )
+        """)
     else:
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS packages (
@@ -202,6 +238,36 @@ def init_db():
                 modified_by TEXT NOT NULL,
                 change_summary TEXT NOT NULL,
                 timestamp TEXT NOT NULL
+            )
+        """)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS pipeline_runs (
+                run_id TEXT PRIMARY KEY,
+                project_id TEXT NOT NULL,
+                status TEXT NOT NULL,
+                current_stage TEXT,
+                requirements_revision INTEGER DEFAULT 0,
+                research_revision INTEGER DEFAULT 0,
+                architecture_revision INTEGER DEFAULT 0,
+                bom_revision INTEGER DEFAULT 0,
+                created_at TEXT NOT NULL,
+                completed_at TEXT,
+                error TEXT
+            )
+        """)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS pipeline_stage_runs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                run_id TEXT NOT NULL,
+                project_id TEXT NOT NULL,
+                stage TEXT NOT NULL,
+                status TEXT NOT NULL,
+                input_revision_ids TEXT,
+                output_revision_id INTEGER,
+                stage_data TEXT,
+                started_at TEXT NOT NULL,
+                completed_at TEXT,
+                error TEXT
             )
         """)
         # Insert default roles into roles table
@@ -451,3 +517,187 @@ def get_user_history(user_id: str):
             "timestamp": row["timestamp"]
         })
     return history
+
+
+def save_pipeline_run(
+    run_id: str,
+    project_id: str,
+    status: str = "RUNNING",
+    current_stage: str = "R2_REQUIREMENTS",
+    requirements_rev: int = 0,
+    research_rev: int = 0,
+    architecture_rev: int = 0,
+    bom_rev: int = 0,
+):
+    conn = get_db_connection()
+    is_postgres = hasattr(conn, "cursor_factory")
+    created_at = datetime.utcnow().isoformat()
+    if is_postgres:
+        execute_query(conn, "DELETE FROM pipeline_stage_runs WHERE run_id = %s", (run_id,))
+        query = """
+            INSERT INTO pipeline_runs (
+                run_id, project_id, status, current_stage,
+                requirements_revision, research_revision, architecture_revision, bom_revision,
+                created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT (run_id) DO UPDATE SET
+                status = EXCLUDED.status,
+                current_stage = EXCLUDED.current_stage,
+                requirements_revision = EXCLUDED.requirements_revision,
+                research_revision = EXCLUDED.research_revision,
+                architecture_revision = EXCLUDED.architecture_revision,
+                bom_revision = EXCLUDED.bom_revision
+        """
+    else:
+        execute_query(conn, "DELETE FROM pipeline_stage_runs WHERE run_id = ?", (run_id,))
+        query = """
+            INSERT OR REPLACE INTO pipeline_runs (
+                run_id, project_id, status, current_stage,
+                requirements_revision, research_revision, architecture_revision, bom_revision,
+                created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """
+    execute_query(conn, query, (
+        run_id, project_id, status, current_stage,
+        requirements_rev, research_rev, architecture_rev, bom_rev,
+        created_at
+    ))
+    conn.commit()
+    conn.close()
+
+
+def update_pipeline_run(
+    run_id: str,
+    status: str,
+    current_stage: str = None,
+    requirements_rev: int = None,
+    research_rev: int = None,
+    architecture_rev: int = None,
+    bom_rev: int = None,
+    error: str = None,
+):
+    conn = get_db_connection()
+    completed_at = datetime.utcnow().isoformat() if status in ["COMPLETED", "FAILED"] else None
+    
+    updates = ["status = ?"]
+    params = [status]
+    
+    if current_stage is not None:
+        updates.append("current_stage = ?")
+        params.append(current_stage)
+    if requirements_rev is not None:
+        updates.append("requirements_revision = ?")
+        params.append(requirements_rev)
+    if research_rev is not None:
+        updates.append("research_revision = ?")
+        params.append(research_rev)
+    if architecture_rev is not None:
+        updates.append("architecture_revision = ?")
+        params.append(architecture_rev)
+    if bom_rev is not None:
+        updates.append("bom_revision = ?")
+        params.append(bom_rev)
+    if completed_at is not None:
+        updates.append("completed_at = ?")
+        params.append(completed_at)
+    if error is not None:
+        updates.append("error = ?")
+        params.append(error)
+        
+    params.append(run_id)
+    query = f"UPDATE pipeline_runs SET {', '.join(updates)} WHERE run_id = ?"
+    execute_query(conn, query, tuple(params))
+    conn.commit()
+    conn.close()
+
+
+def get_pipeline_run(run_id: str):
+    conn = get_db_connection()
+    query = "SELECT * FROM pipeline_runs WHERE run_id = ?"
+    cursor = execute_query(conn, query, (run_id,))
+    row = cursor.fetchone()
+    conn.close()
+    if row:
+        return dict(row)
+    return None
+
+
+def get_pipeline_runs_for_project(project_id: str):
+    conn = get_db_connection()
+    query = "SELECT * FROM pipeline_runs WHERE project_id = ? ORDER BY created_at DESC"
+    cursor = execute_query(conn, query, (project_id,))
+    rows = cursor.fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def save_pipeline_stage_run(
+    run_id: str,
+    project_id: str,
+    stage: str,
+    status: str,
+    input_revision_ids: dict = None,
+    output_revision_id: int = None,
+    stage_data: dict = None,
+    error: str = None,
+):
+    conn = get_db_connection()
+    now_iso = datetime.utcnow().isoformat()
+    # Check if stage already exists for this run
+    check_query = "SELECT id FROM pipeline_stage_runs WHERE run_id = ? AND stage = ?"
+    cursor = execute_query(conn, check_query, (run_id, stage))
+    existing = cursor.fetchone()
+
+    if existing:
+        update_query = """
+            UPDATE pipeline_stage_runs SET
+                status = ?,
+                input_revision_ids = COALESCE(?, input_revision_ids),
+                output_revision_id = COALESCE(?, output_revision_id),
+                stage_data = COALESCE(?, stage_data),
+                completed_at = ?,
+                error = ?
+            WHERE run_id = ? AND stage = ?
+        """
+        input_revs_json = json.dumps(input_revision_ids) if input_revision_ids is not None else None
+        stage_data_json = json.dumps(stage_data) if stage_data is not None else None
+        completed_at = now_iso if status in ["COMPLETED", "FAILED"] else None
+        execute_query(conn, update_query, (
+            status, input_revs_json, output_revision_id, stage_data_json, completed_at, error, run_id, stage
+        ))
+    else:
+        insert_query = """
+            INSERT INTO pipeline_stage_runs (
+                run_id, project_id, stage, status,
+                input_revision_ids, output_revision_id, stage_data,
+                started_at, completed_at, error
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """
+        execute_query(conn, insert_query, (
+            run_id, project_id, stage, status,
+            json.dumps(input_revision_ids or {}), output_revision_id,
+            json.dumps(stage_data or {}), now_iso, now_iso if status in ["COMPLETED", "FAILED"] else None, error
+        ))
+    conn.commit()
+    conn.close()
+
+
+def get_pipeline_stages_for_run(run_id: str):
+    conn = get_db_connection()
+    query = "SELECT * FROM pipeline_stage_runs WHERE run_id = ? ORDER BY id ASC"
+    cursor = execute_query(conn, query, (run_id,))
+    rows = cursor.fetchall()
+    conn.close()
+    results = []
+    for r in rows:
+        d = dict(r)
+        try:
+            d["input_revision_ids"] = json.loads(d["input_revision_ids"])
+        except Exception:
+            pass
+        try:
+            d["stage_data"] = json.loads(d["stage_data"])
+        except Exception:
+            pass
+        results.append(d)
+    return results

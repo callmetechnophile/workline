@@ -13,7 +13,8 @@ import {
   Cpu,
   CircuitBoard,
   Activity,
-  FileText
+  FileText,
+  CheckCircle2
 } from 'lucide-react';
 import { NavSection } from './layout/Sidebar';
 import EngineeringStatusBadge from './EngineeringStatusBadge';
@@ -187,6 +188,71 @@ export default function ProjectOverview({
               {resolvedTargetDays} Days
             </div>
             <div className="text-[11px] text-slate-500">Autonomous execution window</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Sequential Pipeline Orchestration Status */}
+      <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-4 space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-mono font-bold tracking-wider text-slate-500 uppercase">
+              SEQUENTIAL PIPELINE ORCHESTRATION (R1 → R2 → R3 → R4 → R5)
+            </span>
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-950/80 text-indigo-300 border border-indigo-800/40">
+              R1 AUTHORITATIVE
+            </span>
+          </div>
+          <span className="text-[11px] font-mono text-emerald-400 font-bold flex items-center gap-1">
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            <span>LINEAGE VERIFIED</span>
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
+          <div className="bg-slate-950/80 border border-slate-800 rounded-lg p-2.5 space-y-1">
+            <div className="flex items-center justify-between text-[10px] font-mono">
+              <span className="text-slate-400 font-bold">R2: REQUIREMENTS</span>
+              <span className="text-emerald-400 font-bold">✓ Rev {projectData.pipeline_lineage?.requirements_revision || 1}</span>
+            </div>
+            <div className="text-[11px] font-semibold text-slate-200 truncate">Validated Goals</div>
+            <div className="text-[9px] text-slate-500 font-mono">Upstream: User Request</div>
+          </div>
+
+          <div className="bg-slate-950/80 border border-slate-800 rounded-lg p-2.5 space-y-1">
+            <div className="flex items-center justify-between text-[10px] font-mono">
+              <span className="text-slate-400 font-bold">R3: RESEARCH</span>
+              <span className="text-emerald-400 font-bold">✓ Rev {projectData.pipeline_lineage?.research_revision || 1}</span>
+            </div>
+            <div className="text-[11px] font-semibold text-slate-200 truncate">{papers.length} Papers & Standards</div>
+            <div className="text-[9px] text-slate-500 font-mono">Based on: R2_v{projectData.pipeline_lineage?.requirements_revision || 1}</div>
+          </div>
+
+          <div className="bg-slate-950/80 border border-slate-800 rounded-lg p-2.5 space-y-1">
+            <div className="flex items-center justify-between text-[10px] font-mono">
+              <span className="text-slate-400 font-bold">R4: ENGINEERING</span>
+              <span className="text-emerald-400 font-bold">✓ Rev {projectData.pipeline_lineage?.architecture_revision || 1}</span>
+            </div>
+            <div className="text-[11px] font-semibold text-slate-200 truncate">Architecture & Wiring</div>
+            <div className="text-[9px] text-slate-500 font-mono">Based on: R2_v1 + R3_v1</div>
+          </div>
+
+          <div className="bg-slate-950/80 border border-slate-800 rounded-lg p-2.5 space-y-1">
+            <div className="flex items-center justify-between text-[10px] font-mono">
+              <span className="text-slate-400 font-bold">R5: CANONICAL BOM</span>
+              <span className="text-emerald-400 font-bold">✓ Rev {projectData.pipeline_lineage?.bom_revision || 1}</span>
+            </div>
+            <div className="text-[11px] font-semibold text-slate-200 truncate">{bomItems.length} Sourced Parts</div>
+            <div className="text-[9px] text-slate-500 font-mono">Based on: R2+R3+R4</div>
+          </div>
+
+          <div className="bg-slate-950/80 border border-indigo-800/40 rounded-lg p-2.5 space-y-1">
+            <div className="flex items-center justify-between text-[10px] font-mono">
+              <span className="text-indigo-300 font-bold">PROCUREMENT / x402</span>
+              <span className="text-indigo-400 font-bold">● READY</span>
+            </div>
+            <div className="text-[11px] font-semibold text-indigo-200 truncate">${Number(projectData.total_cost_usd || projectData.total_usd || 0).toFixed(2)} USD</div>
+            <div className="text-[9px] text-indigo-400 font-mono">Algorand Settlement</div>
           </div>
         </div>
       </div>

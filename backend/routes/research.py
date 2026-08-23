@@ -144,3 +144,27 @@ def simulate_violation(payload: ViolationRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
+@router.get("/pipeline/runs/{run_id}")
+def get_pipeline_run_details(run_id: str):
+    from backend.database import get_pipeline_run, get_pipeline_stages_for_run
+    run = get_pipeline_run(run_id)
+    if not run:
+        raise HTTPException(status_code=404, detail="Pipeline run not found")
+    stages = get_pipeline_stages_for_run(run_id)
+    return {
+        "run": run,
+        "stages": stages
+    }
+
+
+@router.get("/pipeline/project/{project_id}")
+def get_pipeline_runs_by_project(project_id: str):
+    from backend.database import get_pipeline_runs_for_project
+    runs = get_pipeline_runs_for_project(project_id)
+    return {
+        "project_id": project_id,
+        "runs": runs
+    }
+
+
