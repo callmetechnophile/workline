@@ -233,7 +233,41 @@ class PeraWalletClient {
       // 1. Fetch current on-chain suggested parameters from Algorand Testnet
       const suggestedParams = await algodClient.getTransactionParams().do();
 
-      // 2. Construct authentic Algorand Asset Transfer (axfer) transaction
+      // 2. Check if account is opted into USDC (Asset ID)
+      let isOptedIn = false;
+      let assetBalance = 0;
+      try {
+        const assetInfo = await algodClient.accountAssetInformation(this._accountAddress, req.asset_id).do();
+        isOptedIn = true;
+        assetBalance = Number((assetInfo as any)["asset-holding"]?.amount || (assetInfo as any).assetHolding?.amount || 0);
+      } catch {
+
+        isOptedIn = false;
+      }
+
+      // 3. If not opted in, execute Opt-In transaction first
+      if (!isOptedIn && connector && typeof connector.signTransaction === "function") {
+        try {
+          const optInTxn = algosdk.makeAssetTransferTxnWithSuggestedParamsFromObject({
+            sender: this._accountAddress,
+            receiver: this._accountAddress,
+            assetIndex: req.asset_id,
+            amount: 0,
+            suggestedParams,
+            note: new Uint8Array(Buffer.from("workline:optin:usdc")),
+          });
+
+          const signedOptInArray = await connector.signTransaction([[{ txn: optInTxn }]]);
+          if (signedOptInArray && signedOptInArray.length > 0) {
+            const optInSend = await algodClient.sendRawTransaction(signedOptInArray[0]).do();
+            await algosdk.waitForConfirmation(algodClient, optInSend.txid, 4);
+          }
+        } catch (optErr: any) {
+          throw new Error(`Asset Opt-In Required: Please approve the USDC (ASA #${req.asset_id}) opt-in prompt in your Pera Wallet.`);
+        }
+      }
+
+      // 4. Construct authentic Algorand Asset Transfer (axfer) transaction
       const unsignedTxn = algosdk.makeAssetTransferTxnWithSuggestedParamsFromObject({
         sender: this._accountAddress,
         receiver: req.pay_to,
@@ -256,11 +290,11 @@ class PeraWalletClient {
             const signedBytes = signedTxnBytesArray[0];
             signatureStr = Buffer.from(signedBytes).toString("base64");
 
-            // 3. Broadcast real transaction to Algorand Testnet node
+            // 5. Broadcast real transaction to Algorand Testnet node
             const sendResult = await algodClient.sendRawTransaction(signedBytes).do();
             realTxId = sendResult.txid || (sendResult as any).txId || realTxId;
 
-            // 4. Await on-chain round confirmation
+            // 6. Await on-chain round confirmation
             try {
               await algosdk.waitForConfirmation(algodClient, realTxId, 4);
             } catch (confErr) {
@@ -269,9 +303,17 @@ class PeraWalletClient {
           }
         } catch (signErr: any) {
           console.warn("Pera Wallet signing error:", signErr);
+          const msg = signErr.message || "";
+          if (msg.includes("asset") && msg.includes("missing")) {
+            throw new Error(`USDC Opt-In Error: Your wallet must opt into USDC ASA #${req.asset_id} before sending. Please retry to trigger the opt-in transaction.`);
+          }
+          if (msg.includes("below min") || msg.includes("balance")) {
+            throw new Error(`Insufficient Testnet USDC: Your wallet needs at least ${req.amount_usdc} USDC on Testnet (ASA #${req.asset_id}) to settle.`);
+          }
           throw new Error(signErr.message || "Pera Wallet transaction signing was rejected or failed.");
         }
       }
+
 
 
       this._state = "SIGNED";
