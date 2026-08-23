@@ -3,24 +3,22 @@ import json
 import httpx
 from typing import Dict, Any, List
 
-GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
-GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 
 def ask_connection_assistant(message: str, context: Dict[str, Any]) -> str:
     """
     Acts as an engineering connection advisor. Evaluates electrical connections,
-    pins, voltage, and protocol compatibilities using Amazon Bedrock.
+    pins, voltage, and protocol compatibilities using Amazon Bedrock DeepSeek R1.
     """
     msg_lower = message.lower()
     
-    # 1. Route through centralized Amazon Bedrock Model Router
+    # 1. Route through centralized Amazon Bedrock Model Router (DeepSeek R1)
     try:
         from backend.workline.ai.bedrock.router import model_router
         bom_summary = ", ".join([c.get("component") or c.get("name", "") for c in context.get("bom", [])])
         wiring_summary = json.dumps(context.get("wiring", []), indent=2)
         power_summary = json.dumps(context.get("power", {}).get("summary", {}), indent=2)
 
-        system_prompt = f"""You are an engineering connection assistant.
+        system_prompt = f"""You are an engineering connection assistant powered by DeepSeek R1.
 Focus ONLY on:
 - electrical connections
 - protocol issues (I2C, SPI, UART, PWM, CAN, GPIO)
@@ -39,7 +37,7 @@ Rules:
 2. Keep replies concise, technical, and blueprint-focused.
 3. Reference pin maps and voltage domains from the context.
 """
-        ai_res = model_router.reasoning(prompt=message, system_instruction=system_prompt)
+        ai_res = model_router.research(prompt=message, system_instruction=system_prompt)
         if ai_res and ai_res.text:
             return ai_res.text
     except Exception:

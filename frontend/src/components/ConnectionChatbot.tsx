@@ -172,7 +172,7 @@ export default function ConnectionChatbot({ projectContext = { bom: [], wiring: 
             Connection Assistant Terminal
           </h3>
           <span className="text-[9px] bg-cyan-950/60 border border-cyan-800 text-cyan-400 px-2 py-0.5 rounded font-bold uppercase tracking-wider animate-pulse">
-            Llama-Nemotron
+            DeepSeek R1
           </span>
         </div>
         <button
