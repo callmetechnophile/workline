@@ -38,6 +38,7 @@ class AgentCapability(str, Enum):
     VALIDATE_PCB = "pcb.validate"
     ANALYZE_THERMAL = "thermal.analyze"
     ANALYZE_POWER = "power.analyze"
+    IMAGE_GENERATION = "image.generate"  # PaperBanana + Amazon Bedrock visual generation
     
     # High Risk (Modifications & External Quotes)
     MODIFY_BOM = "bom.modify"
@@ -156,6 +157,28 @@ TOOL_CAPABILITY_MAP: Dict[str, Dict[str, Any]] = {
         "capability": AgentCapability.FINANCIAL_TRANSACTION,
         "risk": RiskTier.CRITICAL,
         "service": "R5_PROCUREMENT",
+    },
+
+    # Image Generation (Medium Risk — calls external Gemini API, produces visual assets)
+    "generate_engineering_image": {
+        "capability": AgentCapability.IMAGE_GENERATION,
+        "risk": RiskTier.MEDIUM,
+        "service": "R2_AI",
+    },
+    "generate_project_visual": {
+        "capability": AgentCapability.IMAGE_GENERATION,
+        "risk": RiskTier.MEDIUM,
+        "service": "R2_AI",
+    },
+    "generate_architecture_image": {
+        "capability": AgentCapability.IMAGE_GENERATION,
+        "risk": RiskTier.MEDIUM,
+        "service": "R2_AI",
+    },
+    "generate_pcb_visual": {
+        "capability": AgentCapability.IMAGE_GENERATION,
+        "risk": RiskTier.MEDIUM,
+        "service": "R2_AI",
     },
 }
 

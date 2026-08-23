@@ -75,6 +75,19 @@ class ServiceCatalog:
                 endpoint="/api/x402/procurement/quote",
                 tags=["procurement", "quote", "rfq"],
             ),
+            ServiceDefinition(
+                id="image.generate",
+                name="Engineering Visual Generation",
+                description=(
+                    "Generate engineering visuals (block diagrams, architecture charts, PCB layouts, "
+                    "workflow diagrams) via PaperBanana powered by Amazon Bedrock. "
+                    "Payment authorizes generation; ArmourIQ independently authorizes capability."
+                ),
+                price_usdc=0.10,
+                endpoint="/api/x402/image/generate",
+                tags=["image", "generation", "paperbanana", "bedrock", "visualization"],
+                version="1.0.0",
+            ),
         ]
 
         for s in services:
@@ -162,6 +175,27 @@ class ServiceCatalog:
                 "lead_time_days": 3,
                 "status": "READY_FOR_PURCHASE_ORDER",
             }
+
+        elif service_id == "image.generate":
+            # Delegates to PaperBanana + Gemini via generation service.
+            # ArmourIQ policy is enforced inside generate_engineering_image().
+            # Payment (x402) grants permission to request; ArmourIQ independently grants capability.
+            from backend.workline.agents.generation_tools import generate_engineering_image
+            prompt = params.get("prompt", f"Engineering visual for project {project_id}")
+            image_type = params.get("image_type", "ARCHITECTURE")
+            conversation_id = params.get("conversation_id")
+            try:
+                result = await generate_engineering_image(
+                    project_id=project_id,
+                    prompt=prompt,
+                    image_type=image_type,
+                    conversation_id=conversation_id,
+                )
+                return result
+            except PermissionError as exc:
+                return {"status": "DENIED", "reason": str(exc)}
+            except Exception as exc:
+                return {"status": "FAILED", "reason": f"Image generation error: {exc}"}
 
         return {"service_id": service_id, "status": "COMPLETED", "output": params}
 

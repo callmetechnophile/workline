@@ -18,6 +18,7 @@ import {
   Settings,
   CreditCard,
   Server,
+  Users,
   ChevronRight
 } from 'lucide-react';
 import { UserButton, SignInButton, useAuth } from '@clerk/nextjs';
@@ -36,6 +37,7 @@ export type NavSection =
   | 'release'
   | 'projects'
   | 'conversations'
+  | 'teams'
   | 'agents'
   | 'services'
   | 'payments'
@@ -75,6 +77,7 @@ export default function Sidebar({
   ];
 
   const systemNavItems = [
+    { id: 'teams' as NavSection, label: 'Team Collaboration', icon: Users },
     { id: 'agents' as NavSection, label: 'Agent Operations', icon: Bot },
     { id: 'services' as NavSection, label: 'API Services', icon: Server },
     { id: 'payments' as NavSection, label: 'x402 Payments', icon: CreditCard },

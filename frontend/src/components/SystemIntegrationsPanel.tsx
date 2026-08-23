@@ -1,10 +1,34 @@
 'use client';
 
 import React from 'react';
-import { Blocks, CheckCircle2, AlertCircle, Database, Shield, GitBranch, Layers, Lock } from 'lucide-react';
+import { Blocks, CheckCircle2, AlertCircle, Database, Shield, GitBranch, Layers, Lock, Cpu, Sparkles, Image as ImageIcon } from 'lucide-react';
 
 export default function SystemIntegrationsPanel() {
   const integrations = [
+    {
+      name: 'Amazon Bedrock AI Engine',
+      category: 'Model Inference (R2)',
+      status: 'Connected',
+      type: 'DeepSeek V3 / Claude Haiku / Claude Sonnet / Nova Canvas',
+      isSecure: true,
+      desc: 'Centralized model execution across research, fast code generation, multi-physics reasoning, and engineering visuals.',
+    },
+    {
+      name: 'Algorand Mainnet x402 Facilitator',
+      category: 'Payment Protocol (R5)',
+      status: 'Active (Production)',
+      type: 'GoPlausible Settlement (USDC: 31566704)',
+      isSecure: true,
+      desc: 'Authoritative machine-to-machine payment verification and BOM quote settlement on Algorand with Pera Wallet signing.',
+    },
+    {
+      name: 'PaperBanana Visual Synthesis',
+      category: 'Engineering Diagram Engine (R2)',
+      status: 'Active',
+      type: 'Bedrock Nova Canvas & SVG Synthesis',
+      isSecure: true,
+      desc: 'Automated architectural block diagrams, power distribution networks, and PCB schematics.',
+    },
     {
       name: 'Qdrant Cloud Vector Database',
       category: 'Knowledge Infrastructure (R3)',
@@ -22,14 +46,6 @@ export default function SystemIntegrationsPanel() {
       desc: 'Component taxonomy, pinout relationships, and architectural dependency links.',
     },
     {
-      name: 'Clerk Authentication & Session Security',
-      category: 'Identity & Access',
-      status: 'Connected',
-      type: 'OAuth & JWT Tokens',
-      isSecure: true,
-      desc: 'Cryptographic session management with multi-factor authentication.',
-    },
-    {
       name: 'DigiKey & Mouser Supplier APIs',
       category: 'Procurement (R5)',
       status: 'Active',
@@ -38,12 +54,12 @@ export default function SystemIntegrationsPanel() {
       desc: 'Live pricing, tiered volume discounts, and global warehouse stock feeds.',
     },
     {
-      name: 'Base Sepolia x402 Facilitator',
-      category: 'Payment Protocol (R5)',
-      status: 'Active (Testnet)',
-      type: 'Non-Custodial Cryptographic Escrow',
+      name: 'Clerk Authentication & Session Security',
+      category: 'Identity & Access',
+      status: 'Connected',
+      type: 'OAuth & JWT Tokens',
       isSecure: true,
-      desc: 'Autonomous machine-to-machine payment verification and order challenge settlement.',
+      desc: 'Cryptographic session management with multi-factor authentication.',
     },
     {
       name: 'GitHub Repository Sync',
@@ -58,9 +74,9 @@ export default function SystemIntegrationsPanel() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-base font-bold text-slate-100">System Integrations & External Services</h2>
+        <h2 className="text-base font-bold text-slate-100">System Integrations & AI Architecture</h2>
         <p className="text-xs text-slate-400">
-          Connected cloud databases, supplier APIs, and authentication providers powering Workline AI.
+          Connected cloud databases, Amazon Bedrock AI inference, Algorand x402 payment facilitators, and supplier APIs.
         </p>
       </div>
 
@@ -88,11 +104,11 @@ export default function SystemIntegrationsPanel() {
             </p>
 
             <div className="pt-2 border-t border-slate-850 flex items-center justify-between text-[10px] font-mono text-slate-500">
-              <span>{item.type}</span>
+              <span className="truncate max-w-[70%]">{item.type}</span>
               {item.isSecure && (
-                <span className="flex items-center gap-1 text-slate-400">
+                <span className="flex items-center gap-1 text-slate-400 flex-shrink-0">
                   <Lock className="w-3 h-3 text-slate-500" />
-                  <span>Secrets Isolated</span>
+                  <span>Isolated</span>
                 </span>
               )}
             </div>

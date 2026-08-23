@@ -44,48 +44,27 @@ def find_alternatives(component_name: str) -> List[Dict[str, Any]]:
         if key in comp_lower:
             return alts
             
-    # 2. Try calling Groq with Nemotron
-    groq_api_key = os.environ.get("GROQ_API_KEY")
-    if groq_api_key and not groq_api_key.startswith("gsk_placeholder"):
-        try:
-            prompt = (
-                f"Identify 2 alternative components for the hardware element: '{component_name}'. "
-                "Each alternative should be cheaper, equivalent, or upgraded. "
-                "Response MUST be a raw JSON array of objects with keys: "
-                "'name' (string), 'type' (string: 'cheaper', 'equivalent', or 'upgraded'), "
-                "'reason' (string explaining why it is a good alternative - better efficiency or lower cost), "
-                "'approx_cost_usd' (float). Do not write any markdown wrappers."
-            )
-            
-            response = httpx.post(
-                "https://api.groq.com/openai/v1/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {groq_api_key}",
-                    "Content-Type": "application/json"
-                },
-                json={
-                    "model": "llama-3.1-nemotron-70b-specdec",
-                    "messages": [{"role": "user", "content": prompt}],
-                    "temperature": 0.2,
-                    "max_tokens": 500
-                },
-                timeout=5.0
-            )
-            
-            if response.status_code == 200:
-                res_data = response.json()
-                content = res_data["choices"][0]["message"]["content"].strip()
-                # Remove json markdown markers if present
-                if content.startswith("```"):
-                    content = content.split("```")[1]
-                    if content.startswith("json"):
-                        content = content[4:]
-                content = content.strip()
-                parsed = json.loads(content)
-                if isinstance(parsed, list) and len(parsed) > 0:
-                    return parsed
-        except Exception as e:
-            print(f"Nemotron API call failed, using generic fallback: {e}")
+    # 2. Try calling Amazon Bedrock model router
+    try:
+        from backend.workline.ai.bedrock.router import model_router
+        prompt = (
+            f"Identify 2 alternative components for the hardware element: '{component_name}'. "
+            "Each alternative should be cheaper, equivalent, or upgraded. "
+            "Response MUST be a raw JSON array of objects with keys: "
+            "'name' (string), 'type' (string: 'cheaper', 'equivalent', or 'upgraded'), "
+            "'reason' (string explaining why it is a good alternative - better efficiency or lower cost), "
+            "'approx_cost_usd' (float). Do not write any markdown wrappers."
+        )
+        ai_res = model_router.fast_code(prompt=prompt)
+        content = ai_res.text.strip()
+        if content.startswith("```"):
+            lines = content.split("\n")
+            content = "\n".join(l for l in lines if not l.startswith("```")).strip()
+        parsed = json.loads(content)
+        if isinstance(parsed, list):
+            return parsed
+    except Exception:
+        pass
             
     # 3. Generic fallback builder
     return [

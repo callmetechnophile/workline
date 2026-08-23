@@ -76,6 +76,13 @@ import { AgentCapabilityPanel } from '@/components/AgentCapabilityPanel';
 import { AgentTaskPanel } from '@/components/AgentTaskPanel';
 import { AgentExecutionTimeline } from '@/components/AgentExecutionTimeline';
 
+// Team & Collaboration
+import TeamWorkspace from '@/components/TeamWorkspace';
+
+// Payment & Image Generation
+import { PaymentPanel, PaymentDetails } from '@/components/PaymentPanel';
+import ImageGenerationPanel from '@/components/ImageGenerationPanel';
+
 // Contextual Copilot
 import ConnectionChatbot from '@/components/ConnectionChatbot';
 
@@ -322,6 +329,17 @@ function AuthenticatedWorkbench() {
           <div className="space-y-6">
             <DependencyGraph data={projectData?.dependency_graph || { nodes: [], edges: [] }} />
             <WiringDiagram data={projectData?.wiring_diagram || { connections: [] }} />
+            <ImageGenerationPanel
+              projectId={projectData?.project_id || (hasProject ? projectName : 'default_project')}
+              onGenerateImage={async (params) => {
+                const res = await fetch(`${apiBase}/api/generation/image`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(params),
+                });
+                return await res.json();
+              }}
+            />
           </div>
         );
 
@@ -389,6 +407,43 @@ function AuthenticatedWorkbench() {
         }
         return (
           <div className="space-y-6">
+            <PaymentPanel
+              payment={{
+                quote_id: projectData?.quote_id || `quote_bom_${(projectName || 'active').toLowerCase()}`,
+                payment_request_id: `req_${(projectName || 'active').toLowerCase()}`,
+                project_id: projectData?.project_id || projectName,
+                bom_id: `bom_${(projectName || 'active').toLowerCase()}`,
+                amount_usd: projectData?.bom_total_usd || 127.43,
+                amount_usdc: projectData?.bom_total_usd || 127.43,
+                currency: 'USD',
+                network: 'algorand-mainnet',
+                asset: 'USDC',
+                asset_id: 31566704,
+                recipient: 'WORKLINE24EUSDCALGORANDTREASURYRECIPIENT402XXXXXXXXXXXXXX',
+                expires_at: new Date(Date.now() + 86400000).toISOString(),
+                status: 'REQUIRED',
+              }}
+              onAuthorizePayment={async (quoteId, proof) => {
+                const res = await fetch(`${apiBase}/api/procurement/${quoteId}/pay`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    payment_proof: proof.signature,
+                    tx_hash: proof.tx_hash,
+                    signed_txn: proof.signed_txn,
+                  }),
+                });
+                if (!res.ok) {
+                  const err = await res.json();
+                  throw new Error(err.detail || 'Payment authorization failed');
+                }
+              }}
+              onGenerateReport={async (quoteId) => {
+                const res = await fetch(`${apiBase}/api/procurement/report/${quoteId}`);
+                if (!res.ok) throw new Error('Report generation failed');
+                return await res.json();
+              }}
+            />
             <ProcurementHeatmap />
             <ReceiptExplorer apiBase={apiBase} />
           </div>
@@ -423,6 +478,15 @@ function AuthenticatedWorkbench() {
           />
         );
 
+      case 'teams':
+        return (
+          <TeamWorkspace
+            apiBase={apiBase}
+            projectId={projectData?.project_id || (hasProject ? projectName : undefined)}
+            currentUserRole="OWNER"
+          />
+        );
+
       case 'agents':
         return (
           <div className="space-y-6">
@@ -447,11 +511,11 @@ function AuthenticatedWorkbench() {
 
       case 'settings':
         return (
-          <div className="bg-slate-900/80 border border-slate-800 rounded-lg p-6 space-y-4 max-w-2xl">
-            <h2 className="text-sm font-bold text-slate-100 uppercase font-mono">
-              Workspace Settings
+          <div className="bg-slate-900/80 border border-slate-800 rounded-lg p-6 space-y-5 max-w-3xl">
+            <h2 className="text-sm font-bold text-slate-100 uppercase font-mono tracking-wider">
+              Workspace & Infrastructure Settings
             </h2>
-            <div className="space-y-3 text-xs text-slate-300">
+            <div className="space-y-4 text-xs text-slate-300">
               <div>
                 <label className="block text-slate-500 font-mono mb-1">
                   R1 CORE GATEWAY URL
@@ -463,6 +527,38 @@ function AuthenticatedWorkbench() {
                   className="w-full bg-slate-950 border border-slate-800 rounded p-2 text-slate-300 font-mono"
                 />
               </div>
+
+              <div>
+                <label className="block text-slate-500 font-mono mb-1">
+                  CENTRAL AI INFERENCE PROVIDER
+                </label>
+                <input
+                  type="text"
+                  disabled
+                  value="Amazon Bedrock (R2 AI / Google ADK Runtime)"
+                  className="w-full bg-slate-950 border border-slate-800 rounded p-2 text-slate-300 font-mono"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                <div className="bg-slate-950 p-3 rounded border border-slate-800 font-mono">
+                  <div className="text-[10px] text-indigo-400 font-bold">Research & Literature Model</div>
+                  <div className="text-slate-200 mt-1 font-semibold">DeepSeek V3 / R1</div>
+                </div>
+                <div className="bg-slate-950 p-3 rounded border border-slate-800 font-mono">
+                  <div className="text-[10px] text-indigo-400 font-bold">Fast Code & Tools Model</div>
+                  <div className="text-slate-200 mt-1 font-semibold">Claude 3.5 Haiku</div>
+                </div>
+                <div className="bg-slate-950 p-3 rounded border border-slate-800 font-mono">
+                  <div className="text-[10px] text-indigo-400 font-bold">Multi-Physics & Reports Model</div>
+                  <div className="text-slate-200 mt-1 font-semibold">Claude 3.5 / 3.7 Sonnet</div>
+                </div>
+                <div className="bg-slate-950 p-3 rounded border border-slate-800 font-mono">
+                  <div className="text-[10px] text-indigo-400 font-bold">Visual Generation Engine</div>
+                  <div className="text-slate-200 mt-1 font-semibold">Amazon Nova Canvas / Titan</div>
+                </div>
+              </div>
+
               <div>
                 <label className="block text-slate-500 font-mono mb-1">
                   PAYMENT PROTOCOL & BLOCKCHAIN SETTLEMENT

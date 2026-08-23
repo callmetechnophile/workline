@@ -12,9 +12,14 @@ runner = CliRunner()
 
 
 def test_api_generation_image_and_presentation():
+    import os
+    auth_key = os.getenv("WORKLINE_SERVICE_AUTH_KEY", "workline-internal-mesh-key-2026")
+    headers = {"Authorization": f"Bearer {auth_key}"}
+
     # 1. POST /api/generation/image
     img_res = client.post(
         "/api/generation/image",
+        headers=headers,
         json={
             "project_id": "api_rover",
             "purpose": "ARCHITECTURE",
@@ -24,13 +29,15 @@ def test_api_generation_image_and_presentation():
     )
     assert img_res.status_code == 200
     img_data = img_res.json()
-    assert img_data["provider"] == "PaperBanana"
-    assert img_data["format"] == "svg"
-    art_id = img_data["artifact_id"]
+    artifact = img_data.get("artifact", img_data)
+    assert artifact["provider"] == "PaperBanana"
+    assert artifact["format"] == "svg"
+    art_id = artifact["artifact_id"]
 
     # 2. POST /api/generation/presentation
     pres_res = client.post(
         "/api/generation/presentation",
+        headers=headers,
         json={
             "project_id": "api_rover",
             "title": "API Rover Architecture Deck",
@@ -43,12 +50,12 @@ def test_api_generation_image_and_presentation():
     assert pres_data["slide_count"] == 6
 
     # 3. GET /api/generation/artifacts
-    list_res = client.get("/api/generation/artifacts?project_id=api_rover")
+    list_res = client.get("/api/generation/artifacts?project_id=api_rover", headers=headers)
     assert list_res.status_code == 200
     assert len(list_res.json()) >= 2
 
     # 4. GET /api/generation/artifacts/{id}
-    detail_res = client.get(f"/api/generation/artifacts/{art_id}")
+    detail_res = client.get(f"/api/generation/artifacts/{art_id}", headers=headers)
     assert detail_res.status_code == 200
     assert detail_res.json()["artifact_id"] == art_id
 

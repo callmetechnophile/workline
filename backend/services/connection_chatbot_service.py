@@ -9,19 +9,18 @@ GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 def ask_connection_assistant(message: str, context: Dict[str, Any]) -> str:
     """
     Acts as an engineering connection advisor. Evaluates electrical connections,
-    pins, voltage, and protocol compatibilities using Nemotron.
+    pins, voltage, and protocol compatibilities using Amazon Bedrock.
     """
     msg_lower = message.lower()
     
-    # Check if Groq API is available
-    if GROQ_API_KEY:
-        try:
-            # Format context details for LLM
-            bom_summary = ", ".join([c.get("component") or c.get("name", "") for c in context.get("bom", [])])
-            wiring_summary = json.dumps(context.get("wiring", []), indent=2)
-            power_summary = json.dumps(context.get("power", {}).get("summary", {}), indent=2)
-            
-            system_prompt = f"""You are an engineering connection assistant.
+    # 1. Route through centralized Amazon Bedrock Model Router
+    try:
+        from backend.workline.ai.bedrock.router import model_router
+        bom_summary = ", ".join([c.get("component") or c.get("name", "") for c in context.get("bom", [])])
+        wiring_summary = json.dumps(context.get("wiring", []), indent=2)
+        power_summary = json.dumps(context.get("power", {}).get("summary", {}), indent=2)
+
+        system_prompt = f"""You are an engineering connection assistant.
 Focus ONLY on:
 - electrical connections
 - protocol issues (I2C, SPI, UART, PWM, CAN, GPIO)
@@ -40,27 +39,11 @@ Rules:
 2. Keep replies concise, technical, and blueprint-focused.
 3. Reference pin maps and voltage domains from the context.
 """
-            payload = {
-                "model": "llama-3.1-nemotron-70b-specdec",
-                "messages": [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": message}
-                ],
-                "temperature": 0.2,
-                "max_tokens": 800
-            }
-            
-            headers = {
-                "Authorization": f"Bearer {GROQ_API_KEY}",
-                "Content-Type": "application/json"
-            }
-            
-            with httpx.Client(timeout=15.0) as client:
-                res = client.post(GROQ_URL, json=payload, headers=headers)
-                if res.status_code == 200:
-                    return res.json()["choices"][0]["message"]["content"]
-        except Exception as e:
-            print(f"[Chatbot] Groq connection failed: {e}. Running local fallback rules.")
+        ai_res = model_router.reasoning(prompt=message, system_instruction=system_prompt)
+        if ai_res and ai_res.text:
+            return ai_res.text
+    except Exception:
+        pass
             
     # --- Local Fallback Rules for Offline Sandbox Stability ---
     components = context.get("bom", [])

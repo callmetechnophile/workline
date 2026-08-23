@@ -57,3 +57,8 @@ Thumbs.db
 # Workline Local Cache & Temporary artifacts
 .workline/cache/
 .workline/temp/
+*.db
+*.sqlite
+*.sqlite3
+scratch_*.py
+*audit_results*.json

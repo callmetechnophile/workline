@@ -5,11 +5,14 @@ Handles 402 challenges, GoPlausible/Algorand payment verification, and service e
 
 from datetime import datetime, timedelta, timezone
 import json
+import os
 import uuid
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Header, HTTPException, Request, Response, status
+from fastapi.responses import FileResponse
 from loguru import logger
 
+from backend.workline.x402.bom_flow import bom_payment_flow
 from backend.workline.x402.catalog import service_catalog
 from backend.workline.x402.config import x402_config
 from backend.workline.x402.models import (
@@ -394,3 +397,127 @@ async def execute_procurement_quote(
         request=request,
         idempotency_key=x_idempotency_key or payload.get("idempotency_key"),
     )
+
+
+# =========================================================================
+# AUTHORITATIVE BOM PROCUREMENT PAYMENT & REPORTING FLOW
+# =========================================================================
+
+@router.post("/bom/quote")
+async def create_bom_payment_quote_api(payload: Dict[str, Any]):
+    """
+    Creates a frozen, authoritative payment quote for a BOM.
+    Enforces strict parity: BOM Total USD == x402 Amount USDC on Algorand.
+    """
+    project_id = payload.get("project_id", "default_project")
+    bom_data = payload.get("bom", payload)
+    try:
+        quote = bom_payment_flow.create_payment_quote(
+            bom_data=bom_data,
+            project_id=project_id,
+        )
+        return {
+            "status": "PAYMENT_REQUIRED",
+            "quote": quote.model_dump(),
+            "challenge": {
+                "scheme": "x402",
+                "network": quote.network,
+                "asset": quote.asset,
+                "asset_id": quote.asset_id,
+                "amount": quote.amount_usdc,
+                "currency": "USD",
+                "pay_to": quote.pay_to,
+                "payment_request_id": quote.payment_request_id,
+                "quote_id": quote.quote_id,
+                "expires_at": quote.expires_at,
+                "facilitator": quote.facilitator,
+            },
+        }
+    except PermissionError as exc:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(exc))
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
+    except Exception as exc:
+        logger.error(f"[API] Error creating BOM payment quote: {exc}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(exc))
+
+
+@router.get("/bom/quote/{quote_id}")
+async def get_bom_payment_quote_api(quote_id: str):
+    """Retrieves real-time status of a BOM payment quote."""
+    quote = bom_payment_flow.get_quote(quote_id)
+    if not quote:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Quote '{quote_id}' not found.")
+    return quote.model_dump()
+
+
+@router.post("/bom/verify")
+async def verify_and_settle_bom_payment_api(payload: Dict[str, Any]):
+    """
+    Submits Algorand payment proof and settles the frozen BOM quote.
+    """
+    quote_id = payload.get("quote_id") or payload.get("payment_request_id")
+    if not quote_id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="quote_id or payment_request_id is required.")
+
+    ok, err, quote = await bom_payment_flow.settle_payment_proof(
+        quote_id=quote_id,
+        proof_data=payload,
+    )
+    if not ok:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Payment verification failed: {err}")
+
+    return {
+        "status": "SETTLED",
+        "quote_id": quote.quote_id,
+        "payment_request_id": quote.payment_request_id,
+        "amount_usdc": quote.amount_usdc,
+        "transaction_id": quote.transaction_id,
+        "settled_at": quote.settled_at,
+        "quote": quote.model_dump(),
+    }
+
+
+@router.post("/bom/report")
+async def generate_bom_payment_report_api(payload: Dict[str, Any]):
+    """
+    Compiles an auditable PDF payment report for a settled BOM quote.
+    Queries CoinGecko ONCE for informational INR rate (resilient to failure).
+    """
+    quote_id = payload.get("quote_id") or payload.get("payment_request_id")
+    if not quote_id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="quote_id is required.")
+
+    ok, err, artifact = await bom_payment_flow.generate_payment_report(quote_id=quote_id)
+    if not ok or not artifact:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Report generation failed: {err}")
+
+    return {
+        "status": "REPORT_READY" if artifact.inr_available else "REPORT_READY_WITHOUT_INR",
+        "artifact": artifact.model_dump(),
+        "download_url": f"/api/x402/bom/report/{artifact.artifact_id}/download",
+    }
+
+
+@router.get("/bom/report/{artifact_id}")
+async def get_bom_payment_report_metadata_api(artifact_id: str):
+    """Fetches metadata for a compiled PDF payment report."""
+    artifact = bom_payment_flow.get_report(artifact_id)
+    if not artifact:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Report artifact '{artifact_id}' not found.")
+    return artifact.model_dump()
+
+
+@router.get("/bom/report/{artifact_id}/download")
+async def download_bom_payment_report_api(artifact_id: str):
+    """Downloads the compiled PDF payment report artifact."""
+    artifact = bom_payment_flow.get_report(artifact_id)
+    if not artifact or not os.path.exists(artifact.filepath):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Report file not found on server.")
+
+    return FileResponse(
+        path=artifact.filepath,
+        filename=artifact.filename,
+        media_type="application/pdf",
+    )
+

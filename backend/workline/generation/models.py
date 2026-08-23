@@ -95,6 +95,8 @@ class ImageGenerationRequest(BaseModel):
     aspect_ratio: str = "16:9"
     reference_artifacts: List[str] = Field(default_factory=list)
     output_format: str = "svg"
+    extra_context: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Project or session context")
+    conversation_id: Optional[str] = Field(default=None, description="Conversation this image is attached to")
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 
@@ -118,6 +120,7 @@ class GeneratedImageArtifact(BaseModel):
     artifact_id: str = Field(default_factory=lambda: f"art_img_{uuid.uuid4().hex[:8]}")
     project_id: str
     request_id: str
+    image_type: str = "ARCHITECTURE"
     filename: str
     format: str
     width: int = 1920
@@ -125,9 +128,12 @@ class GeneratedImageArtifact(BaseModel):
     size: int = 0
     sha256: str
     provider: str = "PaperBanana"
-    model: str = "paper-banana-v1"
+    model: str = "gemini-2.0-flash"
     prompt_hash: str
     content: Optional[str] = None  # SVG markup or data URI
+    storage_path: Optional[str] = None  # Filesystem path on R2
+    conversation_id: Optional[str] = None  # Conversation this image is attached to
+    generation_version: int = 1  # Increments for each generation within same project+type
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     source_project_version: Optional[str] = None
     source_git_commit: Optional[str] = None

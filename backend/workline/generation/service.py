@@ -84,6 +84,17 @@ class GenerationService:
             extra_context=extra_context,
         )
 
+        # Compute versioning: count prior generations for this project+purpose
+        with self._lock:
+            existing = [
+                a for a in self._artifacts.values()
+                if getattr(a, "project_id", None) == project_id
+                and getattr(a, "image_type", None) == purpose.value
+            ]
+            generation_version = len(existing) + 1
+
+        conversation_id = (extra_context or {}).get("conversation_id")
+
         request = ImageGenerationRequest(
             project_id=project_id,
             team_id=team_id,
@@ -91,9 +102,16 @@ class GenerationService:
             purpose=purpose,
             prompt=prompt,
             aspect_ratio=aspect_ratio,
+            conversation_id=conversation_id,
         )
 
         artifact = await provider.generate(request)
+
+        # Stamp generation version and conversation
+        artifact.generation_version = generation_version
+        artifact.image_type = purpose.value
+        if conversation_id:
+            artifact.conversation_id = conversation_id
 
         with self._lock:
             self._artifacts[artifact.artifact_id] = artifact
@@ -187,11 +205,59 @@ class GenerationService:
         self._cost_tracker[project_id] = total
 
     def _sync_metadata(self, project_id: str, artifact: Any) -> None:
-        """Optionally syncs generation metadata to SurrealDB and Qdrant without leaking credentials."""
+        """
+        Persist generation metadata to SurrealDB project asset store.
+        Records: artifact_id, project_id, conversation_id, image_type, model,
+                 provider, sha256, generation_version, created_at, storage_path.
+        Does NOT store: prompt_hash, content (SVG body), API keys.
+        Failures are non-fatal — artifact is already in-memory.
+        """
         try:
-            logger.info("Registered generated artifact '%s' for project '%s'", artifact.artifact_id, project_id)
-        except Exception:
-            pass
+            import asyncio
+            from backend.workline.database.surrealdb import surreal_db
+
+            metadata = {
+                "artifact_id": artifact.artifact_id,
+                "project_id": project_id,
+                "image_type": getattr(artifact, "image_type", None),
+                "conversation_id": getattr(artifact, "conversation_id", None),
+                "provider": getattr(artifact, "provider", None),
+                "model": getattr(artifact, "model", None),
+                "format": getattr(artifact, "format", None),
+                "sha256": getattr(artifact, "sha256", None),
+                "size": getattr(artifact, "size", None),
+                "generation_version": getattr(artifact, "generation_version", 1),
+                "storage_path": getattr(artifact, "storage_path", None),
+                "created_at": getattr(artifact, "created_at", None),
+            }
+            # Attempt async persist — fire-and-forget in sync context
+            try:
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    # Schedule as a background task (don't block generation response)
+                    loop.create_task(
+                        surreal_db.query(
+                            f"CREATE project_asset SET {', '.join(f'{k} = ${k}' for k in metadata)}",
+                            metadata,
+                        )
+                    )
+                else:
+                    loop.run_until_complete(
+                        surreal_db.query(
+                            f"CREATE project_asset SET {', '.join(f'{k} = ${k}' for k in metadata)}",
+                            metadata,
+                        )
+                    )
+            except Exception:
+                pass  # SurrealDB may be offline in dev; in-memory store is the durable copy
+
+            logger.info(
+                f"[GenerationService] Registered artifact='{artifact.artifact_id}' "
+                f"project='{project_id}' model='{metadata.get('model')}' "
+                f"version={metadata.get('generation_version')}"
+            )
+        except Exception as exc:
+            logger.warning(f"[GenerationService] Metadata sync failed (non-fatal): {exc}")
 
 
 # Global singleton generation service

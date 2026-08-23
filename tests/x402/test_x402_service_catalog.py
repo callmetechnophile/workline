@@ -12,7 +12,7 @@ def test_service_catalog_initialization():
     catalog = ServiceCatalog()
     services = catalog.list_services()
 
-    assert len(services) == 5
+    assert len(services) == 6
     service_ids = {s.id for s in services}
     expected_ids = {
         "bom.optimize",
@@ -20,6 +20,7 @@ def test_service_catalog_initialization():
         "research.engineering",
         "simulation.thermal",
         "procurement.quote",
+        "image.generate",
     }
     assert service_ids == expected_ids
 

@@ -7,6 +7,8 @@ import EngineeringStatusBadge, { EngineeringStatus } from '../EngineeringStatusB
 interface ProjectHeaderProps {
   projectName: string;
   category?: string;
+  teamName?: string;
+  userRole?: string;
   status?: EngineeringStatus;
   targetDays?: number;
   lastUpdated?: string;
@@ -19,6 +21,8 @@ interface ProjectHeaderProps {
 export default function ProjectHeader({
   projectName,
   category = 'Hardware Systems Engineering',
+  teamName = 'Engineering Core Team',
+  userRole = 'MEMBER',
   status = 'PASS',
   targetDays = 30,
   lastUpdated = 'Just now',
@@ -38,6 +42,17 @@ export default function ProjectHeader({
             </span>
             <span className="text-slate-600">•</span>
             <span className="text-[11px] text-slate-400 font-mono">ID: PROJ-{projectName.slice(0, 4).toUpperCase()}</span>
+            {teamName && (
+              <>
+                <span className="text-slate-600">•</span>
+                <span className="text-[11px] font-mono text-cyan-400 bg-cyan-950/40 border border-cyan-800/40 px-2 py-0.5 rounded">
+                  TEAM: {teamName}
+                </span>
+                <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-zinc-800 text-slate-300">
+                  {userRole}
+                </span>
+              </>
+            )}
           </div>
           <h1 className="text-xl font-bold text-slate-100 tracking-tight">
             {projectName}

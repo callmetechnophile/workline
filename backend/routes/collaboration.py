@@ -66,7 +66,6 @@ class AcceptBody(BaseModel):
 
 
 @router.post("/api/collaboration/teams")
-@router.post("/api/teams")
 def api_create_team(payload: TeamCreate):
     try:
         team_data = create_team(payload.name)

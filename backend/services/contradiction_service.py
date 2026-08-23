@@ -5,63 +5,44 @@ from typing import List, Dict, Any
 def detect_contradictions(papers: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """
     Detect conflicting engineering recommendations across academic papers.
-    Uses Nemotron via Groq if API key is present; otherwise falls back to a deterministic rule-based contradiction detector.
+    Uses Amazon Bedrock (DeepSeek / Claude Sonnet) as the central AI model router;
+    falls back to deterministic rule-based contradiction detector if offline.
     """
     if len(papers) < 2:
         return []
 
-    # Try calling Nemotron via Groq API
-    groq_api_key = os.environ.get("GROQ_API_KEY")
-    if groq_api_key and not groq_api_key.startswith("gsk_placeholder"):
-        try:
-            import httpx
-            # Prepare papers text for the prompt
-            papers_text = ""
-            for idx, p in enumerate(papers[:4]):
-                papers_text += f"Paper {idx+1}: Title: {p.get('title')}, Summary: {p.get('summary')}\n\n"
-            
-            prompt = (
-                "You are an expert hardware research validation system. "
-                "Analyze the following summaries of academic engineering papers and detect any engineering contradictions, "
-                "such as conflicting recommendations on component choice, material choice, architecture, methodology, or efficiency.\n\n"
-                f"{papers_text}"
-                "Output ONLY a valid JSON list of contradictions. Do not include markdown wraps or any text outside of the JSON block.\n"
-                "Each contradiction item MUST have exactly these fields:\n"
-                "- conflict_type: (choose one of 'material', 'architecture', 'methodology', 'efficiency')\n"
-                "- source_a: Title of Paper A\n"
-                "- source_b: Title of Paper B\n"
-                "- severity: (choose one of 'low', 'medium', 'high', 'critical')\n"
-                "- details: Explanation of the conflict\n"
-                "Example format: [{\"conflict_type\": \"material\", \"source_a\": \"Paper A Title\", \"source_b\": \"Paper B Title\", \"severity\": \"high\", \"details\": \"Paper A recommends Li-ion while Paper B recommends Supercapacitors.\"}]"
-            )
-            
-            payload = {
-                "model": "llama-3.1-nemotron-70b-specdec",
-                "messages": [
-                    {"role": "system", "content": "You are a precise JSON generator. Output only JSON."},
-                    {"role": "user", "content": prompt}
-                ],
-                "temperature": 0.1,
-                "response_format": {"type": "json_object"}
-            }
-            
-            headers = {
-                "Authorization": f"Bearer {groq_api_key}",
-                "Content-Type": "application/json"
-            }
-            
-            with httpx.Client(timeout=15.0) as client:
-                res = client.post("https://api.groq.com/openai/v1/chat/completions", json=payload, headers=headers)
-                if res.status_code == 200:
-                    content = res.json()["choices"][0]["message"]["content"].strip()
-                    # Parse the JSON
-                    parsed = json.loads(content)
-                    if isinstance(parsed, list):
-                        return parsed
-                    elif isinstance(parsed, dict) and "contradictions" in parsed:
-                        return parsed["contradictions"]
-        except Exception as e:
-            print(f"[Contradiction] Nemotron API failed: {e}. Falling back to rule-based logic.")
+    # 1. Try calling Amazon Bedrock via centralized model_router
+    try:
+        from backend.workline.ai.bedrock.router import model_router
+        papers_text = ""
+        for idx, p in enumerate(papers[:4]):
+            papers_text += f"Paper {idx+1}: Title: {p.get('title')}, Summary: {p.get('summary')}\n\n"
+
+        prompt = (
+            "You are an expert hardware research validation system. "
+            "Analyze the following summaries of academic engineering papers and detect any engineering contradictions, "
+            "such as conflicting recommendations on component choice, material choice, architecture, methodology, or efficiency.\n\n"
+            f"{papers_text}"
+            "Output ONLY a valid JSON list of contradictions. Do not include markdown wraps or any text outside of the JSON block.\n"
+            "Each contradiction item MUST have exactly these fields:\n"
+            "- conflict_type: (choose one of 'material', 'architecture', 'methodology', 'efficiency')\n"
+            "- source_a: Title of Paper A\n"
+            "- source_b: Title of Paper B\n"
+            "- severity: (choose one of 'low', 'medium', 'high', 'critical')\n"
+            "- details: Explanation of the conflict\n"
+        )
+        ai_res = model_router.research(prompt=prompt)
+        text = ai_res.text.strip()
+        if text.startswith("```"):
+            lines = text.split("\n")
+            text = "\n".join(l for l in lines if not l.startswith("```")).strip()
+        parsed = json.loads(text)
+        if isinstance(parsed, list):
+            return parsed
+        if isinstance(parsed, dict) and "contradictions" in parsed:
+            return parsed["contradictions"]
+    except Exception:
+        pass
 
     # Rule-based fallback logic (highly deterministic, robust simulation)
     conflicts = []

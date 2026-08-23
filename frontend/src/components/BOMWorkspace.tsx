@@ -65,8 +65,9 @@ export const BOMWorkspace: React.FC<BOMWorkspaceProps> = ({
           <span className="text-base font-mono font-bold text-zinc-100">{itemCount ?? 0} Parts</span>
         </div>
         <div className="p-3 bg-zinc-950/60 border border-zinc-800 rounded-lg flex flex-col gap-1">
-          <span className="text-xs text-zinc-400">Estimated Subtotal</span>
-          <span className="text-base font-mono font-bold text-emerald-400">₹{(totalCost ?? 0).toFixed(2)}</span>
+          <span className="text-xs text-zinc-400">Authoritative Subtotal</span>
+          <span className="text-base font-mono font-bold text-emerald-400">${(totalCost ?? 0).toFixed(2)} USD</span>
+          <span className="text-[10px] text-zinc-500 font-mono">{(totalCost ?? 0).toFixed(2)} USDC (Algorand)</span>
         </div>
         <div className="p-3 bg-zinc-950/60 border border-zinc-800 rounded-lg flex flex-col gap-1">
           <span className="text-xs text-zinc-400">Target Project</span>
