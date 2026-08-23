@@ -365,7 +365,8 @@ export default function ThermalRiskPanel({
       return 0;
     });
     return comps;
-  }, [localAnalysis?.components, sortField, sortAsc]);
+  }, [localAnalysis, sortField, sortAsc]);
+
 
   const toggleSort = (field: SortField) => {
     if (sortField === field) {
