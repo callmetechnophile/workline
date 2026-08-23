@@ -45,9 +45,11 @@ import VoltageRiskTable from '@/components/VoltageRiskTable';
 
 import PowerAnalysis from '@/components/PowerAnalysis';
 import ThermalRiskPanel from '@/components/ThermalRiskPanel';
+import { PCBLayoutVisualization } from '@/components/PCBLayoutVisualization';
 
 import { BoardCanvas } from '@/components/BoardCanvas';
 import { ComponentPlacement } from '@/components/ComponentPlacement';
+
 
 import { ConstraintPanel } from '@/components/ConstraintPanel';
 import { ConstraintEditor } from '@/components/ConstraintEditor';
@@ -422,6 +424,15 @@ function AuthenticatedWorkbench() {
         }
         return (
           <div className="space-y-6">
+            <PCBLayoutVisualization
+              projectId={projectData?.project_id || projectId || projectName}
+              projectName={projectName}
+              engineeringGoal={systemSpecification}
+              components={projectData?.bom_items || projectData?.bom || []}
+              powerAnalysis={projectData?.power_analysis}
+              thermalAnalysis={projectData?.thermal_reports}
+              apiBase={apiBase}
+            />
             <BoardCanvas />
             <ComponentPlacement />
           </div>
@@ -429,14 +440,20 @@ function AuthenticatedWorkbench() {
 
       case 'simulation':
         if (!hasProject) {
-          return <EmptyProjectState onOpenNewProject={() => setIsModalOpen(true)} label="simulation" />;
+          return <EmptyProjectState onOpenNewProject={() => setIsModalOpen(true)} label="thermal analysis" />;
         }
         return (
           <div className="space-y-6">
-            <ThermalRiskPanel />
+            <ThermalRiskPanel
+              projectId={projectData?.project_id || projectId || projectName}
+              components={projectData?.bom_items || projectData?.bom || []}
+              powerAnalysis={projectData?.power_analysis}
+              thermalReports={projectData?.thermal_reports}
+            />
             <PowerAnalysis data={projectData?.power_analysis} />
           </div>
         );
+
 
       case 'procurement':
         if (!hasProject) {
@@ -450,9 +467,10 @@ function AuthenticatedWorkbench() {
                 payment_request_id: `req_${(projectName || 'active').toLowerCase()}`,
                 project_id: projectData?.project_id || projectName,
                 bom_id: `bom_${(projectName || 'active').toLowerCase()}`,
-                amount_usd: projectData?.bom_total_usd || 127.43,
-                amount_usdc: projectData?.bom_total_usd || 127.43,
+                amount_usd: 5.00,
+                amount_usdc: 5.00,
                 currency: 'USD',
+
                 network: 'algorand-mainnet',
                 asset: 'USDC',
                 asset_id: 31566704,

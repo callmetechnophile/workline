@@ -11,6 +11,10 @@ interface PaperItem {
   url: string;
   publish_year: number;
   citation_count: number;
+  arxiv_id?: string;
+  relevance_score?: number;
+  relevance_reason?: string;
+  abstract?: string;
 }
 
 interface PaperSummary {
@@ -19,6 +23,8 @@ interface PaperSummary {
   summary: string;
   conclusions: string[];
   recommendations: string;
+  url?: string;
+  arxiv_id?: string;
 }
 
 interface ResearchPapersProps {
@@ -92,15 +98,15 @@ export default function ResearchPapers({ papers, summary, intent = '', apiBase =
       <div className="lg:col-span-1 space-y-4">
         <h3 className="text-sm font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2 mb-1">
           <BookOpen className="w-4 h-4 text-cyan-400" />
-          Retrieved References
+          Retrieved References (arXiv API)
         </h3>
         {papers.map((paper) => (
           <a 
-            key={paper.id} 
+            key={paper.id || paper.url} 
             href={paper.url} 
             target="_blank" 
             rel="noreferrer"
-            className="glass-panel p-4 border border-blue-500/10 hover:border-blue-500/30 hover:bg-slate-900/5 transition-all duration-200 block cursor-pointer"
+            className="glass-panel p-4 border border-blue-500/10 hover:border-cyan-500/40 hover:bg-slate-900/40 transition-all duration-200 block cursor-pointer"
           >
             <div className="flex justify-between items-start gap-2 mb-1">
               <h4 className="text-xs font-semibold text-slate-200 line-clamp-2 leading-tight">
@@ -112,12 +118,19 @@ export default function ResearchPapers({ papers, summary, intent = '', apiBase =
             </div>
             
             <p className="text-[10px] text-slate-400 mb-2">
-              {paper.authors} • <span className="font-semibold">{paper.source}</span>
+              {paper.authors} • <span className="font-semibold text-cyan-400/90">{paper.source}</span>
+              {paper.arxiv_id && (
+                <span className="ml-1 text-slate-500 font-mono">[{paper.arxiv_id}]</span>
+              )}
             </p>
             
             <div className="flex justify-between items-center text-[9px] text-slate-500 font-mono mt-1 border-t border-slate-800/40 pt-2">
               <span>Published: {paper.publish_year}</span>
-              <span>Citations: {paper.citation_count}</span>
+              {paper.relevance_score ? (
+                <span className="text-emerald-400 font-bold">Match: {paper.relevance_score}%</span>
+              ) : (
+                <span>Citations: {paper.citation_count}</span>
+              )}
             </div>
           </a>
         ))}
@@ -127,7 +140,7 @@ export default function ResearchPapers({ papers, summary, intent = '', apiBase =
       <div className="lg:col-span-2 space-y-4">
         <h3 className="text-sm font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2 mb-1">
           <FileText className="w-4 h-4 text-cyan-400" />
-          Deep Synthesis & Summary
+          Deep Synthesis & Peer-Reviewed Summary
         </h3>
         
         {summary && summary.summary ? (

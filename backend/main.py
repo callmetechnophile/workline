@@ -1,8 +1,10 @@
 import os
+from typing import Optional, Dict, Any
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 
 load_dotenv()
+
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -117,7 +119,53 @@ app.include_router(armouriq_router)
 app.include_router(teams_router)
 
 
+@app.post("/api/projects/{project_id}/pcb/generate", tags=["PCB"])
+async def project_pcb_generate_endpoint(project_id: str, payload: Optional[dict] = None):
+    from backend.workline.api.pcb import generate_pcb_visualization_api, GeneratePCBVisRequest
+    req_obj = GeneratePCBVisRequest(**payload) if payload else GeneratePCBVisRequest(project_id=project_id)
+    return await generate_pcb_visualization_api(project_id=project_id, payload=req_obj)
+
+
+@app.get("/api/projects/{project_id}/pcb/visualization", tags=["PCB"])
+async def project_pcb_visualization_endpoint(project_id: str):
+    from backend.workline.api.pcb import get_pcb_visualization_api
+    return await get_pcb_visualization_api(project_id=project_id)
+
+
+@app.get("/api/projects/{project_id}/thermal", tags=["Thermal"])
+@app.get("/api/thermal/{project_id}", tags=["Thermal"])
+async def get_project_thermal_analysis_endpoint(project_id: str):
+    from backend.services.thermal_service import calculate_project_thermal_analysis
+    from backend.database import get_project_by_id
+    
+    clean_id = project_id.strip()
+    proj = get_project_by_id(clean_id)
+    components = []
+    if proj:
+        components = proj.get("bom") or proj.get("components") or []
+    return calculate_project_thermal_analysis(components=components, project_id=clean_id)
+
+
+@app.post("/api/projects/{project_id}/thermal", tags=["Thermal"])
+@app.post("/api/thermal/{project_id}", tags=["Thermal"])
+async def calculate_project_thermal_endpoint(project_id: str, payload: Optional[dict] = None):
+    from backend.services.thermal_service import calculate_project_thermal_analysis
+    from backend.database import get_project_by_id
+
+    clean_id = project_id.strip()
+    components = []
+    if payload and "components" in payload:
+        components = payload["components"]
+    else:
+        proj = get_project_by_id(clean_id)
+        if proj:
+            components = proj.get("bom") or proj.get("components") or []
+    return calculate_project_thermal_analysis(components=components, project_id=clean_id)
+
+
+
 @app.get("/", tags=["Health"])
+
 @app.get("/health", tags=["Health"])
 @app.get("/version", tags=["Health"])
 @app.get("/service", tags=["Health"])

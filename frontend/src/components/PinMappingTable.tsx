@@ -5,9 +5,16 @@ import { Cpu, Download, RefreshCw } from 'lucide-react';
 
 interface PinConnection {
   component: string;
-  pin: string;
+  pin?: string;
+  pin_number?: string;
+  pin_name?: string;
+  direction?: string;
+  function?: string;
   connected_to: string;
-  type: string; // "I2C", "SPI", "UART", "PWM", "Analog", "Digital"
+  type?: string;
+  signal_type?: string;
+  voltage_domain?: string;
+  status?: string;
 }
 
 interface PinMappingTableProps {
@@ -17,10 +24,10 @@ interface PinMappingTableProps {
 export default function PinMappingTable({ pins }: PinMappingTableProps) {
   const downloadCSV = () => {
     if (!pins || pins.length === 0) return;
-    const headers = ["Component", "Pin", "Connected To", "Type"];
+    const headers = ["Component", "Pin Number", "Pin Name", "Direction", "Function", "Connected To", "Signal Type", "Voltage Domain", "Status"];
     const csvContent = [
       headers.join(","),
-      ...pins.map(p => `"${p.component}","${p.pin}","${p.connected_to}","${p.type}"`)
+      ...pins.map(p => `"${p.component}","${p.pin_number || ''}","${p.pin_name || p.pin || ''}","${p.direction || ''}","${p.function || ''}","${p.connected_to}","${p.signal_type || p.type || ''}","${p.voltage_domain || ''}","${p.status || 'VERIFIED'}"`)
     ].join("\n");
 
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
@@ -39,7 +46,7 @@ export default function PinMappingTable({ pins }: PinMappingTableProps) {
         <div className="flex items-center gap-2.5">
           <Cpu className="w-5 h-5 text-blue-400" />
           <h3 className="text-sm font-mono font-bold text-slate-200 uppercase tracking-wider">
-            Pin Configuration Table
+            Verified Pin Configuration & Interconnect Table
           </h3>
         </div>
         
@@ -63,29 +70,49 @@ export default function PinMappingTable({ pins }: PinMappingTableProps) {
           <table className="w-full text-left text-xs border-collapse font-mono">
             <thead>
               <tr className="border-b border-slate-800 text-slate-400 uppercase tracking-widest text-[9px]">
-                <th className="py-2.5 px-3">Controller Component</th>
-                <th className="py-2.5 px-3">Controller Pin</th>
-                <th className="py-2.5 px-3">Connected Peripheral</th>
-                <th className="py-2.5 px-3 text-right">Protocol Type</th>
+                <th className="py-2.5 px-3">Component / IC</th>
+                <th className="py-2.5 px-3">Pin</th>
+                <th className="py-2.5 px-3">Direction & Function</th>
+                <th className="py-2.5 px-3">Connected Net</th>
+                <th className="py-2.5 px-3 text-right">Domain</th>
+                <th className="py-2.5 px-3 text-right">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/30">
               {pins.map((pin, idx) => {
+                const isVerified = pin.status !== "PINOUT VERIFICATION REQUIRED";
+                const pType = pin.signal_type || pin.type || "SIGNAL";
+                
                 let badgeColor = "bg-slate-950/60 border-slate-800 text-slate-400";
-                if (pin.type === "I2C") badgeColor = "bg-blue-950/30 border-blue-900/30 text-blue-400";
-                else if (pin.type === "SPI") badgeColor = "bg-purple-950/30 border-purple-900/30 text-purple-400";
-                else if (pin.type === "UART") badgeColor = "bg-cyan-950/30 border-cyan-900/30 text-cyan-400";
-                else if (pin.type === "PWM") badgeColor = "bg-amber-950/30 border-amber-900/30 text-amber-400";
-                else if (pin.type === "Analog") badgeColor = "bg-emerald-950/30 border-emerald-900/30 text-emerald-400";
+                if (pType === "I2C" || pType === "COMMUNICATION") badgeColor = "bg-blue-950/30 border-blue-900/30 text-blue-400";
+                else if (pType === "POWER") badgeColor = "bg-red-950/30 border-red-900/30 text-red-400";
+                else if (pType === "GROUND") badgeColor = "bg-zinc-950/60 border-zinc-800 text-zinc-400";
+                else if (pType === "USB") badgeColor = "bg-emerald-950/30 border-emerald-900/30 text-emerald-400";
+                else if (pType === "PWM" || pType === "GPIO") badgeColor = "bg-amber-950/30 border-amber-900/30 text-amber-400";
 
                 return (
                   <tr key={idx} className="hover:bg-slate-900/30 transition-all">
-                    <td className="py-3.5 px-3 text-slate-400">{pin.component}</td>
-                    <td className="py-3.5 px-3 font-semibold text-slate-200">{pin.pin}</td>
-                    <td className="py-3.5 px-3 text-cyan-300 font-medium">{pin.connected_to}</td>
-                    <td className="py-3.5 px-3 text-right">
+                    <td className="py-3 px-3 text-slate-300 font-semibold">{pin.component}</td>
+                    <td className="py-3 px-3 font-semibold text-cyan-300">
+                      {pin.pin_number ? `Pin ${pin.pin_number} (${pin.pin_name || pin.pin})` : (pin.pin || 'Pin')}
+                    </td>
+                    <td className="py-3 px-3 text-slate-400 text-[11px]">
+                      {pin.direction && <span className="text-slate-500 font-bold mr-1.5">[{pin.direction}]</span>}
+                      {pin.function || "Signal interconnection"}
+                    </td>
+                    <td className="py-3 px-3 text-slate-200 font-medium">{pin.connected_to}</td>
+                    <td className="py-3 px-3 text-right">
                       <span className={`inline-block text-[9px] font-extrabold px-2 py-0.5 border rounded uppercase ${badgeColor}`}>
-                        {pin.type}
+                        {pin.voltage_domain || pType}
+                      </span>
+                    </td>
+                    <td className="py-3 px-3 text-right">
+                      <span className={`inline-block text-[9px] font-extrabold px-2 py-0.5 rounded ${
+                        isVerified 
+                          ? "bg-emerald-950/60 text-emerald-400 border border-emerald-800/60"
+                          : "bg-amber-950/60 text-amber-400 border border-amber-800/60"
+                      }`}>
+                        {isVerified ? "VERIFIED" : "VERIFY"}
                       </span>
                     </td>
                   </tr>

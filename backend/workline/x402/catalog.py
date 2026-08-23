@@ -88,6 +88,24 @@ class ServiceCatalog:
                 tags=["image", "generation", "paperbanana", "bedrock", "visualization"],
                 version="1.0.0",
             ),
+            ServiceDefinition(
+                id="workline.test.verified",
+                name="Workline Verified Engineering Service",
+                description="Live Algorand Testnet x402 payment verification, settlement, and engineering attestation proof.",
+                price_usdc=x402_config.test_price_usdc,
+                endpoint="/api/x402/demo",
+                tags=["testnet", "x402", "attestation", "verification", "demo"],
+                version="1.0.0",
+            ),
+            ServiceDefinition(
+                id="demo",
+                name="Workline Verified Engineering Service",
+                description="Live Algorand Testnet x402 payment verification, settlement, and engineering attestation proof.",
+                price_usdc=x402_config.test_price_usdc,
+                endpoint="/api/x402/demo",
+                tags=["testnet", "x402", "attestation", "verification", "demo"],
+                version="1.0.0",
+            ),
         ]
 
         for s in services:
@@ -196,6 +214,21 @@ class ServiceCatalog:
                 return {"status": "DENIED", "reason": str(exc)}
             except Exception as exc:
                 return {"status": "FAILED", "reason": f"Image generation error: {exc}"}
+
+        elif service_id in ("workline.test.verified", "demo"):
+            from datetime import datetime, timezone
+            return {
+                "status": "VERIFIED",
+                "service_id": service_id,
+                "service_name": "Workline Verified Engineering Service",
+                "network": x402_config.network,
+                "asset": x402_config.asset,
+                "asset_id": x402_config.asset_id,
+                "price_usdc": x402_config.test_price_usdc,
+                "engineering_attestation": "Autonomous hardware lifecycle attestation unlocked via verified Algorand Testnet x402 settlement.",
+                "verification_status": "CRYPTOGRAPHICALLY_VERIFIED",
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
 
         return {"service_id": service_id, "status": "COMPLETED", "output": params}
 

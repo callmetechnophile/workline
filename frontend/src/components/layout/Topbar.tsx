@@ -1,8 +1,10 @@
 'use client';
 
-import React from 'react';
-import { Search, Moon, Sun, ShieldCheck, Sparkles, Terminal } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { Search, Moon, Sun, ShieldCheck, Sparkles, Terminal, Wallet } from 'lucide-react';
 import { SignInButton, SignUpButton, UserButton, useAuth } from '@clerk/nextjs';
+import { peraWallet, WalletConnectionState } from '@/lib/peraWallet';
 
 interface TopbarProps {
   isLightMode: boolean;
@@ -20,6 +22,16 @@ export default function Topbar({
   onOpenCopilot,
 }: TopbarProps) {
   const { isSignedIn } = useAuth();
+  const [walletState, setWalletState] = useState<WalletConnectionState>(peraWallet.getState());
+  const [walletAddress, setWalletAddress] = useState<string | null>(peraWallet.getAddress());
+
+  useEffect(() => {
+    const unsub = peraWallet.subscribe((state, address) => {
+      setWalletState(state);
+      setWalletAddress(address);
+    });
+    return () => unsub();
+  }, []);
 
   return (
     <header className="h-14 border-b border-slate-800 bg-slate-950/80 backdrop-blur-md px-6 flex items-center justify-between z-20 sticky top-0">
@@ -66,6 +78,26 @@ export default function Topbar({
 
       {/* Right: Actions, AI Copilot, Theme & Auth */}
       <div className="flex items-center gap-3">
+        {/* Dedicated Wallet Icon & Payments Button */}
+        <Link
+          href="/wallet"
+          title="Wallet & Payments"
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md border text-xs font-mono transition-all cursor-pointer ${
+            walletState === 'CONNECTED' && walletAddress
+              ? 'bg-cyan-950/60 border-cyan-700/60 text-cyan-300 hover:bg-cyan-900/60'
+              : 'bg-slate-900/70 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+          }`}
+        >
+          <Wallet className={`w-3.5 h-3.5 ${walletState === 'CONNECTED' ? 'text-cyan-400' : 'text-slate-400'}`} />
+          {walletState === 'CONNECTED' && walletAddress ? (
+            <span className="font-bold text-[11px] truncate max-w-[90px]">
+              {walletAddress.slice(0, 4)}...{walletAddress.slice(-4)}
+            </span>
+          ) : (
+            <span className="hidden sm:inline text-[11px]">Wallet</span>
+          )}
+        </Link>
+
         {/* Contextual AI Assistant Drawer Trigger */}
         <button
           onClick={onOpenCopilot}

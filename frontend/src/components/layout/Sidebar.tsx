@@ -10,7 +10,9 @@ import {
   Layers, 
   CircuitBoard, 
   Zap, 
+  Flame,
   ShoppingCart, 
+
   PackageCheck, 
   Bot, 
   Activity, 
@@ -71,10 +73,11 @@ export default function Sidebar({
     { id: 'components' as NavSection, label: 'Components', icon: Cpu },
     { id: 'bom' as NavSection, label: 'BOM & Sourcing', icon: Layers },
     { id: 'pcb' as NavSection, label: 'PCB & Layout', icon: CircuitBoard },
-    { id: 'simulation' as NavSection, label: 'Simulation & PINN', icon: Zap },
+    { id: 'simulation' as NavSection, label: 'Thermal Analysis', icon: Flame },
     { id: 'procurement' as NavSection, label: 'Procurement & Sourcing', icon: ShoppingCart },
     { id: 'release' as NavSection, label: 'Release Gate', icon: PackageCheck },
   ];
+
 
   const systemNavItems = [
     { id: 'teams' as NavSection, label: 'Team Collaboration', icon: Users },

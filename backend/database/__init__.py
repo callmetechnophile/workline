@@ -1,11 +1,14 @@
 import os
 import sqlite3
+import json
+import uuid
+from typing import Optional, Dict, Any, List
+from datetime import datetime
 from dotenv import load_dotenv
 load_dotenv()
-import json
-from datetime import datetime
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
+
 
 def get_db_connection():
     DB_PATH = os.path.join(os.path.dirname(__file__), "..", "user_storage.db")
@@ -154,9 +157,41 @@ def init_db():
                 error TEXT
             )
         """)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS pcb_visualizations (
+
+                id TEXT PRIMARY KEY,
+                project_id TEXT NOT NULL,
+                image_url TEXT,
+                image_data TEXT,
+                storage_key TEXT,
+                generation_prompt_hash TEXT,
+                model TEXT NOT NULL,
+                status TEXT NOT NULL,
+                metadata TEXT,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )
+        """)
     else:
         cursor.execute("""
+            CREATE TABLE IF NOT EXISTS pcb_visualizations (
+                id TEXT PRIMARY KEY,
+                project_id TEXT NOT NULL,
+                image_url TEXT,
+                image_data TEXT,
+                storage_key TEXT,
+                generation_prompt_hash TEXT,
+                model TEXT NOT NULL,
+                status TEXT NOT NULL,
+                metadata TEXT,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )
+        """)
+        cursor.execute("""
             CREATE TABLE IF NOT EXISTS packages (
+
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id TEXT NOT NULL,
                 intent TEXT NOT NULL,
@@ -701,3 +736,92 @@ def get_pipeline_stages_for_run(run_id: str):
             pass
         results.append(d)
     return results
+
+
+def save_pcb_visualization(
+    project_id: str,
+    image_url: Optional[str] = None,
+    image_data: Optional[str] = None,
+    storage_key: Optional[str] = None,
+    generation_prompt_hash: Optional[str] = None,
+    model: str = "PaperBanana",
+    status: str = "COMPLETED",
+    metadata: Optional[Dict[str, Any]] = None,
+    visualization_id: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Persists a generated PCB visualization scoped strictly by project_id."""
+    conn = get_db_connection()
+    now_iso = datetime.utcnow().isoformat()
+    vis_id = visualization_id or f"pcb_vis_{uuid.uuid4().hex[:10]}"
+    
+    # Check if project already has a visualization
+    cursor = execute_query(conn, "SELECT id FROM pcb_visualizations WHERE project_id = ?", (project_id,))
+    existing = cursor.fetchone()
+    
+    meta_json = json.dumps(metadata or {})
+    
+    if existing:
+        update_query = """
+            UPDATE pcb_visualizations SET
+                image_url = COALESCE(?, image_url),
+                image_data = COALESCE(?, image_data),
+                storage_key = COALESCE(?, storage_key),
+                generation_prompt_hash = COALESCE(?, generation_prompt_hash),
+                model = ?,
+                status = ?,
+                metadata = ?,
+                updated_at = ?
+            WHERE project_id = ?
+        """
+        execute_query(conn, update_query, (
+            image_url, image_data, storage_key, generation_prompt_hash,
+            model, status, meta_json, now_iso, project_id
+        ))
+        vis_id = existing["id"] if isinstance(existing, sqlite3.Row) or isinstance(existing, dict) else existing[0]
+    else:
+        insert_query = """
+            INSERT INTO pcb_visualizations (
+                id, project_id, image_url, image_data, storage_key,
+                generation_prompt_hash, model, status, metadata,
+                created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """
+        execute_query(conn, insert_query, (
+            vis_id, project_id, image_url, image_data, storage_key,
+            generation_prompt_hash, model, status, meta_json,
+            now_iso, now_iso
+        ))
+        
+    conn.commit()
+    conn.close()
+    
+    return {
+        "id": vis_id,
+        "project_id": project_id,
+        "image_url": image_url,
+        "image_data": image_data,
+        "storage_key": storage_key,
+        "generation_prompt_hash": generation_prompt_hash,
+        "model": model,
+        "status": status,
+        "metadata": metadata or {},
+        "created_at": now_iso,
+        "updated_at": now_iso,
+    }
+
+
+def get_pcb_visualization(project_id: str) -> Optional[Dict[str, Any]]:
+    conn = get_db_connection()
+    cursor = execute_query(conn, "SELECT * FROM pcb_visualizations WHERE project_id = ?", (project_id,))
+    row = cursor.fetchone()
+    conn.close()
+    if not row:
+        return None
+    d = dict(row)
+    try:
+        d["metadata"] = json.loads(d["metadata"])
+    except Exception:
+        d["metadata"] = {}
+    return d
+
+

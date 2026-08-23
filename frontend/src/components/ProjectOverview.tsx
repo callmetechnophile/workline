@@ -13,6 +13,7 @@ import {
   Cpu,
   CircuitBoard,
   Activity,
+  Flame,
   FileText,
   CheckCircle2
 } from 'lucide-react';
@@ -121,12 +122,13 @@ export default function ProjectOverview({
     },
     {
       id: 'simulation' as NavSection,
-      title: 'Simulation & Physics',
+      title: 'Thermal Analysis',
       count: projectData.power_analysis ? 'Analyzed' : '—',
-      desc: 'PINN surrogate neural loss & power tree dissipation',
-      icon: Zap,
+      desc: 'Component thermal dissipation, junction temperatures & cooling margins',
+      icon: Flame,
       status: projectData.power_analysis ? ('PASS' as const) : ('PENDING' as const),
     },
+
     {
       id: 'procurement' as NavSection,
       title: 'Procurement & Orders',

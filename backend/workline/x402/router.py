@@ -115,35 +115,65 @@ def extract_payment_proof(
     request: Request,
     payload: Dict[str, Any],
 ) -> Optional[PaymentProof]:
-    """Extracts PaymentProof from X-PAYMENT header, Authorization, or JSON payload."""
-    # 1. Header: X-PAYMENT or X-Payment
+    """Extracts PaymentProof from X-PAYMENT header, Authorization, query params, or JSON payload."""
+    import base64
+    # 1. Header: X-PAYMENT or X-Payment or Authorization
     raw_header = request.headers.get("X-PAYMENT") or request.headers.get("X-Payment")
     if raw_header:
         try:
+            # Try raw json
             parsed = json.loads(raw_header)
             return PaymentProof(**parsed)
         except Exception:
-            # Handle token/hash format in header
-            if "pay_req_" in raw_header:
-                parts = raw_header.split(":")
-                return PaymentProof(
-                    payment_request_id=parts[0].strip(),
-                    tx_hash=parts[1].strip() if len(parts) > 1 else None,
-                )
+            # Try base64 decoded json
+            try:
+                decoded = base64.b64decode(raw_header).decode("utf-8")
+                parsed = json.loads(decoded)
+                return PaymentProof(**parsed)
+            except Exception:
+                # Handle token/hash format in header: "pay_req_123:TXALGO..."
+                if "pay_req_" in raw_header:
+                    parts = raw_header.split(":")
+                    return PaymentProof(
+                        payment_request_id=parts[0].strip(),
+                        tx_hash=parts[1].strip() if len(parts) > 1 else None,
+                    )
 
-    # 2. Body proof field
-    if "payment_proof" in payload:
+    # 2. Authorization header: "Bearer <json_b64>" or "x402 <proof>"
+    auth_header = request.headers.get("Authorization")
+    if auth_header and auth_header.startswith("Bearer "):
+        token_str = auth_header[7:].strip()
         try:
-            return PaymentProof(**payload["payment_proof"])
+            decoded = base64.b64decode(token_str).decode("utf-8")
+            parsed = json.loads(decoded)
+            if "payment_request_id" in parsed or "tx_hash" in parsed:
+                return PaymentProof(**parsed)
         except Exception:
             pass
 
-    if "payment_request_id" in payload:
+    # 3. Query parameters (for GET requests)
+    q_params = dict(request.query_params)
+    if "payment_request_id" in q_params and ("tx_hash" in q_params or "signature" in q_params):
         return PaymentProof(
-            payment_request_id=payload["payment_request_id"],
-            tx_hash=payload.get("tx_hash") or payload.get("signature"),
-            payer_address=payload.get("payer_address"),
+            payment_request_id=q_params["payment_request_id"],
+            tx_hash=q_params.get("tx_hash") or q_params.get("signature"),
+            payer_address=q_params.get("payer") or q_params.get("payer_address"),
         )
+
+    # 4. Body proof field
+    if payload:
+        if "payment_proof" in payload:
+            try:
+                return PaymentProof(**payload["payment_proof"])
+            except Exception:
+                pass
+
+        if "payment_request_id" in payload:
+            return PaymentProof(
+                payment_request_id=payload["payment_request_id"],
+                tx_hash=payload.get("tx_hash") or payload.get("signature") or payload.get("transaction_id"),
+                payer_address=payload.get("payer") or payload.get("payer_address"),
+            )
 
     return None
 
@@ -396,6 +426,45 @@ async def execute_procurement_quote(
         payload=payload,
         request=request,
         idempotency_key=x_idempotency_key or payload.get("idempotency_key"),
+    )
+
+
+@router.get("/demo")
+async def execute_demo_service_get(
+    request: Request,
+    x_idempotency_key: Optional[str] = Header(None, alias="X-Idempotency-Key"),
+):
+    """
+    Dedicated Hackathon x402 Test Endpoint (GET):
+    Workline Verified Engineering Service (0.01 USDC on Algorand Testnet).
+    Returns HTTP 402 with X402Challenge if unpaid; returns attestation when settled.
+    """
+    payload = dict(request.query_params)
+    return await handle_service_execution_flow(
+        service_id="workline.test.verified",
+        payload=payload,
+        request=request,
+        idempotency_key=x_idempotency_key or payload.get("idempotency_key"),
+    )
+
+
+@router.post("/demo")
+async def execute_demo_service_post(
+    request: Request,
+    payload: Optional[Dict[str, Any]] = None,
+    x_idempotency_key: Optional[str] = Header(None, alias="X-Idempotency-Key"),
+):
+    """
+    Dedicated Hackathon x402 Test Endpoint (POST):
+    Workline Verified Engineering Service (0.01 USDC on Algorand Testnet).
+    Returns HTTP 402 with X402Challenge if unpaid; returns attestation when settled.
+    """
+    body_payload = payload or {}
+    return await handle_service_execution_flow(
+        service_id="workline.test.verified",
+        payload=body_payload,
+        request=request,
+        idempotency_key=x_idempotency_key or body_payload.get("idempotency_key"),
     )
 
 

@@ -112,14 +112,23 @@ export default function X402PaymentsPanel({ apiBase }: X402PaymentsPanelProps) {
           </p>
         </div>
 
-        <button
-          onClick={fetchPayments}
-          disabled={isLoading}
-          className="px-3.5 py-2 rounded-lg bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white text-xs font-mono flex items-center gap-1.5 cursor-pointer transition-all self-start sm:self-auto"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
-          <span>Refresh</span>
-        </button>
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <a
+            href="/wallet"
+            className="px-3.5 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-mono font-bold flex items-center gap-1.5 cursor-pointer transition-all shadow"
+          >
+            <ShieldCheck className="w-3.5 h-3.5" />
+            <span>Open Wallet & Pay</span>
+          </a>
+          <button
+            onClick={fetchPayments}
+            disabled={isLoading}
+            className="px-3.5 py-2 rounded-lg bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white text-xs font-mono flex items-center gap-1.5 cursor-pointer transition-all"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+            <span>Refresh</span>
+          </button>
+        </div>
       </div>
 
       {/* Ledger Table / Empty State */}
