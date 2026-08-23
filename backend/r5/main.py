@@ -18,6 +18,7 @@ from backend.workline.api.bom import router as bom_router
 from backend.workline.api.procurement import router as procurement_router
 from backend.workline.api.orders import router as orders_router
 from backend.workline.api.payments import router as payments_router
+from backend.workline.x402 import x402_router
 from backend.workline.procurement.engine import procurement_engine
 from backend.workline.orders.service import order_service
 from backend.workline.orders.models import Order, OrderPlan, PaymentRequest, PaymentStatus
@@ -249,6 +250,7 @@ app.include_router(bom_router, dependencies=[Depends(verify_internal_service_aut
 app.include_router(procurement_router, dependencies=[Depends(verify_internal_service_auth)])
 app.include_router(orders_router, dependencies=[Depends(verify_internal_service_auth)])
 app.include_router(payments_router, dependencies=[Depends(verify_internal_service_auth)])
+app.include_router(x402_router, dependencies=[Depends(verify_internal_service_auth)])
 
 
 if __name__ == "__main__":

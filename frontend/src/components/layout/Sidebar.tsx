@@ -1,6 +1,3 @@
-'use client';
-
-import React from 'react';
 import { 
   Plus, 
   FolderKanban, 
@@ -19,6 +16,8 @@ import {
   Activity, 
   Blocks, 
   Settings,
+  CreditCard,
+  Server,
   ChevronRight
 } from 'lucide-react';
 import { UserButton, SignInButton, useAuth } from '@clerk/nextjs';
@@ -38,6 +37,8 @@ export type NavSection =
   | 'projects'
   | 'conversations'
   | 'agents'
+  | 'services'
+  | 'payments'
   | 'health'
   | 'integrations'
   | 'settings';
@@ -69,12 +70,14 @@ export default function Sidebar({
     { id: 'bom' as NavSection, label: 'BOM & Sourcing', icon: Layers },
     { id: 'pcb' as NavSection, label: 'PCB & Layout', icon: CircuitBoard },
     { id: 'simulation' as NavSection, label: 'Simulation & PINN', icon: Zap },
-    { id: 'procurement' as NavSection, label: 'Procurement & x402', icon: ShoppingCart },
+    { id: 'procurement' as NavSection, label: 'Procurement & Sourcing', icon: ShoppingCart },
     { id: 'release' as NavSection, label: 'Release Gate', icon: PackageCheck },
   ];
 
   const systemNavItems = [
     { id: 'agents' as NavSection, label: 'Agent Operations', icon: Bot },
+    { id: 'services' as NavSection, label: 'API Services', icon: Server },
+    { id: 'payments' as NavSection, label: 'x402 Payments', icon: CreditCard },
     { id: 'health' as NavSection, label: 'Service Health', icon: Activity },
     { id: 'integrations' as NavSection, label: 'Integrations', icon: Blocks },
     { id: 'settings' as NavSection, label: 'Settings', icon: Settings },

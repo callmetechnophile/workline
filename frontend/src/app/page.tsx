@@ -30,6 +30,8 @@ import ProjectOverview from '@/components/ProjectOverview';
 import ServiceHealthPanel from '@/components/ServiceHealthPanel';
 import SystemIntegrationsPanel from '@/components/SystemIntegrationsPanel';
 import ConversationsWorkspace from '@/components/ConversationsWorkspace';
+import APIServicesPanel from '@/components/APIServicesPanel';
+import X402PaymentsPanel from '@/components/X402PaymentsPanel';
 
 // Engineering Modules
 import { BOMTable } from '@/components/BOMTable';
@@ -427,6 +429,12 @@ function AuthenticatedWorkbench() {
           </div>
         );
 
+      case 'services':
+        return <APIServicesPanel apiBase={apiBase} />;
+
+      case 'payments':
+        return <X402PaymentsPanel apiBase={apiBase} />;
+
       case 'health':
         return <ServiceHealthPanel />;
 
@@ -453,12 +461,12 @@ function AuthenticatedWorkbench() {
               </div>
               <div>
                 <label className="block text-slate-500 font-mono mb-1">
-                  PAYMENT PROTOCOL NETWORK
+                  PAYMENT PROTOCOL & BLOCKCHAIN SETTLEMENT
                 </label>
                 <input
                   type="text"
                   disabled
-                  value="Base Sepolia (x402 Testnet USDC)"
+                  value="Algorand Mainnet (USDC ASA #31566704) via GoPlausible x402"
                   className="w-full bg-slate-950 border border-slate-800 rounded p-2 text-slate-300 font-mono"
                 />
               </div>

@@ -1,7 +1,10 @@
-"""x402 Payment Authorization Protocol Provider for Workline.
+"""x402 Payment Authorization Protocol Provider for Workline (Algorand + USDC).
 
-Implements non-custodial HTTP 402 Payment Required flows, generating payment requirements
-and verifying facilitator-settled payment proofs.
+Implements non-custodial HTTP 402 Payment Required flows on Algorand, generating
+payment requirements and verifying GoPlausible facilitator-settled payment proofs.
+
+Note: x402 payments monetize Workline engineering & AI service execution.
+Physical component procurement is settled separately via distributor payment rails.
 """
 
 import asyncio
@@ -11,8 +14,6 @@ import os
 import uuid
 from typing import Any, Dict, Optional, Tuple
 
-import httpx
-
 from backend.workline.orders.models import (
     Order,
     PaymentRequest,
@@ -20,12 +21,15 @@ from backend.workline.orders.models import (
     PaymentStatus,
 )
 from backend.workline.orders.payment.base import PaymentProvider
+from backend.workline.x402.config import x402_config
+from backend.workline.x402.verifier import x402_verifier
+from backend.workline.x402.models import PaymentProof, PaymentRecord
 
 
 class X402PaymentProvider(PaymentProvider):
     """
-    x402 Protocol Payment Provider enabling non-custodial cryptographic payment
-    challenges and payment authorization verification.
+    Algorand x402 Protocol Payment Provider enabling non-custodial USDC payment
+    challenges and authorization verification via GoPlausible Facilitator.
     """
 
     def __init__(
@@ -36,20 +40,19 @@ class X402PaymentProvider(PaymentProvider):
         facilitator_url: Optional[str] = None,
         enabled: Optional[bool] = None,
     ):
-        self.network = network or os.environ.get("WORKLINE_X402_NETWORK", "base-sepolia")
-        self.asset = asset or os.environ.get("WORKLINE_X402_ASSET", "USDC")
-        self.recipient = recipient or os.environ.get("WORKLINE_X402_PAYMENT_ADDRESS", "0xWorklineTreasuryRecipient402")
-        self.facilitator_url = facilitator_url or os.environ.get("WORKLINE_X402_FACILITATOR_URL", "https://facilitator.x402.org")
-
-        env_enabled = os.environ.get("WORKLINE_X402_ENABLED", "true").lower() in ("true", "1", "yes")
-        self._enabled = enabled if enabled is not None else env_enabled
+        self.network = network or x402_config.network
+        self.asset = asset or x402_config.asset
+        self.asset_id = x402_config.asset_id
+        self.recipient = recipient or x402_config.pay_to
+        self.facilitator_url = facilitator_url or x402_config.facilitator_url
+        self._enabled = enabled if enabled is not None else x402_config.enabled
 
         self._requests: Dict[str, PaymentRequest] = {}
         self._sessions: Dict[str, PaymentSession] = {}
 
     @property
     def name(self) -> str:
-        return "x402"
+        return "x402-algorand"
 
     @property
     def is_enabled(self) -> bool:
@@ -59,16 +62,14 @@ class X402PaymentProvider(PaymentProvider):
         self, order: Order, metadata: Optional[Dict[str, Any]] = None
     ) -> PaymentRequest:
         """
-        Generates an HTTP 402 cryptographic payment challenge.
-        Converts order total into the target asset (USDC) with explicit expiry.
+        Generates an HTTP 402 Algorand USDC cryptographic payment challenge.
         """
-        # Conversion to USD / USDC: Standard rate ~86.50 INR / USD
         amount_usd = round(order.total / (order.financials.exchange_rate if (order.financials and order.financials.exchange_rate) else 86.50), 2)
         amount_usd = max(amount_usd, 0.01)
 
         req_id = f"pay_req_{uuid.uuid4().hex[:12]}"
         now = datetime.now(timezone.utc)
-        expires = (now + timedelta(minutes=30)).isoformat()
+        expires = (now + timedelta(minutes=x402_config.challenge_ttl_minutes)).isoformat()
 
         req = PaymentRequest(
             payment_request_id=req_id,
@@ -91,6 +92,7 @@ class X402PaymentProvider(PaymentProvider):
                     "scheme": "x402",
                     "network": self.network,
                     "asset": self.asset,
+                    "asset_id": self.asset_id,
                     "pay_to": self.recipient,
                     "amount": amount_usd,
                     "currency": "USD",
@@ -139,7 +141,7 @@ class X402PaymentProvider(PaymentProvider):
         self, payment_id: str, signed_proof: Dict[str, Any]
     ) -> Tuple[bool, Optional[str], Optional[PaymentSession]]:
         """
-        Verifies cryptographic signature / facilitator proof before authorizing the order.
+        Verifies Algorand settlement proof via GoPlausible verifier before authorizing.
         """
         session = self._sessions.get(payment_id)
         req = self._requests.get(payment_id)
