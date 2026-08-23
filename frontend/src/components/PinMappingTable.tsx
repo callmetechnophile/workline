@@ -21,14 +21,17 @@ interface PinMappingTableProps {
   pins?: PinConnection[];
 }
 
-export default function PinMappingTable({ pins }: PinMappingTableProps) {
+export default function PinMappingTable({ pins = [] }: PinMappingTableProps) {
+  const safePins = Array.isArray(pins) ? pins : [];
+
   const downloadCSV = () => {
-    if (!pins || pins.length === 0) return;
+    if (!safePins || safePins.length === 0) return;
     const headers = ["Component", "Pin Number", "Pin Name", "Direction", "Function", "Connected To", "Signal Type", "Voltage Domain", "Status"];
     const csvContent = [
       headers.join(","),
-      ...pins.map(p => `"${p.component}","${p.pin_number || ''}","${p.pin_name || p.pin || ''}","${p.direction || ''}","${p.function || ''}","${p.connected_to}","${p.signal_type || p.type || ''}","${p.voltage_domain || ''}","${p.status || 'VERIFIED'}"`)
+      ...safePins.map(p => `"${p.component}","${p.pin_number || ''}","${p.pin_name || p.pin || ''}","${p.direction || ''}","${p.function || ''}","${p.connected_to}","${p.signal_type || p.type || ''}","${p.voltage_domain || ''}","${p.status || 'VERIFIED'}"`)
     ].join("\n");
+
 
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
@@ -61,7 +64,7 @@ export default function PinMappingTable({ pins }: PinMappingTableProps) {
         )}
       </div>
 
-      {!pins || pins.length === 0 ? (
+      {!safePins || safePins.length === 0 ? (
         <div className="text-center py-6 text-xs text-slate-500 font-mono">
           [SYSTEM NOTICE]: Pin connection configuration is idle. Submit a query to generate wiring boards.
         </div>
@@ -79,7 +82,8 @@ export default function PinMappingTable({ pins }: PinMappingTableProps) {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/30">
-              {pins.map((pin, idx) => {
+              {safePins.map((pin, idx) => {
+
                 const isVerified = pin.status !== "PINOUT VERIFICATION REQUIRED";
                 const pType = pin.signal_type || pin.type || "SIGNAL";
                 

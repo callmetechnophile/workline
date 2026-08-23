@@ -21,20 +21,21 @@ interface ComponentTableProps {
   components: ComponentItem[];
 }
 
-export default function ComponentTable({ components }: ComponentTableProps) {
-  const totalLandedCost = components.reduce((sum, item) => sum + (item.final_cost || 0), 0);
+export default function ComponentTable({ components = [] }: ComponentTableProps) {
+  const safeComps = Array.isArray(components) ? components : [];
+  const totalLandedCost = safeComps.reduce((sum, item) => sum + (item?.final_cost || 0), 0);
 
   const handleExportCSV = () => {
     const headers = ["Component", "Optimal Vendor", "Base Cost (INR)", "Shipping Cost (INR)", "Distance", "Final Landed Cost (INR)", "Stock Status", "Estimated Delivery (ETA)"];
-    const rows = components.map(item => [
-      `"${item.component.replace(/"/g, '""')}"`,
-      `"${item.selected_vendor.replace(/"/g, '""')}"`,
-      item.base_cost,
-      item.shipping_cost,
-      `"${item.distance}"`,
-      item.final_cost,
-      `"${item.stock}"`,
-      `"${item.eta}"`
+    const rows = safeComps.map(item => [
+      `"${(item.component || '').replace(/"/g, '""')}"`,
+      `"${(item.selected_vendor || '').replace(/"/g, '""')}"`,
+      item.base_cost ?? 0,
+      item.shipping_cost ?? 0,
+      `"${item.distance || ''}"`,
+      item.final_cost ?? 0,
+      `"${item.stock || ''}"`,
+      `"${item.eta || ''}"`
     ]);
     
     // Add total row
@@ -53,7 +54,8 @@ export default function ComponentTable({ components }: ComponentTableProps) {
     document.body.removeChild(link);
   };
 
-  if (!components || components.length === 0 || !components[0].selected_vendor) {
+  if (!safeComps || safeComps.length === 0 || !safeComps[0]?.selected_vendor) {
+
     return (
       <div className="flex flex-col items-center justify-center p-8 text-slate-400">
         <Layers className="w-12 h-12 mb-2 stroke-1 text-slate-600" />

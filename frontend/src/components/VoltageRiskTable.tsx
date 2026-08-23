@@ -15,7 +15,9 @@ interface VoltageRiskTableProps {
   risks?: VoltageRisk[];
 }
 
-export default function VoltageRiskTable({ risks }: VoltageRiskTableProps) {
+export default function VoltageRiskTable({ risks = [] }: VoltageRiskTableProps) {
+  const safeRisks = Array.isArray(risks) ? risks : [];
+
   return (
     <div className="glass-panel border border-amber-500/20 bg-slate-900/10 p-5 space-y-4">
       <div className="flex justify-between items-center border-b border-amber-900/40 pb-3">
@@ -30,7 +32,7 @@ export default function VoltageRiskTable({ risks }: VoltageRiskTableProps) {
         </span>
       </div>
 
-      {!risks || risks.length === 0 ? (
+      {!safeRisks || safeRisks.length === 0 ? (
         <div className="text-center py-6 text-xs text-slate-500 font-mono">
           [SYSTEM NOTICE]: No electrical validation results found. Execute a design query.
         </div>
@@ -47,7 +49,8 @@ export default function VoltageRiskTable({ risks }: VoltageRiskTableProps) {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/30">
-              {risks.map((risk, idx) => {
+              {safeRisks.map((risk, idx) => {
+
                 let badgeStyle = "bg-emerald-950/20 border-emerald-500/30 text-emerald-400";
                 let statusIcon = <ShieldCheck className="w-3 h-3 text-emerald-400" />;
                 

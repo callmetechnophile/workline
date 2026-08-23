@@ -100,7 +100,7 @@ export default function ResearchPapers({ papers, summary, intent = '', apiBase =
           <BookOpen className="w-4 h-4 text-cyan-400" />
           Retrieved References (arXiv API)
         </h3>
-        {papers.map((paper) => (
+        {Array.isArray(papers) && papers.map((paper) => (
           <a 
             key={paper.id || paper.url} 
             href={paper.url} 
@@ -159,13 +159,14 @@ export default function ResearchPapers({ papers, summary, intent = '', apiBase =
                 Key Technical Findings:
               </h5>
               <ul className="list-disc pl-4 space-y-1.5 text-xs text-slate-300">
-                {summary.conclusions?.map((concl, i) => (
+                {Array.isArray(summary.conclusions) && summary.conclusions.map((concl, i) => (
                   <li key={`concl-${i}`} className="leading-relaxed">
                     {concl}
                   </li>
                 ))}
               </ul>
             </div>
+
 
             <div className="bg-slate-900/70 border border-slate-800 rounded-lg p-4 relative">
               <div className="flex justify-between items-center mb-2 border-b border-slate-800/60 pb-1.5">
@@ -224,7 +225,7 @@ export default function ResearchPapers({ papers, summary, intent = '', apiBase =
               <span className="font-bold text-cyan-400">Contextual Prompting:</span> Input your custom integration ideas below to check compatibility and receive immediate safety recommendations.
             </div>
 
-            {messages.map((msg, i) => (
+            {Array.isArray(messages) && messages.map((msg, i) => (
               <div 
                 key={`msg-${i}`}
                 className={`flex gap-2 max-w-[85%] ${

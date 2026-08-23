@@ -29,7 +29,7 @@ export default function WiringDiagram({ data }: WiringDiagramProps) {
   const isPanningRef = useRef<boolean>(false);
   const startPanRef = useRef({ x: 0, y: 0 });
 
-  if (!data || !data.connections || data.connections.length === 0) {
+  if (!data || !Array.isArray(data.connections) || data.connections.length === 0) {
     return (
       <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-8 text-center">
         <Cpu className="w-8 h-8 text-slate-600 mx-auto mb-2" />

@@ -28,7 +28,7 @@ export const BOMTable: React.FC<BOMTableProps> = ({
 }) => {
   const [filter, setFilter] = useState("");
 
-  if (!items || items.length === 0) {
+  if (!items || !Array.isArray(items) || items.length === 0) {
     return (
       <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-8 text-center">
         <Table className="w-8 h-8 text-slate-600 mx-auto mb-2" />
@@ -40,10 +40,12 @@ export const BOMTable: React.FC<BOMTableProps> = ({
 
   const filtered = items.filter(
     (item) =>
-      item.ref.toLowerCase().includes(filter.toLowerCase()) ||
-      item.partNumber.toLowerCase().includes(filter.toLowerCase()) ||
-      item.orderingCode.toLowerCase().includes(filter.toLowerCase())
+      (item.ref || '').toLowerCase().includes(filter.toLowerCase()) ||
+      (item.partNumber || '').toLowerCase().includes(filter.toLowerCase()) ||
+      (item.orderingCode || '').toLowerCase().includes(filter.toLowerCase()) ||
+      (item.component || '').toLowerCase().includes(filter.toLowerCase())
   );
+
 
   return (
     <div className="bg-surface border border-border rounded-lg p-5 flex flex-col gap-4 text-foreground">

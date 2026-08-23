@@ -306,6 +306,14 @@ function AuthenticatedWorkbench() {
       );
     }
 
+    const safeBomItems = Array.isArray(projectData?.bom_items)
+      ? projectData.bom_items
+      : Array.isArray(projectData?.bom?.items)
+      ? projectData.bom.items
+      : Array.isArray(projectData?.bom)
+      ? projectData.bom
+      : [];
+
     switch (activeSection) {
       case 'overview':
       case 'projects':
@@ -341,10 +349,10 @@ function AuthenticatedWorkbench() {
         return (
           <div className="space-y-6">
             <ResearchPapers
-              papers={projectData?.research_papers || []}
+              papers={Array.isArray(projectData?.research_papers) ? projectData.research_papers : []}
               summary={projectData?.research_summary}
             />
-            <ContradictionViewer contradictions={projectData?.contradictions || []} />
+            <ContradictionViewer contradictions={Array.isArray(projectData?.contradictions) ? projectData.contradictions : []} />
           </div>
         );
 
@@ -368,6 +376,7 @@ function AuthenticatedWorkbench() {
           <div className="space-y-6">
             <DependencyGraph data={projectData?.dependency_graph || { nodes: [], edges: [] }} />
             <WiringDiagram data={projectData?.wiring_diagram || { connections: [] }} />
+
             <ImageGenerationPanel
               projectId={projectData?.project_id || (hasProject ? projectName : 'default_project')}
               onGenerateImage={async (params) => {
@@ -380,6 +389,7 @@ function AuthenticatedWorkbench() {
               }}
             />
           </div>
+
         );
 
       case 'components':
@@ -388,10 +398,10 @@ function AuthenticatedWorkbench() {
         }
         return (
           <div className="space-y-6">
-            <ComponentTable components={projectData?.bom || []} />
+            <ComponentTable components={safeBomItems} />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <CandidateComparison />
-              <AlternativeComponents components={projectData?.bom || []} />
+              <AlternativeComponents components={safeBomItems} />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <PinMappingTable />
@@ -406,10 +416,10 @@ function AuthenticatedWorkbench() {
         }
         return (
           <div className="space-y-6">
-            <BOMTable items={projectData?.bom_items} />
+            <BOMTable items={safeBomItems} />
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2">
-                <CostBreakdown components={projectData?.bom || []} />
+                <CostBreakdown components={safeBomItems} />
               </div>
               <div>
                 <BOMExportPanel apiBase={apiBase} exports={projectData?.exports} />
@@ -428,7 +438,7 @@ function AuthenticatedWorkbench() {
               projectId={projectData?.project_id || projectId || projectName}
               projectName={projectName}
               engineeringGoal={systemSpecification}
-              components={projectData?.bom_items || projectData?.bom || []}
+              components={safeBomItems}
               powerAnalysis={projectData?.power_analysis}
               thermalAnalysis={projectData?.thermal_reports}
               apiBase={apiBase}
@@ -446,7 +456,7 @@ function AuthenticatedWorkbench() {
           <div className="space-y-6">
             <ThermalRiskPanel
               projectId={projectData?.project_id || projectId || projectName}
-              components={projectData?.bom_items || projectData?.bom || []}
+              components={safeBomItems}
               powerAnalysis={projectData?.power_analysis}
               thermalReports={projectData?.thermal_reports}
             />

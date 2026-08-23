@@ -38,25 +38,31 @@ interface CostBreakdownProps {
   };
 }
 
-export default function CostBreakdown({ components, costSummary }: CostBreakdownProps) {
+export default function CostBreakdown({ components = [], costSummary }: CostBreakdownProps) {
   // State storing active component config: mapping component name to { base_cost, shipping_cost, final_cost }
   const [activePricing, setActivePricing] = useState<Record<string, { base: number; shipping: number; final: number }>>({});
 
   useEffect(() => {
     const initial: Record<string, { base: number; shipping: number; final: number }> = {};
-    components.forEach((comp) => {
-      initial[comp.component] = {
-        base: comp.base_cost,
-        shipping: comp.shipping_cost,
-        final: comp.final_cost
-      };
-    });
+    if (Array.isArray(components)) {
+      components.forEach((comp) => {
+        if (comp && comp.component) {
+          initial[comp.component] = {
+            base: comp.base_cost ?? 0,
+            shipping: comp.shipping_cost ?? 0,
+            final: comp.final_cost ?? 0
+          };
+        }
+      });
+    }
     setActivePricing(initial);
   }, [components]);
 
   const handleSwap = (compName: string, selectedValue: string) => {
-    const original = components.find(c => c.component === compName);
+    if (!Array.isArray(components)) return;
+    const original = components.find(c => c && c.component === compName);
     if (!original) return;
+
 
     if (selectedValue === "original") {
       setActivePricing(prev => ({
@@ -111,14 +117,19 @@ export default function CostBreakdown({ components, costSummary }: CostBreakdown
     Power: 0
   };
 
-  components.forEach((comp) => {
-    const pricing = activePricing[comp.component] || { base: comp.base_cost, shipping: comp.shipping_cost, final: comp.final_cost };
-    const catGroup = getCategoryGroup(comp.category, comp.component);
-    
-    subtotals[catGroup] += pricing.base;
-    rawComponentCost += pricing.base;
-    transportCost += pricing.shipping;
-  });
+  if (Array.isArray(components)) {
+    components.forEach((comp) => {
+      if (comp && comp.component) {
+        const pricing = activePricing[comp.component] || { base: comp.base_cost ?? 0, shipping: comp.shipping_cost ?? 0, final: comp.final_cost ?? 0 };
+        const catGroup = getCategoryGroup(comp.category, comp.component);
+        
+        subtotals[catGroup] += pricing.base;
+        rawComponentCost += pricing.base;
+        transportCost += pricing.shipping;
+      }
+    });
+  }
+
 
   const finalBOMCost = rawComponentCost + transportCost;
 

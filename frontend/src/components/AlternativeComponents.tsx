@@ -44,8 +44,10 @@ interface AlternativeComponentsProps {
   };
 }
 
-export default function AlternativeComponents({ components, optimizationData }: AlternativeComponentsProps) {
-  const compWithAlts = components.filter(c => c.alternatives && c.alternatives.length > 0);
+export default function AlternativeComponents({ components = [], optimizationData }: AlternativeComponentsProps) {
+  const safeComps = Array.isArray(components) ? components : [];
+  const compWithAlts = safeComps.filter(c => c && c.alternatives && Array.isArray(c.alternatives) && c.alternatives.length > 0);
+
   const targetBudget = optimizationData?.budget_target_usd ?? 5.00;
   const actualBom = optimizationData?.actual_bom_usd ?? 0.00;
   const budgetStatus = optimizationData?.budget_status ?? (actualBom <= targetBudget && actualBom > 0 ? "UNDER BUDGET" : "OVER BUDGET");

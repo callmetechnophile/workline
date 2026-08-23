@@ -79,11 +79,19 @@ export default function ThermalRiskPanel({
 
   const currentProjId = projectId || 'current_project';
 
+  const safeComponents = useMemo(() => {
+    if (Array.isArray(components)) return components;
+    if (components && typeof components === 'object' && Array.isArray((components as any).items)) {
+      return (components as any).items;
+    }
+    return [];
+  }, [components]);
+
   useEffect(() => {
     let isMounted = true;
 
     async function loadThermalAnalysis() {
-      if (!currentProjId || components.length === 0) {
+      if (!currentProjId || safeComponents.length === 0) {
         return;
       }
 
@@ -93,7 +101,7 @@ export default function ThermalRiskPanel({
         const res = await fetch(`${apiBase}/api/projects/${encodeURIComponent(currentProjId)}/thermal`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ components }),
+          body: JSON.stringify({ components: safeComponents }),
         });
 
         if (res.ok) {
@@ -116,14 +124,21 @@ export default function ThermalRiskPanel({
     return () => {
       isMounted = false;
     };
-  }, [currentProjId, components]);
+  }, [currentProjId, safeComponents]);
 
   // Local fallback calculation if backend has not loaded yet
   const localAnalysis = useMemo(() => {
-    if (data) return data;
+    if (data) {
+      return {
+        ...data,
+        components: Array.isArray(data.components) ? data.components : [],
+        missing_components: Array.isArray(data.missing_components) ? data.missing_components : [],
+        findings: Array.isArray(data.findings) ? data.findings : [],
+      };
+    }
 
     const refCounts: Record<string, number> = { U: 0, J: 0, C: 0, R: 0, Q: 0 };
-    const analyzed: ThermalComponentItem[] = components.map((c: any, idx: number) => {
+    const analyzed: ThermalComponentItem[] = safeComponents.map((c: any, idx: number) => {
       const name = c.name || c.component || `Component ${idx + 1}`;
       const mpn = c.mpn || name;
       const cat = (c.category || '').toLowerCase();
@@ -146,6 +161,7 @@ export default function ThermalRiskPanel({
         refCounts.U = (refCounts.U || 0) + 1;
         desig = `U${refCounts.U}`;
       }
+
 
       // Verified datasheet matching
       if (nameLower.includes('usb5734')) {
@@ -320,11 +336,11 @@ export default function ThermalRiskPanel({
         highest ? `Highest operating-temperature limit: ${highest.value_c} °C (${highest.components.join(', ')})` : '',
       ].filter(Boolean),
     };
-  }, [data, components, currentProjId]);
+  }, [data, safeComponents, currentProjId]);
 
   // Sorted components
   const sortedComponents = useMemo(() => {
-    const comps = [...localAnalysis.components];
+    const comps = Array.isArray(localAnalysis?.components) ? [...localAnalysis.components] : [];
     comps.sort((a, b) => {
       if (sortField === 'max_temp') {
         const valA = a.max_temp_c ?? (sortAsc ? 999 : -999);
@@ -349,7 +365,7 @@ export default function ThermalRiskPanel({
       return 0;
     });
     return comps;
-  }, [localAnalysis.components, sortField, sortAsc]);
+  }, [localAnalysis?.components, sortField, sortAsc]);
 
   const toggleSort = (field: SortField) => {
     if (sortField === field) {
@@ -360,9 +376,9 @@ export default function ThermalRiskPanel({
     }
   };
 
-
-  if (components.length === 0 && !data) {
+  if (safeComponents.length === 0 && !data) {
     return (
+
       <div className="glass-panel p-6 border border-zinc-800 bg-zinc-950/70 rounded-xl space-y-4">
         <div className="flex items-center gap-2.5 text-amber-400 font-mono text-sm font-semibold uppercase">
           <AlertTriangle className="w-5 h-5" />
