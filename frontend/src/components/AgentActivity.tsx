@@ -50,6 +50,39 @@ export const AgentActivity: React.FC<AgentActivityProps> = ({
   const [loading, setLoading] = useState<boolean>(false);
   const [submitting, setSubmitting] = useState<boolean>(false);
 
+  useEffect(() => {
+    if (!projectId && !executionId) return;
+
+    const fetchStatus = async () => {
+      try {
+        if (executionId) {
+          const res = await fetch(`/api/agents/executions/${executionId}`);
+          if (res.ok) {
+            const data = await res.json();
+            setState(data);
+          }
+        } else if (projectId) {
+          const res = await fetch(`/api/agents/project/${projectId}/status`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.execution_id) {
+              const execRes = await fetch(`/api/agents/executions/${data.execution_id}`);
+              if (execRes.ok) {
+                setState(await execRes.json());
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Failed to poll agent status:", err);
+      }
+    };
+
+    fetchStatus();
+    const interval = setInterval(fetchStatus, 3000);
+    return () => clearInterval(interval);
+  }, [projectId, executionId]);
+
   if (!projectId && !executionId) {
     return (
       <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-8 text-center">
@@ -59,37 +92,6 @@ export const AgentActivity: React.FC<AgentActivityProps> = ({
       </div>
     );
   }
-
-  const fetchStatus = async () => {
-    try {
-      if (executionId) {
-        const res = await fetch(`/api/agents/executions/${executionId}`);
-        if (res.ok) {
-          const data = await res.json();
-          setState(data);
-        }
-      } else if (projectId) {
-        const res = await fetch(`/api/agents/project/${projectId}/status`);
-        if (res.ok) {
-          const data = await res.json();
-          if (data.execution_id) {
-            const execRes = await fetch(`/api/agents/executions/${data.execution_id}`);
-            if (execRes.ok) {
-              setState(await execRes.json());
-            }
-          }
-        }
-      }
-    } catch (err) {
-      console.error("Failed to poll agent status:", err);
-    }
-  };
-
-  useEffect(() => {
-    fetchStatus();
-    const interval = setInterval(fetchStatus, 3000);
-    return () => clearInterval(interval);
-  }, [projectId, executionId]);
 
   const handleDecision = async (decision: string) => {
     if (!state?.execution_id) return;
