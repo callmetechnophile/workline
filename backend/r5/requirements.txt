@@ -1,0 +1,20 @@
+# ==============================================================================
+# Workline R5 Procurement, Orders & x402 Payment Service Dependencies
+# ==============================================================================
+
+fastapi>=0.100.0
+uvicorn>=0.22.0
+pydantic>=2.0
+httpx>=0.24.0
+cryptography>=41.0.0
+python-jose[cryptography]>=3.3.0
+python-multipart>=0.0.9
+python-dotenv>=1.0.0
+reportlab>=4.0.0
+python-docx>=1.1.0
+orjson>=3.9.0
+aiosqlite>=0.19.0
+loguru>=0.7.0
+pytest>=8.0.0
+pytest-asyncio>=0.23.0
+pytest-mock>=3.12.0

@@ -35,6 +35,10 @@ services:
         sync: false
       - key: WORKLINE_R5_URL
         value: http://workline-procurement-service:10005
+      - key: R5_INTERNAL_URL
+        value: http://workline-procurement-service:10005
+      - key: R5_SERVICE_TOKEN
+        sync: false
 
   # ============================================================================
   # R2: Workline AI & Research Agents Service (Docker Containerized)
@@ -110,16 +114,36 @@ services:
         sync: false
 
   # ============================================================================
-  # R5: Workline Procurement & Collaboration Service
+  # R5: Workline Procurement & x402 Payment Service (Docker Containerized)
   # ============================================================================
   - type: web
     name: workline-procurement-service
-    env: python
+    env: docker
+    dockerfilePath: backend/r5/Dockerfile
+    dockerContext: .
     region: oregon
     plan: starter
-    buildCommand: "pip install -r backend/requirements.txt"
-    startCommand: "uvicorn backend.services.procurement.main:app --host 0.0.0.0 --port $PORT"
     healthCheckPath: /health
     envVars:
       - key: PORT
         value: 10005
+      - key: WORKLINE_ENV
+        value: production
+      - key: R5_SERVICE_TOKEN
+        sync: false
+      - key: R4_INTERNAL_URL
+        value: http://workline-engineering-simulation:10004
+      - key: R4_SERVICE_TOKEN
+        sync: false
+      - key: R3_INTERNAL_URL
+        value: http://workline-knowledge-documents:10003
+      - key: R3_SERVICE_TOKEN
+        sync: false
+      - key: WORKLINE_X402_ENABLED
+        value: "true"
+      - key: WORKLINE_X402_NETWORK
+        value: base-sepolia
+      - key: WORKLINE_X402_ASSET
+        value: USDC
+      - key: WORKLINE_X402_PAYMENT_ADDRESS
+        sync: false
