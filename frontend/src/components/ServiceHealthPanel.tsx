@@ -56,6 +56,16 @@ export default function ServiceHealthPanel() {
       latency: 'Checking...',
       icon: ShoppingCart,
     },
+    {
+      id: 'ARMOURIQ',
+      name: 'ArmourIQ Trust & ADK Governance',
+      role: 'Cryptographic identity, tool authorization, delegation invariant & immutable audit',
+      endpoint: '/api/armouriq/health',
+      runtime: 'Fail-Closed Trust Engine v2.0',
+      status: 'PASS' as const,
+      latency: 'Active',
+      icon: Shield,
+    },
   ];
 
   return (

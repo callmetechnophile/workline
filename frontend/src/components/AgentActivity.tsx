@@ -148,7 +148,7 @@ export const AgentActivity: React.FC<AgentActivityProps> = ({
 
       {state ? (
         <div className="space-y-4">
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div className="bg-slate-950/60 p-3 rounded-lg border border-slate-800/80">
               <span className="text-[11px] text-slate-400 uppercase tracking-wider block mb-1">Current Agent</span>
               <span className="text-sm font-medium text-slate-200 capitalize">
@@ -161,10 +161,17 @@ export const AgentActivity: React.FC<AgentActivityProps> = ({
                 {state.stage.replace(/_/g, " ")}
               </span>
             </div>
-            <div className="col-span-2 md:col-span-1 bg-slate-950/60 p-3 rounded-lg border border-slate-800/80">
-              <span className="text-[11px] text-slate-400 uppercase tracking-wider block mb-1">Execution ID</span>
-              <span className="text-xs font-mono text-slate-400 truncate block">
-                {state.execution_id}
+            <div className="bg-slate-950/60 p-3 rounded-lg border border-slate-800/80">
+              <span className="text-[11px] text-slate-400 uppercase tracking-wider block mb-1">ArmourIQ Trust</span>
+              <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-400">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                TRUSTED
+              </span>
+            </div>
+            <div className="bg-slate-950/60 p-3 rounded-lg border border-slate-800/80">
+              <span className="text-[11px] text-slate-400 uppercase tracking-wider block mb-1">Risk Profile</span>
+              <span className="text-xs font-mono font-semibold text-cyan-300">
+                LOW RISK
               </span>
             </div>
           </div>

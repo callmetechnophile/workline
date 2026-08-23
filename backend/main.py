@@ -35,6 +35,7 @@ from backend.workline.knowledge.graph.api import router as graph_router
 from backend.workline.validation.api import router as validation_router
 from backend.workline.decision.api import router as decision_engine_router
 from backend.workline.x402 import x402_router
+from backend.workline.armouriq import armouriq_router
 from backend.workline.database.surrealdb import surreal_db
 from backend.workline.retrieval.qdrant import qdrant_manager
 from backend.database import init_db
@@ -111,6 +112,7 @@ app.include_router(decision_engine_router)
 app.include_router(calendar_router)
 app.include_router(speech_router)
 app.include_router(x402_router)
+app.include_router(armouriq_router)
 
 
 @app.get("/", tags=["Health"])

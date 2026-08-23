@@ -108,6 +108,39 @@ class WorklineADKRuntime:
         self._sessions[session_id].active_execution_id = exec_id
         self._sessions[session_id].history.append(exec_id)
 
+        # Initialize ArmourIQ Agent Identity & Trust Context
+        from backend.workline.armouriq import (
+            AgentIdentityManager,
+            ArmourIQADKAdapter,
+            TrustContext,
+        )
+
+        identity = AgentIdentityManager.create_agent_identity(
+            agent_id="workline.root_orchestrator",
+            project_id=project_id,
+            session_id=session_id,
+            owner_id=user_id,
+        )
+
+        trust_context = TrustContext(
+            request_id=exec_id,
+            session_id=session_id,
+            user_id=user_id,
+            project_id=project_id,
+            agent_id=identity.agent_id,
+            capabilities=identity.capabilities,
+            trust_level=identity.trust_level,
+        )
+
+        # ArmourIQ Before-Agent Evaluation
+        try:
+            ArmourIQADKAdapter.before_agent_callback(identity, trust_context)
+        except Exception as auth_exc:
+            state.status = AgentStatus.FAILED
+            state.errors.append(str(auth_exc))
+            self._persist_state(state)
+            raise auth_exc
+
         # Run Phase 1 (Planning + Research)
         try:
             out: AgentOutput = await self.root_agent.execute_phase1_planning_and_research(
@@ -115,6 +148,7 @@ class WorklineADKRuntime:
             )
             state.output_summary = out.summary
             state.artifacts = out.artifacts
+            ArmourIQADKAdapter.after_agent_callback(identity, trust_context, output_summary=out.summary)
         except Exception as exc:
             state.status = AgentStatus.FAILED
             state.errors.append(str(exc))
@@ -126,6 +160,7 @@ class WorklineADKRuntime:
                     details={"error": str(exc)},
                 )
             )
+            ArmourIQADKAdapter.after_agent_callback(identity, trust_context, error=str(exc))
         finally:
             self._persist_state(state)
 
