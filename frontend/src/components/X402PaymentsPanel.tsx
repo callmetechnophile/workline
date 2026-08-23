@@ -108,8 +108,9 @@ export default function X402PaymentsPanel({ apiBase }: X402PaymentsPanelProps) {
             </h1>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Audit history of non-custodial <strong className="text-indigo-300">Algorand USDC</strong> micro-payments settled via GoPlausible.
+            Audit history of non-custodial <strong className="text-indigo-300">Algorand Testnet USDC</strong> micro-payments settled on-chain.
           </p>
+
         </div>
 
         <div className="flex items-center gap-2 self-start sm:self-auto">

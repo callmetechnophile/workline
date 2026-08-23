@@ -282,7 +282,7 @@ export const PaymentPanel: React.FC<PaymentPanelProps> = ({
           >
             {submitting || isProcessing ? (
               <>
-                <RefreshCw className="w-4 h-4 animate-spin" /> Verifying Settlement with GoPlausible...
+                <RefreshCw className="w-4 h-4 animate-spin" /> Verifying On-Chain Settlement (Algod)...
               </>
             ) : walletState !== "CONNECTED" ? (
               <>
@@ -293,6 +293,7 @@ export const PaymentPanel: React.FC<PaymentPanelProps> = ({
                 <ShieldCheck className="w-4 h-4" /> Sign & Pay {payment.amount_usdc.toFixed(2)} USDC via Pera
               </>
             )}
+
           </button>
         </div>
       ) : (

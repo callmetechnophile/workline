@@ -632,13 +632,15 @@ function AuthenticatedWorkbench() {
                 <input
                   type="text"
                   disabled
-                  value="Algorand Mainnet (USDC ASA #31566704) via GoPlausible x402"
+                  value="Algorand Testnet (USDC ASA #10458941) x402 On-Chain Settlement"
                   className="w-full bg-slate-950 border border-slate-800 rounded p-2 text-slate-300 font-mono"
                 />
               </div>
             </div>
           </div>
         );
+
+
 
       default:
         return null;

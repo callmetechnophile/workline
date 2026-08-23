@@ -168,8 +168,9 @@ export default function APIServicesPanel({ apiBase }: APIServicesPanelProps) {
             </h1>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Pay-per-use computational engineering APIs monetized via <strong className="text-indigo-300">USDC on Algorand</strong> with GoPlausible settlement.
+            Pay-per-use computational engineering APIs monetized via <strong className="text-indigo-300">USDC on Algorand Testnet (ASA #10458941)</strong> with real-time on-chain settlement.
           </p>
+
         </div>
 
         {/* Network Badge */}

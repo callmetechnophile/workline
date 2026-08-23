@@ -14,13 +14,14 @@ export default function SystemIntegrationsPanel() {
       desc: 'Centralized model execution across research, fast code generation, multi-physics reasoning, and engineering visuals.',
     },
     {
-      name: 'Algorand Mainnet x402 Facilitator',
+      name: 'Algorand Testnet x402 Engine',
       category: 'Payment Protocol (R5)',
-      status: 'Active (Production)',
-      type: 'GoPlausible Settlement (USDC: 31566704)',
+      status: 'Active (Testnet)',
+      type: 'On-Chain Algod Settlement (USDC: 10458941)',
       isSecure: true,
-      desc: 'Authoritative machine-to-machine payment verification and BOM quote settlement on Algorand with Pera Wallet signing.',
+      desc: 'Authoritative machine-to-machine payment verification and BOM quote settlement on Algorand Testnet with Pera Wallet signing.',
     },
+
     {
       name: 'PaperBanana Visual Synthesis',
       category: 'Engineering Diagram Engine (R2)',
