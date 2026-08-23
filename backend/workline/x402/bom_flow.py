@@ -202,7 +202,7 @@ class BomPaymentFlowCoordinator:
                 logger.error(f"[BOM Flow] Amount mismatch rejected: {quote.error_message}")
                 return False, quote.error_message, quote
 
-        # GoPlausible Facilitator Settlement Verification
+        # Algorand Testnet On-Chain Settlement Verification
         quote.status = BomPaymentState.PAYMENT_VERIFYING
         proof_obj = PaymentProof(
             payment_request_id=quote.payment_request_id,
@@ -210,19 +210,33 @@ class BomPaymentFlowCoordinator:
             payer_address=proof_data.get("payer") or proof_data.get("payer_address"),
         )
         record = x402_storage.get_record(quote.payment_request_id)
-        if record:
-            ok, err, updated_rec = await x402_verifier.verify_proof(record, proof_obj)
-            if not ok:
-                quote.status = BomPaymentState.PAYMENT_FAILED
-                quote.error_message = err
-                return False, f"Settlement verification failed: {err}", quote
+        if not record:
+            record = PaymentRecord(
+                payment_request_id=quote.payment_request_id,
+                service_id="procurement.quote",
+                amount=quote.amount_usdc,
+                asset=quote.asset,
+                asset_id=quote.asset_id,
+                network=quote.network,
+                pay_to=quote.pay_to,
+                expires_at=quote.expires_at,
+                status=PaymentStatus.PENDING,
+            )
+            x402_storage.save_record(record)
+
+        ok, err, updated_rec = await x402_verifier.verify_proof(record, proof_obj)
+        if not ok:
+            quote.status = BomPaymentState.PAYMENT_FAILED
+            quote.error_message = err
+            return False, f"Settlement verification failed: {err}", quote
 
         # Settle Quote
         quote.status = BomPaymentState.PAYMENT_SETTLED
         quote.transaction_id = tx_hash
-        quote.payer = proof_data.get("payer") or "algorand:client_wallet"
+        quote.payer = updated_rec.payer or proof_data.get("payer") or "algorand:client_wallet"
         quote.settled_at = now.isoformat()
         quote.error_message = None
+
 
         logger.info(
             f"[BOM Flow] Payment SETTLED for quote '{quote.quote_id}': "

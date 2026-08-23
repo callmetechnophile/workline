@@ -481,13 +481,14 @@ function AuthenticatedWorkbench() {
                 amount_usdc: 5.00,
                 currency: 'USD',
 
-                network: 'algorand-mainnet',
+                network: 'algorand-testnet',
                 asset: 'USDC',
-                asset_id: 31566704,
-                recipient: 'WORKLINE24EUSDCALGORANDTREASURYRECIPIENT402XXXXXXXXXXXXXX',
+                asset_id: 10458941,
+                recipient: '3DOOXTOUNS7G3R6T2B2ESQBKECUQ2VRSOFXSOV54TAZ43FMC36X7W6G7MY',
                 expires_at: new Date(Date.now() + 86400000).toISOString(),
                 status: 'REQUIRED',
               }}
+
               onAuthorizePayment={async (quoteId, proof) => {
                 const res = await fetch(`${apiBase}/api/procurement/${quoteId}/pay`, {
                   method: 'POST',

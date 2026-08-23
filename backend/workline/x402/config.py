@@ -47,11 +47,12 @@ class X402Config(BaseModel):
                 "WORKLINE_X402_PAY_TO",
                 os.getenv(
                     "WORKLINE_X402_PAYMENT_ADDRESS",
-                    "WORKLINE24EUSDCALGORANDTREASURYRECIPIENT402TESTNETADDRXXXX",
+                    "3DOOXTOUNS7G3R6T2B2ESQBKECUQ2VRSOFXSOV54TAZ43FMC36X7W6G7MY",
                 ),
             ),
         )
     )
+
 
     # Test Service Price in USDC
     test_price_usdc: float = Field(

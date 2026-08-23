@@ -297,25 +297,65 @@ export const PaymentPanel: React.FC<PaymentPanelProps> = ({
         </div>
       ) : (
         <div className="space-y-3 pt-2">
-          <div className="p-3 bg-emerald-950/40 border border-emerald-800/60 rounded-lg space-y-1.5 text-xs">
-            <div className="flex items-center justify-between text-emerald-400 font-bold">
-              <span>Settlement Confirmed</span>
-              <CheckCircle2 className="w-4 h-4" />
+          <div className="p-4 bg-emerald-950/40 border border-emerald-800/60 rounded-lg space-y-2.5 text-xs">
+            <div className="flex items-center justify-between text-emerald-400 font-bold border-b border-emerald-900/50 pb-2">
+              <span className="flex items-center gap-1.5 uppercase tracking-wider text-[11px]">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" /> On-Chain Settlement Confirmed (SETTLED)
+              </span>
+              <span className="px-2 py-0.5 rounded bg-emerald-950 text-[10px] text-emerald-300 border border-emerald-800">
+                VERIFIED ON-CHAIN
+              </span>
             </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] pt-1">
+              <div className="space-y-0.5">
+                <span className="text-slate-500 uppercase text-[9px] block">Payer Wallet:</span>
+                <span className="text-slate-200 font-mono font-bold truncate block">{walletAddress || "Connected Pera Wallet"}</span>
+              </div>
+              <div className="space-y-0.5">
+                <span className="text-slate-500 uppercase text-[9px] block">Recipient Treasury:</span>
+                <span className="text-slate-200 font-mono font-bold truncate block">{payment.recipient}</span>
+              </div>
+              <div className="space-y-0.5">
+                <span className="text-slate-500 uppercase text-[9px] block">Settled Amount & Asset:</span>
+                <span className="text-emerald-300 font-mono font-bold block">{payment.amount_usdc.toFixed(2)} USDC (ASA #{payment.asset_id || 10458941})</span>
+              </div>
+              <div className="space-y-0.5">
+                <span className="text-slate-500 uppercase text-[9px] block">Network:</span>
+                <span className="text-cyan-300 font-mono font-bold block">Algorand Testnet</span>
+              </div>
+            </div>
+
             {settledTxHash && (
-              <div className="flex items-center justify-between text-[11px] text-slate-300">
-                <span>Transaction ID:</span>
-                <a
-                  href={`${explorerBase}/${settledTxHash}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-cyan-400 hover:underline flex items-center gap-1 font-bold"
-                >
-                  {settledTxHash.substring(0, 16)}... <ExternalLink className="w-3 h-3" />
-                </a>
+              <div className="border-t border-emerald-900/50 pt-2 space-y-1">
+                <span className="text-slate-500 uppercase text-[9px] block">Algorand Transaction ID (TX ID):</span>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-cyan-300 font-mono font-bold text-xs select-all break-all">
+                    {settledTxHash}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <a
+                      href={`https://lora.algokit.io/testnet/transaction/${settledTxHash}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-2 py-1 rounded bg-slate-900 border border-slate-700 text-cyan-400 hover:text-cyan-300 hover:bg-slate-800 text-[10px] font-bold flex items-center gap-1"
+                    >
+                      Lora Explorer <ExternalLink className="w-3 h-3" />
+                    </a>
+                    <a
+                      href={`https://testnet.explorer.perawallet.app/tx/${settledTxHash}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-2 py-1 rounded bg-amber-950/60 border border-amber-800 text-amber-300 hover:text-amber-200 text-[10px] font-bold flex items-center gap-1"
+                    >
+                      Pera Explorer <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+                </div>
               </div>
             )}
           </div>
+
 
           {/* PDF Procurement Report Generation */}
           <button
