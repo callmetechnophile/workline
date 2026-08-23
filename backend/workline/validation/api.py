@@ -216,3 +216,63 @@ def compare_components_endpoint(req: CompareComponentsRequest) -> Dict[str, Any]
         "requirement_id": req.requirement_id,
         "comparisons": results,
     }
+
+
+# ==================== PROJECT-SCOPED ALIASES ====================
+
+@router.get("/api/projects/{project_id}/requirements", response_model=List[EngineeringRequirement])
+def list_project_requirements_endpoint(project_id: str) -> List[EngineeringRequirement]:
+    """Lists requirements scoped to a specific project."""
+    return validation_service.list_requirements(project_id=project_id)
+
+
+@router.post("/api/projects/{project_id}/requirements", response_model=EngineeringRequirement)
+def create_project_requirement_endpoint(project_id: str, req: CreateRequirementRequest) -> EngineeringRequirement:
+    """Creates a requirement scoped to a specific project."""
+    return validation_service.create_requirement(
+        requirement_id=req.requirement_id,
+        project_id=project_id,
+        title=req.title,
+        description=req.description,
+        category=req.category,
+        parameter=req.parameter,
+        target_value=req.target_value,
+        unit=req.unit,
+        priority=req.priority,
+        status=req.status,
+        verification_method=req.verification_method,
+        source=req.source,
+        constraints=req.constraints,
+        team_id=req.team_id,
+    )
+
+
+@router.get("/api/projects/{project_id}/constraints", response_model=List[EngineeringConstraint])
+def list_project_constraints_endpoint(project_id: str) -> List[EngineeringConstraint]:
+    """Lists constraints scoped to a specific project."""
+    return validation_service.list_constraints(project_id=project_id)
+
+
+@router.post("/api/projects/{project_id}/constraints", response_model=EngineeringConstraint)
+def create_project_constraint_endpoint(project_id: str, payload: CreateConstraintRequest) -> EngineeringConstraint:
+    """Creates a constraint scoped to a specific project."""
+    return validation_service.create_constraint(
+        constraint_id=payload.constraint_id,
+        property_name=payload.property,
+        operator=payload.operator,
+        required_value=payload.required_value,
+        project_id=project_id,
+        requirement_id=payload.requirement_id,
+        required_unit=payload.required_unit,
+        category=payload.category,
+        severity=payload.severity,
+        verification_method=payload.verification_method,
+        source=payload.source,
+    )
+
+
+@router.get("/api/projects/{project_id}/validation", response_model=RequirementOverviewSummary)
+def get_project_validation_endpoint(project_id: str) -> RequirementOverviewSummary:
+    """Returns aggregated validation summary for a project."""
+    return validation_service.get_project_validation_overview(project_id)
+

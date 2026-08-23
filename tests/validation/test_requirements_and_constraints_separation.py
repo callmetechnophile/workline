@@ -240,7 +240,34 @@ def test_requirements_and_constraints_rest_api():
     assert ov_data["total_requirements"] >= 1
     assert ov_data["total_constraints"] >= 1
 
-    # 5. Delete requirement
+    # 5. Test project-scoped alias endpoints
+    res_proj_reqs = client.get("/api/projects/proj_api_test/requirements")
+    assert res_proj_reqs.status_code == 200
+    assert len(res_proj_reqs.json()) >= 1
+
+    res_proj_cons = client.get("/api/projects/proj_api_test/constraints")
+    assert res_proj_cons.status_code == 200
+    assert len(res_proj_cons.json()) >= 1
+
+    res_proj_val = client.get("/api/projects/proj_api_test/validation")
+    assert res_proj_val.status_code == 200
+
+    # 6. Delete requirement
     res_del = client.delete("/api/requirements/REQ-API-01")
     assert res_del.status_code == 200
     assert res_del.json()["deleted"] is True
+
+
+def test_no_hardcoded_mock_data_in_production():
+    """Verify that no hard-coded mock engineering records exist in validation service initial state."""
+    svc = ValidationService()
+    # A freshly instantiated service for an unknown project must return 0 records and empty lists
+    assert len(svc.list_requirements(project_id="non_existent_project")) == 0
+    assert len(svc.list_constraints(project_id="non_existent_project")) == 0
+    overview = svc.get_project_validation_overview("non_existent_project")
+    assert overview.total_requirements == 0
+    assert overview.total_constraints == 0
+    assert overview.validated_count == 0
+    assert overview.violations_count == 0
+    assert overview.overall_status == ValidationStatus.PENDING
+
