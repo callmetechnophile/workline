@@ -1166,7 +1166,7 @@ ${rawBackground.trim()}
           <div className="glass-panel p-8 max-w-md w-full border border-blue-500/30 bg-zinc-950/90 text-center shadow-2xl space-y-6">
             <img 
               src="/icon.png" 
-              alt="Armourline AI Logo" 
+              alt="Workline AI Logo" 
               className="w-16 h-16 mx-auto object-contain animate-pulse" 
             />
             <div className="space-y-2">
