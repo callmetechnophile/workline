@@ -40,4 +40,13 @@ AGENT_SCOPES: Dict[str, List[str]] = {
         "container",
         "delegate",
     ],
+    "VerificationQAAgent": [
+        "test_runner",
+        "pytest",
+        "static_analysis",
+        "file_inspection",
+        "security_scan",
+        "filesystem.read",
+        "shell",
+    ],
 }
