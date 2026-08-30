@@ -69,4 +69,12 @@ AGENT_SCOPES: Dict[str, List[str]] = {
         "orchestration.state",
         "delegate",
     ],
+    "EngineeringCopilotAgent": [
+        "copilot.read",
+        "copilot.query",
+        "copilot.trace",
+        "copilot.explain",
+        "copilot.propose",
+        "graph.read",
+    ],
 }
