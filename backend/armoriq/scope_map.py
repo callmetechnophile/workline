@@ -98,4 +98,14 @@ AGENT_SCOPES: Dict[str, List[str]] = {
         "graph.insert",
         "graph.update",
     ],
+    "EngineeringVerificationAgent": [
+        "verification.plan",
+        "verification.test",
+        "verification.execute",
+        "verification.evidence",
+        "verification.reverify",
+        "graph.read",
+        "graph.insert",
+        "graph.update",
+    ],
 }
