@@ -59,4 +59,14 @@ AGENT_SCOPES: Dict[str, List[str]] = {
         "graph.export",
         "graph.state",
     ],
+    "ProjectLifecycleOrchestrator": [
+        "orchestration.observe",
+        "orchestration.evaluate",
+        "orchestration.decide",
+        "orchestration.delegate",
+        "orchestration.revalidate",
+        "orchestration.human",
+        "orchestration.state",
+        "delegate",
+    ],
 }
