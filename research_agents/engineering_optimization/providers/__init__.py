@@ -1,0 +1,5 @@
+from research_agents.engineering_optimization.providers.base import ReasoningProvider
+from research_agents.engineering_optimization.providers.mock_provider import MockOptimizationProvider
+from research_agents.engineering_optimization.providers.bedrock import BedrockOptimizationProvider
+
+__all__ = ["ReasoningProvider", "MockOptimizationProvider", "BedrockOptimizationProvider"]

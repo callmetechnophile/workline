@@ -119,4 +119,14 @@ AGENT_SCOPES: Dict[str, List[str]] = {
         "graph.insert",
         "graph.update",
     ],
+    "EngineeringOptimizationAgent": [
+        "optimization.create",
+        "optimization.evaluate",
+        "optimization.pareto",
+        "optimization.tradeoff",
+        "optimization.select",
+        "graph.read",
+        "graph.insert",
+        "graph.update",
+    ],
 }
