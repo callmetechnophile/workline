@@ -22,5 +22,22 @@ AGENT_SCOPES: Dict[str, List[str]] = {
     "ContradictionAgent": ["detect_contradictions"],
     "KnowledgeGraphAgent": ["graph.read", "graph.insert", "graph.update"],
     "CalendarAgent": ["calendar.export", "calendar.update", "calendar.download"],
-    "CalendarExportAgent": ["calendar.export", "calendar.generate_link"]
+    "CalendarExportAgent": ["calendar.export", "calendar.generate_link"],
+    "EngineeringExecutionAgent": [
+        "filesystem",
+        "filesystem.read",
+        "filesystem.write",
+        "filesystem.create",
+        "filesystem.modify",
+        "filesystem.delete",
+        "shell",
+        "git",
+        "python",
+        "compiler",
+        "test_runner",
+        "build_system",
+        "simulation",
+        "container",
+        "delegate",
+    ],
 }
