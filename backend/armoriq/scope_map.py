@@ -88,4 +88,14 @@ AGENT_SCOPES: Dict[str, List[str]] = {
         "graph.insert",
         "graph.update",
     ],
+    "EngineeringComplianceAgent": [
+        "compliance.evaluate",
+        "compliance.rules",
+        "compliance.gate",
+        "compliance.matrix",
+        "compliance.waiver",
+        "graph.read",
+        "graph.insert",
+        "graph.update",
+    ],
 }
