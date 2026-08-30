@@ -108,4 +108,15 @@ AGENT_SCOPES: Dict[str, List[str]] = {
         "graph.insert",
         "graph.update",
     ],
+    "EngineeringSimulationAgent": [
+        "simulation.model",
+        "simulation.twin",
+        "simulation.execute",
+        "simulation.scenario",
+        "simulation.sweep",
+        "simulation.evidence",
+        "graph.read",
+        "graph.insert",
+        "graph.update",
+    ],
 }
