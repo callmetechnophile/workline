@@ -1,0 +1,60 @@
+"""
+EngineeringKnowledgeGraphAgent package (Agent #13 of WorkflowGuide AI).
+"""
+
+from research_agents.engineering_knowledge_graph_agent.agent import EngineeringKnowledgeGraphAgent
+from research_agents.engineering_knowledge_graph_agent.config import GraphConfig, graph_config
+from research_agents.engineering_knowledge_graph_agent.schemas import (
+    ArchitectureImpactResult,
+    ArchitectureNode,
+    BOMItemNode,
+    BOMNode,
+    ComponentImpactResult,
+    ComponentNode,
+    EngineeringDecisionNode,
+    EngineeringKnowledgeGraphInput,
+    EngineeringKnowledgeGraphOutput,
+    ExecutionNode,
+    ImplementationTaskNode,
+    ProjectNode,
+    ProjectStateLiteral,
+    ProjectStateNode,
+    ProjectTimelineEvent,
+    RequirementImpactResult,
+    RequirementNode,
+    RequirementTraceResult,
+    ResearchNode,
+    SubsystemNode,
+    TestNode,
+    TestResultNode,
+    UserNode,
+)
+
+__all__ = [
+    "EngineeringKnowledgeGraphAgent",
+    "GraphConfig",
+    "graph_config",
+    "UserNode",
+    "ProjectNode",
+    "RequirementNode",
+    "ResearchNode",
+    "EngineeringDecisionNode",
+    "ArchitectureNode",
+    "SubsystemNode",
+    "ComponentNode",
+    "BOMNode",
+    "BOMItemNode",
+    "ImplementationTaskNode",
+    "ExecutionNode",
+    "TestNode",
+    "TestResultNode",
+    "ProjectStateNode",
+    "ProjectStateLiteral",
+    "RequirementTraceResult",
+    "ComponentImpactResult",
+    "RequirementImpactResult",
+    "ArchitectureImpactResult",
+    "ProjectTimelineEvent",
+    "EngineeringKnowledgeGraphInput",
+    "EngineeringKnowledgeGraphOutput",
+]

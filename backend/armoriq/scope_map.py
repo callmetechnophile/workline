@@ -49,4 +49,14 @@ AGENT_SCOPES: Dict[str, List[str]] = {
         "filesystem.read",
         "shell",
     ],
+    "EngineeringKnowledgeGraphAgent": [
+        "graph.read",
+        "graph.insert",
+        "graph.update",
+        "graph.query",
+        "graph.trace",
+        "graph.impact",
+        "graph.export",
+        "graph.state",
+    ],
 }
