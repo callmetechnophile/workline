@@ -1,7 +1,7 @@
 """
 Data contracts and Pydantic schemas for DocumentProcessingAgent (Agent #3).
 Defines structured input, extracted sections, tables, figures, links, semantic chunks,
-engineering facts with character/page provenance, and quality metrics.
+engineering facts with character/page provenance, code blocks, and quality metrics.
 """
 
 from typing import Any, Dict, List, Literal, Optional
@@ -57,6 +57,10 @@ class DocumentProcessingInput(BaseModel):
         default=None,
         description="Originating upstream agent ('research_paper_agent' | 'web_research_agent').",
     )
+    output_dir: Optional[str] = Field(
+        default=None,
+        description="Optional local filesystem directory to save generated markdown, json, and metadata.",
+    )
     metadata: Dict[str, Any] = Field(
         default_factory=dict,
         description="Optional auxiliary metadata passed from upstream.",
@@ -92,6 +96,19 @@ class DocumentMetadata(BaseModel):
     file_size_bytes: Optional[int] = None
     creation_date: Optional[str] = None
     modification_date: Optional[str] = None
+    document_hash: Optional[str] = None
+
+
+class DocumentSummary(BaseModel):
+    """Document summary matching Section 22 output contract."""
+
+    document_id: str
+    title: Optional[str] = None
+    document_type: str = "pdf"
+    source_url: Optional[str] = None
+    page_count: int = 1
+    quality_score: float = 1.0
+    document_hash: Optional[str] = None
 
 
 class ExtractedBlock(BaseModel):
@@ -137,6 +154,14 @@ class ExtractedFigure(BaseModel):
     caption: str
     page_number: int = Field(default=1, ge=1)
     bounding_box: Optional[List[float]] = None
+
+
+class ExtractedCodeBlock(BaseModel):
+    """Extracted code snippet matching Section 21."""
+
+    language: Optional[str] = None
+    code: str
+    page: int = Field(default=1, ge=1)
 
 
 class ExtractedLink(BaseModel):
@@ -208,20 +233,43 @@ class StructuredError(BaseModel):
 
 
 class DocumentProcessingOutput(BaseModel):
-    """Structured output contract for DocumentProcessingAgent."""
+    """Structured output contract for DocumentProcessingAgent matching Section 22."""
 
     status: Literal["success", "ocr_required", "error"] = "success"
-    document_id: str
-    metadata: DocumentMetadata
+    document: Optional[DocumentSummary] = None
+    document_id: Optional[str] = None
+    metadata: Optional[DocumentMetadata] = None
     markdown: str = ""
     sections: List[ExtractedSection] = Field(default_factory=list)
-    tables: List[ExtractedTable] = Field(default_factory=list)
-    figures: List[ExtractedFigure] = Field(default_factory=list)
-    links: List[ExtractedLink] = Field(default_factory=list)
-    references: List[ExtractedReference] = Field(default_factory=list)
     chunks: List[DocumentChunk] = Field(default_factory=list)
     entities: List[EngineeringEntity] = Field(default_factory=list)
     facts: List[EngineeringFact] = Field(default_factory=list)
+    tables: List[ExtractedTable] = Field(default_factory=list)
+    figures: List[ExtractedFigure] = Field(default_factory=list)
+    code_blocks: List[ExtractedCodeBlock] = Field(default_factory=list)
+    references: List[ExtractedReference] = Field(default_factory=list)
+    links: List[ExtractedLink] = Field(default_factory=list)
+    warnings: List[str] = Field(default_factory=list)
+    errors: List[StructuredError] = Field(default_factory=list)
     quality_score: float = Field(default=1.0, ge=0.0, le=1.0)
     quality_warnings: List[str] = Field(default_factory=list)
-    errors: List[StructuredError] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def sync_backwards_compatibility(self) -> "DocumentProcessingOutput":
+        # Keep document_id & warnings synchronized
+        if self.document and not self.document_id:
+            self.document_id = self.document.document_id
+        elif self.document_id and not self.document:
+            self.document = DocumentSummary(
+                document_id=self.document_id,
+                title=self.metadata.title if self.metadata else None,
+                document_type=self.metadata.document_type if self.metadata else "pdf",
+                source_url=self.metadata.url if self.metadata else None,
+                page_count=self.metadata.page_count if self.metadata else 1,
+                quality_score=self.quality_score,
+            )
+        if self.quality_warnings and not self.warnings:
+            self.warnings = list(self.quality_warnings)
+        elif self.warnings and not self.quality_warnings:
+            self.quality_warnings = list(self.warnings)
+        return self

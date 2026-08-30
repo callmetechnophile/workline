@@ -9,9 +9,10 @@ def test_cli_demo_execution(capsys):
     main(["--demo", "--id", "test_demo_doc"])
     captured = capsys.readouterr().out
 
-    assert "WorkflowGuide AI" in captured
-    assert "DocumentProcessingAgent" in captured
-    assert "test_demo_doc" in captured
-    assert "SUCCESS" in captured
-    assert "Document Processing Summary" in captured
-    assert "Extracted Semantic Chunks" in captured
+    assert "Document:" in captured
+    assert "Pages:" in captured
+    assert "Sections:" in captured
+    assert "Quality:" in captured
+    assert "Markdown generated" in captured
+    assert "Metadata generated" in captured
+    assert "Provenance preserved" in captured
