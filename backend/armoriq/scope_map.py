@@ -77,4 +77,15 @@ AGENT_SCOPES: Dict[str, List[str]] = {
         "copilot.propose",
         "graph.read",
     ],
+    "EngineeringChangeControlAgent": [
+        "change.create",
+        "change.analyze",
+        "change.version",
+        "change.propagate",
+        "change.approve",
+        "change.revalidate",
+        "graph.read",
+        "graph.insert",
+        "graph.update",
+    ],
 }
