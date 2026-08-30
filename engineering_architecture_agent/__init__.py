@@ -1,0 +1,56 @@
+"""
+Root alias module proxying to research_agents.engineering_architecture_agent.
+Allows direct execution via `python -m engineering_architecture_agent`.
+"""
+
+from research_agents.engineering_architecture_agent import (
+    ArchitectureAlternative,
+    ArchitectureComponentRequirement,
+    ArchitectureDecision,
+    ArchitectureGraph,
+    ArchitectureMeta,
+    ArchitectureRisk,
+    ArchitectureTraceability,
+    ArchitectureValidationRequirement,
+    BlockDiagram,
+    ComponentRoleItem,
+    ControlFlowItem,
+    DataFlowItem,
+    DependencyItem,
+    EngineeringArchitectureAgent,
+    EngineeringArchitectureAgentInput,
+    EngineeringArchitectureAgentOutput,
+    HardwareSoftwareBoundary,
+    InterfaceItem,
+    PowerDomainItem,
+    ProjectMeta,
+    SoftwareLayerItem,
+    SubsystemItem,
+    arch_config,
+)
+
+__all__ = [
+    "EngineeringArchitectureAgent",
+    "EngineeringArchitectureAgentInput",
+    "EngineeringArchitectureAgentOutput",
+    "ProjectMeta",
+    "ArchitectureMeta",
+    "SubsystemItem",
+    "ComponentRoleItem",
+    "InterfaceItem",
+    "PowerDomainItem",
+    "DataFlowItem",
+    "ControlFlowItem",
+    "SoftwareLayerItem",
+    "HardwareSoftwareBoundary",
+    "DependencyItem",
+    "ArchitectureDecision",
+    "ArchitectureAlternative",
+    "ArchitectureRisk",
+    "ArchitectureValidationRequirement",
+    "ArchitectureTraceability",
+    "BlockDiagram",
+    "ArchitectureGraph",
+    "ArchitectureComponentRequirement",
+    "arch_config",
+]
