@@ -1,0 +1,20 @@
+{
+  "agent_id": "agent.10",
+  "alias_id": "Agent #10",
+  "name": "EngineeringExecutionAgent",
+  "version": "1.0.0",
+  "description": "Generates hardware schematics, firmware skeletons, and production manufacturing packages.",
+  "capabilities": [
+    "execution.schematic",
+    "execution.firmware",
+    "execution.package"
+  ],
+  "entrypoint": "research_agents.engineering_execution_agent.agent:EngineeringExecutionAgent",
+  "execution_level": "isolated_execution",
+  "dependencies": [
+    "SurrealDB"
+  ],
+  "permissions": [
+    "execution:generate"
+  ]
+}

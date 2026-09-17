@@ -1,0 +1,20 @@
+{
+  "agent_id": "agent.05",
+  "alias_id": "Agent #5",
+  "name": "EngineeringSynthesisAgent",
+  "version": "1.0.0",
+  "description": "Translates technical literature and requirements into actionable engineering specs.",
+  "capabilities": [
+    "synthesis.requirements",
+    "synthesis.decisions",
+    "synthesis.tradeoffs"
+  ],
+  "entrypoint": "research_agents.engineering_synthesis_agent.agent:EngineeringSynthesisAgent",
+  "execution_level": "read_only",
+  "dependencies": [
+    "AmazonBedrock"
+  ],
+  "permissions": [
+    "engineering:synthesis"
+  ]
+}

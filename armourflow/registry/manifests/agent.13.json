@@ -1,0 +1,22 @@
+{
+  "agent_id": "agent.13",
+  "alias_id": "Agent #13",
+  "name": "EngineeringKnowledgeGraphAgent",
+  "version": "1.0.0",
+  "description": "Authoritative SurrealDB engineering knowledge graph manager and query engine.",
+  "capabilities": [
+    "graph.ingest",
+    "graph.query",
+    "graph.lineage",
+    "graph.schema"
+  ],
+  "entrypoint": "research_agents.engineering_knowledge_graph_agent.agent:EngineeringKnowledgeGraphAgent",
+  "execution_level": "read_only",
+  "dependencies": [
+    "SurrealDB"
+  ],
+  "permissions": [
+    "graph:read",
+    "graph:write"
+  ]
+}

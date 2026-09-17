@@ -1,0 +1,20 @@
+{
+  "agent_id": "agent.20",
+  "alias_id": "Agent #20",
+  "name": "EngineeringOptimizationAgent",
+  "version": "1.0.0",
+  "description": "Multi-objective Pareto design space optimization and constraint exploration.",
+  "capabilities": [
+    "optimization.pareto",
+    "optimization.constraints",
+    "optimization.robustness"
+  ],
+  "entrypoint": "research_agents.engineering_optimization.agent:EngineeringOptimizationAgent",
+  "execution_level": "isolated_execution",
+  "dependencies": [
+    "SurrealDB"
+  ],
+  "permissions": [
+    "optimization:compute"
+  ]
+}

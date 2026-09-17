@@ -1,0 +1,20 @@
+{
+  "agent_id": "agent.09",
+  "alias_id": "Agent #9",
+  "name": "EngineeringValidationAgent",
+  "version": "1.0.0",
+  "description": "Validates engineering intent, design rules, and cross-subsystem interface contracts.",
+  "capabilities": [
+    "validation.rules",
+    "validation.interfaces",
+    "validation.gates"
+  ],
+  "entrypoint": "research_agents.engineering_validation_agent.agent:EngineeringValidationAgent",
+  "execution_level": "read_only",
+  "dependencies": [
+    "SurrealDB"
+  ],
+  "permissions": [
+    "validation:run"
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "agent_id": "agent.16",
+  "alias_id": "Agent #16",
+  "name": "EngineeringChangeControlAgent",
+  "version": "1.0.0",
+  "description": "Automated Engineering Change Proposal (ECP) impact analysis and revision management.",
+  "capabilities": [
+    "change_control.propose",
+    "change_control.impact_analysis",
+    "change_control.approve"
+  ],
+  "entrypoint": "research_agents.engineering_change_control.agent:EngineeringChangeControlAgent",
+  "execution_level": "isolated_execution",
+  "dependencies": [
+    "SurrealDB"
+  ],
+  "permissions": [
+    "change_control:manage"
+  ]
+}

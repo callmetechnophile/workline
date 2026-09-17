@@ -1,0 +1,21 @@
+{
+  "agent_id": "agent.02",
+  "alias_id": "Agent #2",
+  "name": "WebResearchAgent",
+  "version": "1.0.0",
+  "description": "Targeted web research, DOM scraping, and multi-source extraction via Tavily & Anakin.",
+  "capabilities": [
+    "research.web",
+    "research.tavily",
+    "research.anakin"
+  ],
+  "entrypoint": "research_agents.web_research_agent.agent:WebResearchAgent",
+  "execution_level": "read_only",
+  "dependencies": [
+    "Tavily",
+    "Anakin"
+  ],
+  "permissions": [
+    "research:web"
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "agent_id": "agent.12",
+  "alias_id": "Agent #12",
+  "name": "ProjectExecutionAgent",
+  "version": "1.0.0",
+  "description": "Orchestrates build/test pipelines, release artifact packaging, and execution milestones.",
+  "capabilities": [
+    "project.milestones",
+    "project.build",
+    "project.packaging"
+  ],
+  "entrypoint": "research_agents.project_execution_agent.agent:ProjectExecutionAgent",
+  "execution_level": "isolated_execution",
+  "dependencies": [
+    "SurrealDB"
+  ],
+  "permissions": [
+    "project:execute"
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "agent_id": "agent.18",
+  "alias_id": "Agent #18",
+  "name": "EngineeringVerificationAgent",
+  "version": "1.0.0",
+  "description": "Formal V&V verification matrix generation and requirement-to-evidence proof validation.",
+  "capabilities": [
+    "verification.matrix",
+    "verification.evidence",
+    "verification.signoff"
+  ],
+  "entrypoint": "research_agents.engineering_verification.agent:EngineeringVerificationAgent",
+  "execution_level": "read_only",
+  "dependencies": [
+    "SurrealDB"
+  ],
+  "permissions": [
+    "verification:verify"
+  ]
+}

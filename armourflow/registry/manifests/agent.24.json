@@ -1,0 +1,24 @@
+{
+  "agent_id": "agent.24",
+  "alias_id": "Agent #24",
+  "name": "ManufacturingDFMAgent",
+  "version": "1.0.0",
+  "description": "Design for Manufacturing & Assembly (DFM/DFA) readiness audit and fabrication checks.",
+  "capabilities": [
+    "dfm_analysis",
+    "dfa_analysis",
+    "manufacturing_process_analysis",
+    "panelization_evaluation",
+    "tolerance_stackup_analysis"
+  ],
+  "entrypoint": "research_agents.manufacturing_agent.agent:ManufacturingDFMAgent",
+  "execution_level": "read_only",
+  "dependencies": [
+    "SurrealDB",
+    "AmazonBedrock"
+  ],
+  "permissions": [
+    "manufacturing:dfm",
+    "manufacturing:dfa"
+  ]
+}

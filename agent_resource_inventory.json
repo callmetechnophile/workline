@@ -1,0 +1,365 @@
+[
+  {
+    "agent_id": "Agent #1",
+    "agent_number": 1,
+    "name": "ResearchPaperAgent",
+    "implementation_path": "research_agents/research_paper_agent",
+    "runtime": "Python 3.13 / Google ADK async",
+    "model_provider": "Freephdlabor (Remote REST API / Freephdlabor adapter)",
+    "model": "freephdlabor-v1 (REMOTE_INFERENCE)",
+    "dependencies": [
+      "httpx",
+      "pydantic",
+      "loguru"
+    ],
+    "container": "SHARED_RUNTIME",
+    "entrypoint": "research_agents.research_paper_agent.__main__:main",
+    "status": "DEPLOYED",
+    "deployment_mode": "SHARED_RUNTIME / ASYNC_TASK"
+  },
+  {
+    "agent_id": "Agent #2",
+    "agent_number": 2,
+    "name": "WebResearchAgent",
+    "implementation_path": "research_agents/web_research_agent",
+    "runtime": "Python 3.13 / Google ADK async",
+    "model_provider": "Tavily / Anakin (Remote REST API)",
+    "model": "tavily-search / anakin-v1 (REMOTE_INFERENCE)",
+    "dependencies": [
+      "httpx",
+      "pydantic",
+      "loguru"
+    ],
+    "container": "SHARED_RUNTIME",
+    "entrypoint": "research_agents.web_research_agent.__main__:main",
+    "status": "DEPLOYED",
+    "deployment_mode": "SHARED_RUNTIME / ASYNC_TASK"
+  },
+  {
+    "agent_id": "Agent #3",
+    "agent_number": 3,
+    "name": "DocumentProcessingAgent",
+    "implementation_path": "research_agents/document_processing_agent",
+    "runtime": "Python 3.13 / Local parser",
+    "model_provider": "Local text extraction / PyMuPDF & BeautifulSoup",
+    "model": "Deterministic Regex / Semantic Chunker (LOCAL_CPU)",
+    "dependencies": [
+      "fitz",
+      "bs4",
+      "pydantic",
+      "loguru"
+    ],
+    "container": "SHARED_RUNTIME",
+    "entrypoint": "research_agents.document_processing_agent.__main__:main",
+    "status": "DEPLOYED",
+    "deployment_mode": "SHARED_RUNTIME / ASYNC_TASK"
+  },
+  {
+    "agent_id": "Agent #4",
+    "agent_number": 4,
+    "name": "DeepResearchAgent",
+    "implementation_path": "research_agents/deep_research_agent",
+    "runtime": "Python 3.13 / Amazon Bedrock SDK",
+    "model_provider": "Amazon Bedrock",
+    "model": "us.anthropic.claude-3-5-sonnet-20241022-v2:0 (REMOTE_INFERENCE)",
+    "dependencies": [
+      "boto3",
+      "pydantic",
+      "loguru"
+    ],
+    "container": "SHARED_RUNTIME",
+    "entrypoint": "research_agents.deep_research_agent.__main__:main",
+    "status": "DEPLOYED",
+    "deployment_mode": "SHARED_RUNTIME / ASYNC_TASK"
+  },
+  {
+    "agent_id": "Agent #5",
+    "agent_number": 5,
+    "name": "EngineeringSynthesisAgent",
+    "implementation_path": "research_agents/engineering_synthesis_agent",
+    "runtime": "Python 3.13 / Amazon Bedrock SDK",
+    "model_provider": "Amazon Bedrock",
+    "model": "us.anthropic.claude-3-5-sonnet-20241022-v2:0 (REMOTE_INFERENCE)",
+    "dependencies": [
+      "boto3",
+      "pydantic",
+      "loguru"
+    ],
+    "container": "SHARED_RUNTIME",
+    "entrypoint": "research_agents.engineering_synthesis_agent.__main__:main",
+    "status": "DEPLOYED",
+    "deployment_mode": "SHARED_RUNTIME / ASYNC_TASK"
+  },
+  {
+    "agent_id": "Agent #6",
+    "agent_number": 6,
+    "name": "EngineeringArchitectureAgent",
+    "implementation_path": "research_agents/engineering_architecture_agent",
+    "runtime": "Python 3.13 / Amazon Bedrock SDK",
+    "model_provider": "Amazon Bedrock",
+    "model": "us.anthropic.claude-3-5-sonnet-20241022-v2:0 (REMOTE_INFERENCE)",
+    "dependencies": [
+      "boto3",
+      "pydantic",
+      "loguru"
+    ],
+    "container": "SHARED_RUNTIME",
+    "entrypoint": "research_agents.engineering_architecture_agent.__main__:main",
+    "status": "DEPLOYED",
+    "deployment_mode": "SHARED_RUNTIME / ASYNC_TASK"
+  },
+  {
+    "agent_id": "Agent #7",
+    "agent_number": 7,
+    "name": "ComponentPlanningAgent",
+    "implementation_path": "research_agents/component_planning_agent",
+    "runtime": "Python 3.13 / Amazon Bedrock SDK",
+    "model_provider": "Amazon Bedrock",
+    "model": "us.anthropic.claude-3-5-sonnet-20241022-v2:0 (REMOTE_INFERENCE)",
+    "dependencies": [
+      "boto3",
+      "pydantic",
+      "loguru"
+    ],
+    "container": "SHARED_RUNTIME",
+    "entrypoint": "research_agents.component_planning_agent.__main__:main",
+    "status": "DEPLOYED",
+    "deployment_mode": "SHARED_RUNTIME / ASYNC_TASK"
+  },
+  {
+    "agent_id": "Agent #8",
+    "agent_number": 8,
+    "name": "BOMOptimizationAgent",
+    "implementation_path": "research_agents/bom_optimization_agent",
+    "runtime": "Python 3.13 / Amazon Bedrock SDK",
+    "model_provider": "Amazon Bedrock",
+    "model": "us.anthropic.claude-3-5-sonnet-20241022-v2:0 (REMOTE_INFERENCE)",
+    "dependencies": [
+      "boto3",
+      "pydantic",
+      "loguru"
+    ],
+    "container": "SHARED_RUNTIME",
+    "entrypoint": "research_agents.bom_optimization_agent.__main__:main",
+    "status": "DEPLOYED",
+    "deployment_mode": "SHARED_RUNTIME / ASYNC_TASK"
+  },
+  {
+    "agent_id": "Agent #9",
+    "agent_number": 9,
+    "name": "EngineeringValidationAgent",
+    "implementation_path": "research_agents/engineering_validation_agent",
+    "runtime": "Python 3.13 / Deterministic rule engine",
+    "model_provider": "Amazon Bedrock / Local Rule Engine",
+    "model": "us.anthropic.claude-3-5-sonnet-20241022-v2:0 (REMOTE_INFERENCE)",
+    "dependencies": [
+      "boto3",
+      "pydantic",
+      "loguru"
+    ],
+    "container": "SHARED_RUNTIME",
+    "entrypoint": "research_agents.engineering_validation_agent.__main__:main",
+    "status": "DEPLOYED",
+    "deployment_mode": "SHARED_RUNTIME / ASYNC_TASK"
+  },
+  {
+    "agent_id": "Agent #10",
+    "agent_number": 10,
+    "name": "ProjectExecutionAgent",
+    "implementation_path": "research_agents/project_execution_agent",
+    "runtime": "Python 3.13 / WBS & DAG Planning Engine",
+    "model_provider": "Amazon Bedrock / WBS Solver",
+    "model": "us.anthropic.claude-3-5-sonnet-20241022-v2:0 (REMOTE_INFERENCE)",
+    "dependencies": [
+      "boto3",
+      "pydantic",
+      "loguru"
+    ],
+    "container": "SHARED_RUNTIME",
+    "entrypoint": "research_agents.project_execution_agent.__main__:main",
+    "status": "DEPLOYED",
+    "deployment_mode": "SHARED_RUNTIME / ASYNC_TASK"
+  },
+  {
+    "agent_id": "Agent #11",
+    "agent_number": 11,
+    "name": "EngineeringExecutionAgent",
+    "implementation_path": "research_agents/engineering_execution_agent",
+    "runtime": "Python 3.13 / ArmorIQ Scoped Execution",
+    "model_provider": "Amazon Bedrock / ArmorIQ Governance",
+    "model": "us.anthropic.claude-3-5-sonnet-20241022-v2:0 (REMOTE_INFERENCE)",
+    "dependencies": [
+      "boto3",
+      "pydantic",
+      "loguru"
+    ],
+    "container": "SHARED_RUNTIME",
+    "entrypoint": "research_agents.engineering_execution_agent.__main__:main",
+    "status": "DEPLOYED",
+    "deployment_mode": "SHARED_RUNTIME / ASYNC_TASK"
+  },
+  {
+    "agent_id": "Agent #12",
+    "agent_number": 12,
+    "name": "VerificationQAAgent",
+    "implementation_path": "research_agents/verification_qa_agent",
+    "runtime": "Python 3.13 / Security Scanner & Test Runner",
+    "model_provider": "Amazon Bedrock / Local Test Engine",
+    "model": "us.anthropic.claude-3-5-sonnet-20241022-v2:0 (REMOTE_INFERENCE)",
+    "dependencies": [
+      "boto3",
+      "pydantic",
+      "loguru",
+      "pytest"
+    ],
+    "container": "SHARED_RUNTIME",
+    "entrypoint": "research_agents.verification_qa_agent.__main__:main",
+    "status": "DEPLOYED",
+    "deployment_mode": "SHARED_RUNTIME / ASYNC_TASK"
+  },
+  {
+    "agent_id": "Agent #13",
+    "agent_number": 13,
+    "name": "EngineeringKnowledgeGraphAgent",
+    "implementation_path": "research_agents/engineering_knowledge_graph_agent",
+    "runtime": "Python 3.13 / SurrealDB Client",
+    "model_provider": "Amazon Bedrock / SurrealDB Graph",
+    "model": "us.anthropic.claude-3-5-sonnet-20241022-v2:0 (REMOTE_INFERENCE)",
+    "dependencies": [
+      "boto3",
+      "pydantic",
+      "loguru",
+      "surrealdb"
+    ],
+    "container": "SHARED_RUNTIME",
+    "entrypoint": "research_agents.engineering_knowledge_graph_agent.__main__:main",
+    "status": "DEPLOYED",
+    "deployment_mode": "SHARED_RUNTIME / ASYNC_TASK"
+  },
+  {
+    "agent_id": "Agent #14",
+    "agent_number": 14,
+    "name": "ProjectLifecycleOrchestrator",
+    "implementation_path": "research_agents/project_lifecycle_orchestrator",
+    "runtime": "Python 3.13 / Closed-Loop Lifecycle",
+    "model_provider": "Amazon Bedrock / State Machine",
+    "model": "us.anthropic.claude-3-5-sonnet-20241022-v2:0 (REMOTE_INFERENCE)",
+    "dependencies": [
+      "boto3",
+      "pydantic",
+      "loguru"
+    ],
+    "container": "SHARED_RUNTIME",
+    "entrypoint": "research_agents.project_lifecycle_orchestrator.__main__:main",
+    "status": "DEPLOYED",
+    "deployment_mode": "SHARED_RUNTIME / ASYNC_TASK"
+  },
+  {
+    "agent_id": "Agent #15",
+    "agent_number": 15,
+    "name": "EngineeringCopilotAgent",
+    "implementation_path": "research_agents/engineering_copilot",
+    "runtime": "Python 3.13 / Natural Language Interface",
+    "model_provider": "Amazon Bedrock",
+    "model": "us.anthropic.claude-3-5-sonnet-20241022-v2:0 (REMOTE_INFERENCE)",
+    "dependencies": [
+      "boto3",
+      "pydantic",
+      "loguru"
+    ],
+    "container": "SHARED_RUNTIME",
+    "entrypoint": "research_agents.engineering_copilot.__main__:main",
+    "status": "DEPLOYED",
+    "deployment_mode": "SHARED_RUNTIME / ASYNC_TASK"
+  },
+  {
+    "agent_id": "Agent #16",
+    "agent_number": 16,
+    "name": "EngineeringChangeControlAgent",
+    "implementation_path": "research_agents/engineering_change_control",
+    "runtime": "Python 3.13 / Change Impact Engine",
+    "model_provider": "Amazon Bedrock",
+    "model": "us.anthropic.claude-3-5-sonnet-20241022-v2:0 (REMOTE_INFERENCE)",
+    "dependencies": [
+      "boto3",
+      "pydantic",
+      "loguru"
+    ],
+    "container": "SHARED_RUNTIME",
+    "entrypoint": "research_agents.engineering_change_control.__main__:main",
+    "status": "DEPLOYED",
+    "deployment_mode": "SHARED_RUNTIME / ASYNC_TASK"
+  },
+  {
+    "agent_id": "Agent #17",
+    "agent_number": 17,
+    "name": "EngineeringComplianceAgent",
+    "implementation_path": "research_agents/engineering_compliance",
+    "runtime": "Python 3.13 / 18-Domain Rule Engine",
+    "model_provider": "Amazon Bedrock / Local Compliance Engine",
+    "model": "us.anthropic.claude-3-5-sonnet-20241022-v2:0 (REMOTE_INFERENCE)",
+    "dependencies": [
+      "boto3",
+      "pydantic",
+      "loguru"
+    ],
+    "container": "SHARED_RUNTIME",
+    "entrypoint": "research_agents.engineering_compliance.__main__:main",
+    "status": "DEPLOYED",
+    "deployment_mode": "SHARED_RUNTIME / ASYNC_TASK"
+  },
+  {
+    "agent_id": "Agent #18",
+    "agent_number": 18,
+    "name": "EngineeringVerificationAgent",
+    "implementation_path": "research_agents/engineering_verification",
+    "runtime": "Python 3.13 / Test & Evidence Engine",
+    "model_provider": "Amazon Bedrock / Verification Engine",
+    "model": "us.anthropic.claude-3-5-sonnet-20241022-v2:0 (REMOTE_INFERENCE)",
+    "dependencies": [
+      "boto3",
+      "pydantic",
+      "loguru"
+    ],
+    "container": "SHARED_RUNTIME",
+    "entrypoint": "research_agents.engineering_verification.__main__:main",
+    "status": "DEPLOYED",
+    "deployment_mode": "SHARED_RUNTIME / ASYNC_TASK"
+  },
+  {
+    "agent_id": "Agent #19",
+    "agent_number": 19,
+    "name": "EngineeringSimulationAgent",
+    "implementation_path": "research_agents/engineering_simulation",
+    "runtime": "Python 3.13 / Numerical Electro-Thermal Engine",
+    "model_provider": "Amazon Bedrock / Local Numerical Engine",
+    "model": "us.anthropic.claude-3-5-sonnet-20241022-v2:0 (REMOTE_INFERENCE)",
+    "dependencies": [
+      "boto3",
+      "pydantic",
+      "loguru"
+    ],
+    "container": "SHARED_RUNTIME",
+    "entrypoint": "research_agents.engineering_simulation.__main__:main",
+    "status": "DEPLOYED",
+    "deployment_mode": "SHARED_RUNTIME / ASYNC_TASK"
+  },
+  {
+    "agent_id": "Agent #20",
+    "agent_number": 20,
+    "name": "EngineeringOptimizationAgent",
+    "implementation_path": "research_agents/engineering_optimization",
+    "runtime": "Python 3.13 / Multi-Objective Pareto Engine",
+    "model_provider": "Amazon Bedrock / Trade-Space Engine",
+    "model": "us.anthropic.claude-3-5-sonnet-20241022-v2:0 (REMOTE_INFERENCE)",
+    "dependencies": [
+      "boto3",
+      "pydantic",
+      "loguru"
+    ],
+    "container": "SHARED_RUNTIME",
+    "entrypoint": "research_agents.engineering_optimization.__main__:main",
+    "status": "DEPLOYED",
+    "deployment_mode": "SHARED_RUNTIME / ASYNC_TASK"
+  }
+]

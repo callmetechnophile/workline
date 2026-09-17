@@ -1,0 +1,20 @@
+{
+  "agent_id": "agent.08",
+  "alias_id": "Agent #8",
+  "name": "BOMOptimizationAgent",
+  "version": "1.0.0",
+  "description": "Hierarchical BOM structuring, single-source risk reduction, and lead-time analysis.",
+  "capabilities": [
+    "bom.structure",
+    "bom.optimize",
+    "bom.export"
+  ],
+  "entrypoint": "research_agents.bom_optimization_agent.agent:BOMOptimizationAgent",
+  "execution_level": "read_only",
+  "dependencies": [
+    "SurrealDB"
+  ],
+  "permissions": [
+    "bom:optimize"
+  ]
+}

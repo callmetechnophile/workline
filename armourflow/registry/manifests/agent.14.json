@@ -1,0 +1,23 @@
+{
+  "agent_id": "agent.14",
+  "alias_id": "Agent #14",
+  "name": "ProjectLifecycleOrchestrator",
+  "version": "1.0.0",
+  "description": "Google ADK-compliant closed-loop project lifecycle coordinator and dependency router.",
+  "capabilities": [
+    "orchestration.observe",
+    "orchestration.decide",
+    "orchestration.delegate",
+    "orchestration.human"
+  ],
+  "entrypoint": "research_agents.project_lifecycle_orchestrator.agent:ProjectLifecycleOrchestrator",
+  "execution_level": "read_only",
+  "dependencies": [
+    "SurrealDB",
+    "AmazonBedrock",
+    "ArmorIQ"
+  ],
+  "permissions": [
+    "orchestration:run"
+  ]
+}

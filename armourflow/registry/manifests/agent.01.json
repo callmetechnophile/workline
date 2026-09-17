@@ -1,0 +1,21 @@
+{
+  "agent_id": "agent.01",
+  "alias_id": "Agent #1",
+  "name": "ResearchPaperAgent",
+  "version": "1.0.0",
+  "description": "Scientific paper retrieval, arXiv indexing, and FreePHDLabor query engine.",
+  "capabilities": [
+    "research.papers",
+    "research.arxiv",
+    "research.freephdlabor"
+  ],
+  "entrypoint": "research_agents.research_paper_agent.agent:ResearchPaperAgent",
+  "execution_level": "read_only",
+  "dependencies": [
+    "FreePHDLabor",
+    "ArXiv"
+  ],
+  "permissions": [
+    "research:read"
+  ]
+}

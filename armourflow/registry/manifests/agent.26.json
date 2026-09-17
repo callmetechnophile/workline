@@ -1,0 +1,23 @@
+{
+  "agent_id": "agent.26",
+  "alias_id": "Agent #26",
+  "name": "DeploymentOpsAgent",
+  "version": "1.0.0",
+  "description": "Commissioning plans, deployment rollback strategies, spare parts, and serviceability.",
+  "capabilities": [
+    "deployment.planning",
+    "deployment.readiness",
+    "deployment.commissioning",
+    "deployment.rollback",
+    "ops.maintenance"
+  ],
+  "entrypoint": "research_agents.deployment_operations.agent:DeploymentOpsAgent",
+  "execution_level": "read_only",
+  "dependencies": [
+    "SurrealDB"
+  ],
+  "permissions": [
+    "deployment:plan",
+    "ops:serviceability"
+  ]
+}

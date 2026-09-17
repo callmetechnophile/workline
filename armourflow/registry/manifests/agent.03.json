@@ -1,0 +1,20 @@
+{
+  "agent_id": "agent.03",
+  "alias_id": "Agent #3",
+  "name": "DocumentProcessingAgent",
+  "version": "1.0.0",
+  "description": "Multimodal technical document parsing, tabular extraction, and entity recognition.",
+  "capabilities": [
+    "document.parse",
+    "document.extract_facts",
+    "document.extract_entities"
+  ],
+  "entrypoint": "research_agents.document_processing_agent.agent:DocumentProcessingAgent",
+  "execution_level": "read_only",
+  "dependencies": [
+    "SurrealDB"
+  ],
+  "permissions": [
+    "document:read"
+  ]
+}

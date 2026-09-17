@@ -1,0 +1,21 @@
+{
+  "agent_id": "agent.15",
+  "alias_id": "Agent #15",
+  "name": "EngineeringCopilotAgent",
+  "version": "1.0.0",
+  "description": "Interactive contextual conversational assistant for technical query answering and guidance.",
+  "capabilities": [
+    "copilot.query",
+    "copilot.explain",
+    "copilot.suggest"
+  ],
+  "entrypoint": "research_agents.engineering_copilot.agent:EngineeringCopilotAgent",
+  "execution_level": "read_only",
+  "dependencies": [
+    "SurrealDB",
+    "AmazonBedrock"
+  ],
+  "permissions": [
+    "copilot:interact"
+  ]
+}

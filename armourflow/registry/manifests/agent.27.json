@@ -1,0 +1,27 @@
+{
+  "agent_id": "agent.27",
+  "alias_id": "Agent #27",
+  "name": "TechDocAgent",
+  "version": "1.0.0",
+  "description": "Engineering publication engine, 25+ document types, review workflows, and conflict check.",
+  "capabilities": [
+    "create_document",
+    "review_document",
+    "approve_document",
+    "publish_document",
+    "check_traceability",
+    "detect_conflicts"
+  ],
+  "entrypoint": "research_agents.documentation_agent.agent:TechDocAgent",
+  "execution_level": "isolated_execution",
+  "dependencies": [
+    "SurrealDB",
+    "AmazonBedrock",
+    "ArmorIQ"
+  ],
+  "permissions": [
+    "techdoc:create",
+    "techdoc:approve",
+    "techdoc:publish:controlled"
+  ]
+}

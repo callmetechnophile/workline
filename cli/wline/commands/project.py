@@ -3,6 +3,7 @@
 from typing import Optional
 import typer
 from rich.console import Console
+from rich.table import Table
 
 from cli.wline.core.manifest import (
     BudgetConfig,
@@ -29,10 +30,66 @@ console = Console()
 
 
 @project_app.command("list")
-def list_all_projects() -> None:
+def list_all_projects(
+    json_output: bool = typer.Option(False, "--json", help="Output project list as pure JSON"),
+) -> None:
     """Discover and list all Workline projects in the workspace."""
     projects = list_projects()
+    if json_output:
+        from cli.wline.core.errors import print_json_output
+        res = []
+        for m in projects:
+            res.append({
+                "name": m.name,
+                "display_name": m.display_name,
+                "created_at": getattr(m.metadata, "created_at", ""),
+                "domain": m.domain,
+                "stage": getattr(m.lifecycle, "current_stage", "initialization"),
+            })
+        print_json_output({"projects": res})
+        return
     render_project_list(projects)
+
+
+@project_app.command("inspect")
+def inspect_project_cmd(
+    name: Optional[str] = typer.Argument(None, help="Project name (defaults to active project)"),
+    json_output: bool = typer.Option(False, "--json", help="Output project manifest as pure JSON"),
+) -> None:
+    """Inspect detailed metadata and manifest configuration of a project."""
+    from rich.panel import Panel
+    from cli.wline.core.errors import print_json_output, exit_with_error, ExitCode
+
+    target_name = name or get_active_project_name()
+    if not target_name:
+        exit_with_error("No active project. Specify a project name or open one.", ExitCode.INVALID_ARGUMENTS, json_mode=json_output)
+
+    project_info = find_project(target_name)
+    if not project_info:
+        exit_with_error(f"Project '{target_name}' not found in workspace.", ExitCode.INVALID_ARGUMENTS, json_mode=json_output)
+
+    proj_dir, manifest = project_info
+    if json_output:
+        print_json_output(manifest.model_dump())
+        return
+
+    grid = Table.grid(expand=True, padding=(0, 2))
+    grid.add_column(style="bold cyan", justify="right")
+    grid.add_column(style="white")
+
+    grid.add_row("Name:", manifest.name)
+    grid.add_row("Display Title:", manifest.display_name)
+    grid.add_row("Directory:", str(proj_dir))
+    grid.add_row("Domain:", manifest.domain)
+    grid.add_row("Description:", manifest.description or "None")
+    grid.add_row("Stage:", getattr(manifest.lifecycle, "current_stage", "initialization"))
+    grid.add_row("Controller:", manifest.target_platform.controller)
+    grid.add_row("Budget:", f"{manifest.budget.amount} {manifest.budget.currency}")
+    grid.add_row("Timeline:", f"{manifest.timeline.target_days} days")
+    grid.add_row("Created At:", getattr(manifest.metadata, "created_at", "N/A"))
+
+    console.print(Panel(grid, title=f"[bold green]Project Manifest: {manifest.name}[/]", border_style="cyan"))
+
 
 
 @project_app.command("create")
@@ -277,7 +334,7 @@ def import_project_cmd(
         raise typer.Exit(code=1)
 
 
-@project_app.command("inspect")
+@project_app.command("inspect-package")
 def inspect_project_package(
     file_path: str = typer.Argument(..., help="Path to .wlipjt package."),
 ) -> None:

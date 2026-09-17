@@ -1,0 +1,20 @@
+{
+  "agent_id": "agent.06",
+  "alias_id": "Agent #6",
+  "name": "EngineeringArchitectureAgent",
+  "version": "1.0.0",
+  "description": "System decomposition, subsystem boundary modeling, and ICD interface specification.",
+  "capabilities": [
+    "architecture.design",
+    "architecture.subsystems",
+    "architecture.interfaces"
+  ],
+  "entrypoint": "research_agents.engineering_architecture_agent.agent:EngineeringArchitectureAgent",
+  "execution_level": "read_only",
+  "dependencies": [
+    "SurrealDB"
+  ],
+  "permissions": [
+    "architecture:write"
+  ]
+}

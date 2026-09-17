@@ -1,0 +1,20 @@
+{
+  "agent_id": "agent.07",
+  "alias_id": "Agent #7",
+  "name": "ComponentPlanningAgent",
+  "version": "1.0.0",
+  "description": "Component selection, functional matching, and parametric trade studies.",
+  "capabilities": [
+    "components.select",
+    "components.match",
+    "components.lifecycle"
+  ],
+  "entrypoint": "research_agents.component_planning_agent.agent:ComponentPlanningAgent",
+  "execution_level": "read_only",
+  "dependencies": [
+    "SurrealDB"
+  ],
+  "permissions": [
+    "components:plan"
+  ]
+}

@@ -42,6 +42,9 @@ from backend.workline.collaboration.teams import teams_router
 from backend.workline.database.surrealdb import surreal_db
 from backend.workline.retrieval.qdrant import qdrant_manager
 from backend.database import init_db
+from backend.workline.jobs import default_job_worker
+from backend.workline.jobs.api import router as jobs_router
+from backend.workline.observability import ObservabilityMiddleware, observability_router
 
 
 @asynccontextmanager
@@ -59,11 +62,16 @@ async def lifespan(app: FastAPI):
     # 3. Connect Qdrant
     try:
         qdrant_manager.connect()
-        qdrant_manager.init_collections()
     except Exception:
         pass
 
+    # 4. Start background job worker
+    await default_job_worker.start()
+
     yield
+
+    # Shutdown job worker
+    await default_job_worker.stop()
 
     # Shutdown
     try:
@@ -78,6 +86,9 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan,
 )
+
+# Add Observability and Correlation ID Middleware
+app.add_middleware(ObservabilityMiddleware)
 
 # Allow CORS for easy Next.js integration
 app.add_middleware(
@@ -117,6 +128,18 @@ app.include_router(speech_router)
 app.include_router(x402_router)
 app.include_router(armouriq_router)
 app.include_router(teams_router)
+app.include_router(jobs_router)
+app.include_router(observability_router)
+
+# Mount official ArmourFlow GraphQL Client/Application API Layer
+try:
+    from armourflow.graphql import get_graphql_router
+    graphql_router = get_graphql_router()
+    app.include_router(graphql_router, prefix="", tags=["GraphQL"])
+except Exception as e:
+    import logging
+    logging.getLogger("uvicorn.error").warning(f"[GraphQL] Could not mount GraphQL router: {e}")
+
 
 
 @app.post("/api/projects/{project_id}/pcb/generate", tags=["PCB"])

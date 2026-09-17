@@ -1,0 +1,20 @@
+{
+  "agent_id": "agent.11",
+  "alias_id": "Agent #11",
+  "name": "VerificationQAAgent",
+  "version": "1.0.0",
+  "description": "Automated test harness generation, linting verification, and quality audit checks.",
+  "capabilities": [
+    "qa.test_generation",
+    "qa.lint",
+    "qa.verification_matrix"
+  ],
+  "entrypoint": "research_agents.verification_qa_agent.agent:VerificationQAAgent",
+  "execution_level": "read_only",
+  "dependencies": [
+    "SurrealDB"
+  ],
+  "permissions": [
+    "qa:verify"
+  ]
+}

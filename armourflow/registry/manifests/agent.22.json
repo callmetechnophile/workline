@@ -1,0 +1,22 @@
+{
+  "agent_id": "agent.22",
+  "alias_id": "Agent #22",
+  "name": "SecurityThreatModelingAgent",
+  "version": "1.0.0",
+  "description": "STRIDE threat modeling, attack surface mapping, and AI security control validation.",
+  "capabilities": [
+    "security.stride",
+    "security.attack_surface",
+    "security.threat_matrix"
+  ],
+  "entrypoint": "research_agents.security_threat.agent:SecurityThreatModelingAgent",
+  "execution_level": "read_only",
+  "dependencies": [
+    "SurrealDB",
+    "AmazonBedrock"
+  ],
+  "permissions": [
+    "security:threat_model",
+    "security:audit"
+  ]
+}

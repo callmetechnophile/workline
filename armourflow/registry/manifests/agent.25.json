@@ -1,0 +1,22 @@
+{
+  "agent_id": "agent.25",
+  "alias_id": "Agent #25",
+  "name": "CostSupplyChainAgent",
+  "version": "1.0.0",
+  "description": "Total Cost of Ownership (TCO), supplier risk evaluation, and currency normalizer.",
+  "capabilities": [
+    "cost.estimation",
+    "cost.tco",
+    "supply_chain.risk",
+    "supply_chain.lead_time"
+  ],
+  "entrypoint": "research_agents.cost_supply_chain.agent:CostSupplyChainAgent",
+  "execution_level": "read_only",
+  "dependencies": [
+    "SurrealDB"
+  ],
+  "permissions": [
+    "cost:calculate",
+    "supply_chain:audit"
+  ]
+}

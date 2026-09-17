@@ -1,0 +1,20 @@
+{
+  "agent_id": "agent.23",
+  "alias_id": "Agent #23",
+  "name": "HardwareThermalAgent",
+  "version": "1.0.0",
+  "description": "EDA board analysis, copper thermal planes, stackup optimization, and thermal dissipation.",
+  "capabilities": [
+    "hardware.stackup",
+    "hardware.thermal",
+    "hardware.signal_integrity"
+  ],
+  "entrypoint": "research_agents.security_threat.agent:SecurityThreatModelingAgent",
+  "execution_level": "read_only",
+  "dependencies": [
+    "SurrealDB"
+  ],
+  "permissions": [
+    "hardware:thermal"
+  ]
+}

@@ -1,6 +1,14 @@
 """Main entry point for the Workline CLI (wline)."""
 
+from pathlib import Path
+import sys
 from typing import Optional
+
+# Ensure repository root is on sys.path so armourflow, backend, and research_agents are importable
+_REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
 import typer
 from rich.console import Console
 
@@ -37,15 +45,26 @@ from cli.wline.commands.auth import auth_app, login_command, logout_command, who
 from cli.wline.commands.sync import sync_app
 from cli.wline.ui.banner import print_main_banner
 
+# ── New ArmourFlow-integrated command sub-apps ────────────────────────────────
+from cli.wline.commands.agents import agents_app
+from cli.wline.commands.task import task_app
+from cli.wline.commands.workflow import workflow_app
+from cli.wline.commands.engineering import engineering_app
+from cli.wline.commands.evidence import evidence_app
+from cli.wline.commands.documents import documents_app
+from cli.wline.commands.security import security_app
+from cli.wline.commands.eval import eval_app
+from cli.wline.commands.system import system_app
+
 app = typer.Typer(
     name="wline",
-    help="Workline - Engineering Lifecycle Platform CLI",
+    help="WORKLINE / ArmourFlow AI – Engineering Lifecycle Platform CLI",
     no_args_is_help=False,
     add_completion=False,
 )
 console = Console()
 
-# Mount sub-apps and direct commands
+# ── Existing command mounts ───────────────────────────────────────────────────
 app.command("init")(init_command)
 app.add_typer(project_app, name="project")
 app.add_typer(knowledge_app, name="knowledge")
@@ -56,7 +75,7 @@ app.add_typer(lesson_app, name="lesson")
 app.add_typer(team_app, name="team")
 app.add_typer(git_app, name="git")
 app.add_typer(github_app, name="github")
-app.add_typer(agent_app, name="agent")
+app.add_typer(agent_app, name="agent")          # wline agent (singular) – internal runtime
 app.add_typer(component_app, name="component")
 app.add_typer(procurement_app, name="procurement")
 app.add_typer(bom_app, name="bom")
@@ -67,7 +86,7 @@ app.add_typer(generate_app, name="generate")
 app.add_typer(cache_app, name="cache")
 app.add_typer(document_app, name="document")
 app.add_typer(entity_app, name="entity")
-app.add_typer(graph_app, name="graph")
+app.add_typer(graph_app, name="graph")          # wline graph (related / evidence / query / traverse)
 app.add_typer(config_app, name="config")
 app.add_typer(database_app, name="database")
 app.add_typer(doctor_app, name="doctor")
@@ -80,6 +99,17 @@ app.command("status")(status_command)
 app.command("version")(version_command)
 app.command("snapshot")(snapshot_command)
 app.command("release")(release_command)
+
+# ── ArmourFlow Control Fabric – integrated command mounts ─────────────────────
+app.add_typer(agents_app, name="agents")        # wline agents (plural) – domain agent registry
+app.add_typer(task_app, name="task")            # wline task – Control Fabric task lifecycle
+app.add_typer(workflow_app, name="workflow")    # wline workflow – named workflow dispatch
+app.add_typer(engineering_app, name="engineering")  # wline engineering – sim/optimize/dfm
+app.add_typer(evidence_app, name="evidence")    # wline evidence – Tavily research + DB
+app.add_typer(documents_app, name="documents")  # wline documents – TechDocAgent (agent.27)
+app.add_typer(security_app, name="security")    # wline security – ArmorIQ + agent.22
+app.add_typer(eval_app, name="eval")            # wline eval – UniversalEvaluationHarness
+app.add_typer(system_app, name="system")        # wline system – platform health/diagnostics
 
 
 def version_callback(value: bool) -> None:
@@ -100,21 +130,31 @@ def main_callback(
         is_eager=True,
     ),
 ) -> None:
-    """Workline main CLI callback handler."""
+    """WORKLINE / ArmourFlow AI Engineering Lifecycle Platform."""
     if ctx.invoked_subcommand is None:
         print_main_banner()
         console.print("\n[bold white]Usage:[/bold white]\n  wline <command>\n")
-        console.print("[bold white]Available commands:[/bold white]\n")
-        console.print("  [cyan]init[/cyan]      Initialize local project workspace & Git repository")
-        console.print("  [cyan]git[/cyan]       Local Git version control (status, commit, log, push, pull, branch, tag)")
-        console.print("  [cyan]github[/cyan]    GitHub remote management (auth, init, connect, remote, push)")
-        console.print("  [cyan]version[/cyan]   Display Workline CLI, active project, Git, and schema version")
-        console.print("  [cyan]snapshot[/cyan]  Create deterministic project state snapshot")
-        console.print("  [cyan]release[/cyan]   Create formal project version release and Git tag")
-        console.print("  [cyan]project[/cyan]   Manage engineering projects (create, list, open, status, delete)")
-        console.print("  [cyan]agent[/cyan]     Manage Multi-Agent Engine (run, status, approve, history)")
-        console.print("  [cyan]database[/cyan]  Manage SurrealDB and Qdrant data layers (status, migrate, validate)")
-        console.print("  [cyan]config[/cyan]    Manage workspace configuration\n")
+        console.print("[bold white]Platform commands (ArmourFlow Control Fabric):[/bold white]\n")
+        console.print("  [bold cyan]agents[/bold cyan]      List / inspect / health-check the 27 domain agents")
+        console.print("  [bold cyan]task[/bold cyan]        Submit, list, inspect, and cancel Control Fabric tasks")
+        console.print("  [bold cyan]workflow[/bold cyan]    Dispatch named engineering workflows")
+        console.print("  [bold cyan]engineering[/bold cyan] Simulation, Pareto optimization, and DFM analysis")
+        console.print("  [bold cyan]evidence[/bold cyan]    Research evidence search (Tavily) and inspection")
+        console.print("  [bold cyan]documents[/bold cyan]   Generate, list, and review technical documentation")
+        console.print("  [bold cyan]graph[/bold cyan]       SurrealQL queries and graph traversal")
+        console.print("  [bold cyan]security[/bold cyan]    Security audit and threat scanning (ArmorIQ + agent.22)")
+        console.print("  [bold cyan]eval[/bold cyan]        Run evaluation benchmarks and view reports")
+        console.print("  [bold cyan]system[/bold cyan]      Platform health, status, and diagnostics\n")
+        console.print("[bold white]Workspace commands:[/bold white]\n")
+        console.print("  [cyan]init[/cyan]        Initialize local project workspace & Git repository")
+        console.print("  [cyan]project[/cyan]     Manage engineering projects (create, list, open, status)")
+        console.print("  [cyan]git[/cyan]         Local Git version control (status, commit, log, push)")
+        console.print("  [cyan]github[/cyan]      GitHub remote management (auth, init, connect, push)")
+        console.print("  [cyan]agent[/cyan]       Internal Workline agent runtime (run, status, approve)")
+        console.print("  [cyan]database[/cyan]    Manage SurrealDB and Qdrant data layers")
+        console.print("  [cyan]config[/cyan]      Manage workspace configuration")
+        console.print("  [cyan]version[/cyan]     Display Workline CLI and project version\n")
+        console.print("[dim]Run 'wline <command> --help' for detailed usage.[/dim]\n")
 
 
 def main() -> None:

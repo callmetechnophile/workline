@@ -1,0 +1,21 @@
+{
+  "agent_id": "agent.21",
+  "alias_id": "Agent #21",
+  "name": "EngineeringRiskAgent",
+  "version": "1.0.0",
+  "description": "System failure mode, effect, and criticality analysis (FMEA) & hazard tracking.",
+  "capabilities": [
+    "risk.fmea",
+    "risk.hazard_analysis",
+    "risk.mitigation_tracking"
+  ],
+  "entrypoint": "research_agents.engineering_risk.agent:EngineeringRiskAgent",
+  "execution_level": "read_only",
+  "dependencies": [
+    "SurrealDB"
+  ],
+  "permissions": [
+    "risk:fmea",
+    "risk:analyze"
+  ]
+}

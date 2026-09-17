@@ -38,6 +38,7 @@ wline = "cli.wline.main:main"
 include = ["cli*", "backend*"]
 
 [tool.pytest.ini_options]
+pythonpath = ["."]
 asyncio_mode = "strict"
 filterwarnings = [
     "ignore::DeprecationWarning",

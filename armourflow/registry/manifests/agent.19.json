@@ -1,0 +1,20 @@
+{
+  "agent_id": "agent.19",
+  "alias_id": "Agent #19",
+  "name": "EngineeringSimulationAgent",
+  "version": "1.0.0",
+  "description": "Digital twin simulation coordination, physics parameters, and thermal modeling.",
+  "capabilities": [
+    "simulation.thermal",
+    "simulation.structural",
+    "simulation.digital_twin"
+  ],
+  "entrypoint": "research_agents.engineering_simulation.agent:EngineeringSimulationAgent",
+  "execution_level": "isolated_execution",
+  "dependencies": [
+    "SurrealDB"
+  ],
+  "permissions": [
+    "simulation:run"
+  ]
+}

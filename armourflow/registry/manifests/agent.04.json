@@ -1,0 +1,20 @@
+{
+  "agent_id": "agent.04",
+  "alias_id": "Agent #4",
+  "name": "DeepResearchAgent",
+  "version": "1.0.0",
+  "description": "Cross-domain literature synthesis, multi-paper reasoning, and citation verification.",
+  "capabilities": [
+    "research.synthesize",
+    "research.cross_reason"
+  ],
+  "entrypoint": "research_agents.deep_research_agent.agent:DeepResearchAgent",
+  "execution_level": "read_only",
+  "dependencies": [
+    "AmazonBedrock",
+    "SurrealDB"
+  ],
+  "permissions": [
+    "research:synthesize"
+  ]
+}
