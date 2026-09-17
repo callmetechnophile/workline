@@ -2,8 +2,18 @@
 Pydantic data models and schemas for LLM Gateway.
 """
 
+from enum import Enum
 from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
+
+
+class LLMCapability(str, Enum):
+    """Functional capability types handled by AI/LLM providers."""
+    TEXT_GENERATION = "TEXT_GENERATION"
+    CHAT_COMPLETION = "CHAT_COMPLETION"
+    IMAGE_GENERATION = "IMAGE_GENERATION"
+    IMAGE_EDITING = "IMAGE_EDITING"
+    EMBEDDINGS = "EMBEDDINGS"
 
 
 class LLMRequest(BaseModel):
@@ -11,6 +21,7 @@ class LLMRequest(BaseModel):
     prompt: str
     system_instruction: Optional[str] = None
     model_alias: str = "fast"  # 'fast', 'reasoning', 'default'
+    capability: LLMCapability = Field(default=LLMCapability.TEXT_GENERATION)
     temperature: float = 0.2
     max_tokens: int = 2048
     metadata: Dict[str, Any] = Field(default_factory=dict)

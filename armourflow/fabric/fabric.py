@@ -1,25 +1,33 @@
 from armourflow.registry.manifest import AgentManifest
-"""Unified Agent Control Fabric orchestrating tasks, idempotency, retries, and execution."""
+"""Unified Agent Control Fabric orchestrating tasks, idempotency, retries, and execution via async job pipeline."""
 
 import asyncio
 import importlib
+import json
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from loguru import logger
 
 from armourflow.config.settings import PlatformSettings, get_settings
 from armourflow.data.client import PlatformDatabaseClient, get_database_client
-from armourflow.fabric.events import FabricEventBus
+from armourflow.fabric.events import FabricEventBus, get_event_bus
 from armourflow.fabric.router import CapabilityRouter
 from armourflow.fabric.schemas import FabricTask, TaskContext, TaskState
 from armourflow.registry.registry import AuthoritativeAgentRegistry, get_agent_registry
 from armourflow.security.armoriq import ArmorIQBoundary, get_security_boundary
 
+# Workline async job system integration
+from backend.workline.jobs.models import Job
+from backend.workline.jobs.queue import JobQueue, default_job_queue
+from backend.workline.jobs.states import JobState
+from backend.workline.jobs.worker import JobRegistry, default_job_registry, default_job_worker
+from backend.workline.jobs.errors import AuthorizationError, ContractValidationError, NonRetryableJobError
+
 
 class AgentControlFabric:
     """
     Central routing, task state, event, lifecycle, and execution coordination fabric.
-    The CLI and ADK submit tasks to this fabric.
+    Tasks are enqueued to the Workline asynchronous job pipeline with durable SQLite idempotency.
     """
 
     _instance: Optional["AgentControlFabric"] = None
@@ -30,17 +38,51 @@ class AgentControlFabric:
         registry: Optional[AuthoritativeAgentRegistry] = None,
         db_client: Optional[PlatformDatabaseClient] = None,
         security: Optional[ArmorIQBoundary] = None,
+        job_queue: Optional[JobQueue] = None,
+        job_registry: Optional[JobRegistry] = None,
     ):
         self.settings = settings or get_settings()
         self.registry = registry or get_agent_registry()
         self.db = db_client or get_database_client()
         self.security = security or get_security_boundary()
-        from armourflow.fabric.events import get_event_bus
+        self.job_queue = job_queue or default_job_queue
+        self.job_registry = job_registry or default_job_registry
+
         self.router = CapabilityRouter(self.registry)
         self.event_bus = get_event_bus()
 
         self._tasks: Dict[str, FabricTask] = {}
         self._idempotency_cache: Dict[str, str] = {}  # key -> task_id
+
+        # Register control fabric task handler in the asynchronous job registry
+        self._register_job_handlers()
+
+    def _register_job_handlers(self):
+        """Register the fabric agent execution job handler with JobRegistry."""
+        async def fabric_job_handler(job: Job) -> Dict[str, Any]:
+            task_id = job.input_reference.get("task_id")
+            agent_id = job.input_reference.get("agent_id")
+            task = self._tasks.get(task_id)
+            if not task:
+                raise NonRetryableJobError(f"Fabric task '{task_id}' not found in fabric state.")
+
+            manifest = self.registry.get_agent(agent_id)
+            if not manifest:
+                raise NonRetryableJobError(f"Agent '{agent_id}' not registered in manifest registry.")
+
+            # Perform agent invocation
+            await self._execute_task(task, manifest)
+
+            if task.state == TaskState.FAILED:
+                if "AUTHORIZATION_DENIED" in (task.error or ""):
+                    raise AuthorizationError(task.error or "Authorization denied")
+                raise RuntimeError(task.error or "Agent execution failed")
+            elif task.state == TaskState.TIMEOUT:
+                raise TimeoutError(task.error or "Agent execution timed out")
+
+            return task.result or {}
+
+        self.job_registry.register("fabric_agent_execution", fabric_job_handler)
 
     @classmethod
     def get_instance(cls) -> "AgentControlFabric":
@@ -57,13 +99,46 @@ class AgentControlFabric:
         user_id: str = "system",
         idempotency_key: Optional[str] = None,
         unauthorized_project_access: bool = False,
+        sync_wait: bool = True,
     ) -> FabricTask:
-        """Create, route, authorize, execute, and persist a task."""
-        # 1. Idempotency Check
-        if idempotency_key and idempotency_key in self._idempotency_cache:
-            existing_id = self._idempotency_cache[idempotency_key]
-            logger.info(f"[ControlFabric] Returning cached result for idempotency key '{idempotency_key}'")
-            return self._tasks[existing_id]
+        """
+        Create, route, authorize, enqueue into async job queue, execute, and persist a task.
+        Supports durable SQLite idempotency deduplication across process restarts.
+        """
+        # 1. Durable Idempotency Check (In-Memory + Database)
+        if idempotency_key:
+            if idempotency_key in self._idempotency_cache:
+                existing_id = self._idempotency_cache[idempotency_key]
+                if existing_id in self._tasks:
+                    logger.info(f"[ControlFabric] Returning in-memory cached result for idempotency key '{idempotency_key}'")
+                    return self._tasks[existing_id]
+
+            # Check persistent database
+            try:
+                from backend.database import get_idempotency_record
+                record = get_idempotency_record(idempotency_key)
+                if record and record.get("task_id"):
+                    cached_task_id = record["task_id"]
+                    if cached_task_id in self._tasks:
+                        return self._tasks[cached_task_id]
+                    # Reconstitute task from database record if possible
+                    reconstituted = FabricTask(
+                        task_id=cached_task_id,
+                        context=TaskContext(project_id=project_id, user_id=user_id),
+                        target_agent_id=target_agent_id,
+                        target_capability=target_capability,
+                        payload=payload,
+                        idempotency_key=idempotency_key,
+                        state=TaskState(record.get("status", "COMPLETED")),
+                        result=record.get("result"),
+                        error=record.get("error"),
+                    )
+                    self._tasks[cached_task_id] = reconstituted
+                    self._idempotency_cache[idempotency_key] = cached_task_id
+                    logger.info(f"[ControlFabric] Reconstituted cached task from database for key '{idempotency_key}'")
+                    return reconstituted
+            except Exception as e:
+                logger.debug(f"[ControlFabric] Idempotency database lookup skipped: {e}")
 
         context = TaskContext(
             project_id=project_id,
@@ -80,6 +155,15 @@ class AgentControlFabric:
         self._tasks[task.task_id] = task
         if idempotency_key:
             self._idempotency_cache[idempotency_key] = task.task_id
+            try:
+                from backend.database import upsert_idempotency_record
+                upsert_idempotency_record(
+                    key=idempotency_key,
+                    task_id=task.task_id,
+                    status=task.state.value,
+                )
+            except Exception as e:
+                logger.debug(f"[ControlFabric] Idempotency record insertion skipped: {e}")
 
         self.event_bus.publish("task.queued", task.task_id, {"project_id": project_id})
 
@@ -93,6 +177,7 @@ class AgentControlFabric:
             task.error = route_err or "ROUTING_FAILED"
             self.event_bus.publish("task.failed", task.task_id, {"error": task.error})
             await self._persist_task(task)
+            self._update_durable_idempotency(task)
             return task
 
         task.target_agent_id = manifest.agent_id
@@ -112,14 +197,54 @@ class AgentControlFabric:
             task.error = auth_err or "AUTHORIZATION_DENIED"
             self.event_bus.publish("task.denied", task.task_id, {"error": task.error})
             await self._persist_task(task)
+            self._update_durable_idempotency(task)
             return task
 
         task.state = TaskState.AUTHORIZED
 
-        # 4. Execution with timeout and retries
-        await self._execute_task(task, manifest)
+        # 4. Enqueue into Asynchronous Job Pipeline
+        job = Job(
+            project_id=project_id,
+            job_type="fabric_agent_execution",
+            requested_by=user_id,
+            input_reference={
+                "task_id": task.task_id,
+                "agent_id": manifest.agent_id,
+                "payload": payload,
+            },
+            correlation_id=task.context.task_id,
+        )
+        await self.job_queue.enqueue(job)
+        logger.info(f"[ControlFabric] Dispatched task {task.task_id} to job queue (job_id={job.job_id})")
+
+        # 5. Execution resolution: worker execution or direct inline wait
+        if sync_wait:
+            await self._execute_task(task, manifest)
+            # Sync job state with queue
+            job.status = JobState.SUCCEEDED if task.state == TaskState.COMPLETED else JobState.FAILED
+            job.output_reference = task.result
+            job.error = task.error
+            job.completed_at = datetime.now(timezone.utc).isoformat()
+            await self.job_queue.update_job(job)
+
         await self._persist_task(task)
+        self._update_durable_idempotency(task)
         return task
+
+    def _update_durable_idempotency(self, task: FabricTask):
+        """Update persistent idempotency record with task completion/failure details."""
+        if task.idempotency_key:
+            try:
+                from backend.database import upsert_idempotency_record
+                upsert_idempotency_record(
+                    key=task.idempotency_key,
+                    task_id=task.task_id,
+                    status=task.state.value,
+                    result=task.result,
+                    error=task.error,
+                )
+            except Exception as e:
+                logger.debug(f"[ControlFabric] Failed to update durable idempotency record: {e}")
 
     async def _execute_task(self, task: FabricTask, manifest: AgentManifest):
         """Invoke the target agent entrypoint with timeout and error handling."""
@@ -148,8 +273,15 @@ class AgentControlFabric:
                 if param_type != inspect.Parameter.empty and hasattr(param_type, "model_validate"):
                     try:
                         arg = param_type.model_validate(payload)
-                    except Exception:
-                        arg = payload
+                    except Exception as val_err:
+                        # Try constructing with only known fields or default operation
+                        try:
+                            valid_fields = getattr(param_type, "model_fields", {})
+                            filtered = {k: v for k, v in payload.items() if k in valid_fields}
+                            arg = param_type.model_validate(filtered)
+                        except Exception:
+                            logger.warning(f"[ControlFabric] Model validation fallback for {param_type}: {val_err}")
+                            arg = payload
                 elif param_type != inspect.Parameter.empty and hasattr(param_type, "__dataclass_fields__"):
                     try:
                         valid_keys = {k: payload[k] for k in param_type.__dataclass_fields__ if k in payload}

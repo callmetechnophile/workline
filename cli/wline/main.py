@@ -58,7 +58,7 @@ from cli.wline.commands.system import system_app
 
 app = typer.Typer(
     name="wline",
-    help="WORKLINE / ArmourFlow AI – Engineering Lifecycle Platform CLI",
+    help="WORKLINE – Engineering Lifecycle Platform CLI",
     no_args_is_help=False,
     add_completion=False,
 )
@@ -130,11 +130,11 @@ def main_callback(
         is_eager=True,
     ),
 ) -> None:
-    """WORKLINE / ArmourFlow AI Engineering Lifecycle Platform."""
+    """WORKLINE Engineering Lifecycle Platform."""
     if ctx.invoked_subcommand is None:
         print_main_banner()
         console.print("\n[bold white]Usage:[/bold white]\n  wline <command>\n")
-        console.print("[bold white]Platform commands (ArmourFlow Control Fabric):[/bold white]\n")
+        console.print("[bold white]Platform commands (Workline Control Fabric):[/bold white]\n")
         console.print("  [bold cyan]agents[/bold cyan]      List / inspect / health-check the 27 domain agents")
         console.print("  [bold cyan]task[/bold cyan]        Submit, list, inspect, and cancel Control Fabric tasks")
         console.print("  [bold cyan]workflow[/bold cyan]    Dispatch named engineering workflows")

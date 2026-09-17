@@ -103,8 +103,11 @@ class JobWorker:
             logger.info(f"[JobWorker] Job {job.job_id} succeeded")
         except Exception as exc:
             logger.warning(f"[JobWorker] Job {job.job_id} failed with error: {exc}")
-            job.retry_count += 1
-            if job.retry_count <= job.max_retries:
+            from backend.workline.jobs.errors import is_error_retryable
+            can_retry = is_error_retryable(exc)
+
+            if can_retry and job.retry_count < job.max_retries:
+                job.retry_count += 1
                 job.status = JobState.RETRYING
                 job.error = str(exc)
                 await self.queue.update_job(job)
@@ -112,8 +115,12 @@ class JobWorker:
                 await asyncio.sleep(0.5 * (2 ** (job.retry_count - 1)))
                 await self.queue.enqueue(job)
             else:
+                # Non-retryable or retries exhausted -> Move to DLQ
                 job.status = JobState.DEAD_LETTER
-                job.error = f"Max retries exceeded ({job.max_retries}). Last error: {exc}"
+                if not can_retry:
+                    job.error = f"NON_RETRYABLE_FAULT: {exc}"
+                else:
+                    job.error = f"Max retries exceeded ({job.max_retries}). Last error: {exc}"
                 job.completed_at = datetime.now(timezone.utc).isoformat()
                 await self.queue.update_job(job)
                 logger.error(f"[JobWorker] Job {job.job_id} moved to DLQ: {job.error}")

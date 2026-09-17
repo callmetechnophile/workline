@@ -1,8 +1,8 @@
-# Workline (ArmourIQ-Workflow)
+# Workline
 
 **Workline** is an enterprise-grade engineering lifecycle orchestration platform that transforms natural-language system requirements into validated engineering specifications, bills of materials (BOMs), multi-physics simulations, procurement packages, and fabrication-ready EDA artifacts.
 
-The platform integrates **Google ADK domain agents**, an **ArmourFlow Control Fabric** routing 27 specialized engineering agents across 90+ capabilities, a deterministic **multi-physics simulation suite**, and an **asynchronous job & governance engine**.
+The platform integrates **Google ADK domain agents**, a unified **Workline Agent Control Fabric** routing 27 specialized engineering agents across 90+ capabilities, a deterministic **multi-physics simulation suite**, and an **asynchronous job & governance engine**.
 
 ---
 
@@ -35,8 +35,10 @@ Workline is designed for modular, asynchronous, observable, and secure productio
 ### 1. Asynchronous Job & Worker Engine (`backend/workline/jobs/`)
 - **Lifecycle States:** `PENDING`, `QUEUED`, `RUNNING`, `SUCCEEDED`, `FAILED`, `CANCELLED`, `RETRYING`, `DEAD_LETTER`.
 - **Worker & Queue:** Pluggable `JobQueue` with thread-safe `LocalJobQueue` and background `JobWorker` supporting exponential backoff retries and Dead Letter Queue (DLQ) isolation.
+- **Control Fabric Integration:** `AgentControlFabric.submit_task()` dispatches task execution through the asynchronous job queue and worker pipeline.
+- **Durable SQLite Idempotency:** SQLite-backed `idempotency_keys` table guarantees deduplication across server restarts.
+- **Error Classification:** Bounded retries with strict classification: fatal faults (policy violations, authorization denial, contract mismatches) are classified non-retryable and routed directly to DLQ without spurious retry loops.
 - **REST Endpoints:** Mounted at `/api/jobs` for job submission, cancellation, status tracking, and DLQ inspection.
-- **Background Dispatch:** Heavy compute (PINN training, finite-difference thermal simulations, multi-vendor procurement quotes) runs asynchronously without blocking HTTP requests.
 
 ### 2. Durable Agent Execution State & Checkpoints (`backend/workline/agent_state/`)
 - **Telemetry & Tracing:** Comprehensive tracking of `AgentRun`, `ToolExecution`, `AgentCheckpoint`, and `AgentDecision`.
@@ -48,7 +50,9 @@ Workline is designed for modular, asynchronous, observable, and secure productio
 - **Integrity:** Automatic SHA-256 content hashing, size tracking, and project-isolated file organization.
 
 ### 4. Centralized LLM Gateway (`backend/workline/llm/`)
-- **Multi-Provider Routing:** Centralized `LLMGateway` supporting AWS Bedrock (`BedrockProvider`) and offline local mock (`LocalMockProvider`).
+- **Multi-Provider Hierarchy:** Centralized `LLMGateway` with AWS Bedrock as primary provider (`BedrockProvider`), explicit NVIDIA NIM fallback (`NvidiaProvider`), and offline local mock (`LocalMockProvider`).
+- **NVIDIA Inference Fallback:** Uses OpenAI-compatible HTTP inference for text/LLM completions during transient AWS disruptions.
+- **Strict Visual Generation Isolation:** The NVIDIA fallback is strictly restricted to text/LLM inference and will never accept or process image generation requests. Technical visual generation remains dedicated to Paper Banana (`backend/workline/generation/`) and AWS Bedrock Nova Canvas/Titan adapters.
 - **Telemetry & Costs:** Tracks token usage (prompt, completion) and estimated cost in USD.
 - **Offline Reliability:** Automatically falls back to deterministic local mock provider in development or CI/CD environments without cloud credentials.
 

@@ -126,7 +126,7 @@ def system_status(
         exit_with_error(f"Failed to inspect system status: {e}", ExitCode.SERVICE_UNAVAILABLE, json_mode=json_output)
 
     status_data = {
-        "platform": "WORKLINE / ArmourFlow AI",
+        "platform": "WORKLINE",
         "cli_version": __version__,
         "environment": str(env),
         "registered_agents": agent_count,
@@ -143,7 +143,7 @@ def system_status(
         return
 
     title = Text()
-    title.append("WORKLINE / ArmourFlow AI\n", style="bold cyan")
+    title.append("WORKLINE\n", style="bold cyan")
     title.append("Engineering Lifecycle Platform", style="dim white")
 
     grid = Table.grid(expand=True, padding=(0, 2))

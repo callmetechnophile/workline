@@ -173,6 +173,17 @@ def init_db():
                 updated_at TEXT NOT NULL
             )
         """)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS idempotency_keys (
+                key TEXT PRIMARY KEY,
+                task_id TEXT NOT NULL,
+                status TEXT NOT NULL,
+                result_json TEXT,
+                error TEXT,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )
+        """)
     else:
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS pcb_visualizations (
@@ -185,6 +196,17 @@ def init_db():
                 model TEXT NOT NULL,
                 status TEXT NOT NULL,
                 metadata TEXT,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )
+        """)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS idempotency_keys (
+                key TEXT PRIMARY KEY,
+                task_id TEXT NOT NULL,
+                status TEXT NOT NULL,
+                result_json TEXT,
+                error TEXT,
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL
             )
@@ -825,3 +847,68 @@ def get_pcb_visualization(project_id: str) -> Optional[Dict[str, Any]]:
     return d
 
 
+def get_idempotency_record(key: str) -> Optional[Dict[str, Any]]:
+    """Retrieve an idempotency record by key."""
+    conn = get_db_connection()
+    cursor = execute_query(conn, "SELECT * FROM idempotency_keys WHERE key = ?", (key,))
+    row = cursor.fetchone()
+    conn.close()
+    if not row:
+        return None
+    d = dict(row)
+    if d.get("result_json"):
+        try:
+            d["result"] = json.loads(d["result_json"])
+        except Exception:
+            d["result"] = d["result_json"]
+    else:
+        d["result"] = None
+    return d
+
+
+def upsert_idempotency_record(
+    key: str,
+    task_id: str,
+    status: str = "QUEUED",
+    result: Optional[Any] = None,
+    error: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Insert or update an idempotency record with execution result."""
+    conn = get_db_connection()
+    is_postgres = hasattr(conn, "cursor_factory")
+    now_iso = datetime.now().isoformat()
+    result_str = json.dumps(result) if result is not None else None
+
+    if is_postgres:
+        execute_query(conn, """
+            INSERT INTO idempotency_keys (key, task_id, status, result_json, error, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT (key) DO UPDATE SET
+                task_id = EXCLUDED.task_id,
+                status = EXCLUDED.status,
+                result_json = EXCLUDED.result_json,
+                error = EXCLUDED.error,
+                updated_at = EXCLUDED.updated_at
+        """, (key, task_id, status, result_str, error, now_iso, now_iso))
+    else:
+        execute_query(conn, """
+            INSERT INTO idempotency_keys (key, task_id, status, result_json, error, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(key) DO UPDATE SET
+                task_id = excluded.task_id,
+                status = excluded.status,
+                result_json = excluded.result_json,
+                error = excluded.error,
+                updated_at = excluded.updated_at
+        """, (key, task_id, status, result_str, error, now_iso, now_iso))
+
+    conn.commit()
+    conn.close()
+    return {
+        "key": key,
+        "task_id": task_id,
+        "status": status,
+        "result": result,
+        "error": error,
+        "updated_at": now_iso,
+    }

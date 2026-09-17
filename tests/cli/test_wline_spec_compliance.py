@@ -61,7 +61,7 @@ def test_wline_system_status_json():
     result = runner.invoke(app, ["system", "status", "--json"])
     assert result.exit_code == 0
     data = json.loads(result.output)
-    assert data["platform"] == "WORKLINE / ArmourFlow AI"
+    assert "WORKLINE" in data["platform"]
     assert data["registered_agents"] == 27
     assert "control_fabric" in data
 
