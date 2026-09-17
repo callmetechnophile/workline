@@ -1,75 +1,105 @@
-# Workline / ArmourIQ-Workflow
+# Workline (ArmourIQ-Workflow)
 
-Workline (ArmourIQ-Workflow) is an engineering lifecycle orchestration platform that transforms natural-language system requirements into validated engineering specifications, BOMs, multi-physics simulations, and procurement packages.
+**Workline** is an enterprise-grade engineering lifecycle orchestration platform that transforms natural-language system requirements into validated engineering specifications, bills of materials (BOMs), multi-physics simulations, procurement packages, and fabrication-ready EDA artifacts.
 
-> **Status:** Architecture frozen for system testing.
+The platform integrates **Google ADK domain agents**, an **ArmourFlow Control Fabric** routing 27 specialized engineering agents across 90+ capabilities, a deterministic **multi-physics simulation suite**, and an **asynchronous job & governance engine**.
 
 ---
 
-## System Architecture
+## High-Level Architecture
 
 ```
 Requirements (Natural Language & Documents)
     ↓
-Knowledge Graph (SurrealDB + Qdrant + LlamaIndex)
+Knowledge & Evidence Layer (SurrealDB + Qdrant + IPC Standards + Unified Retrieval)
     ↓
 Deterministic Engineering Validation Engine (PASS / FAIL / UNKNOWN / CONFLICT)
     ↓
-Engineering Design Decision Engine (Trade-offs & Human Approval)
+Engineering Design & Trade-off Optimization (Pareto Frontiers, Robustness & Sensitivity)
     ↓
-BOM + Procurement Intelligence (Part Resolution & x402 Preparation)
+BOM & Procurement Intelligence (Multi-Vendor Sourcing & Algorand x402 Protocol)
     ↓
-PCB Design & Multi-Physics Simulation Orchestrator (SPICE, Thermal FD, SI/PI, PINN Surrogate)
+PCB Design & Multi-Physics Simulation (SPICE, 2D Thermal FD, SI/PI, PINN Surrogate)
     ↓
-Cross-Validation & Engineering Review
+Engineering Lifecycle Gates (Simulation Thresholds & Sourcing Approvals)
     ↓
-EDA Package & Git Versioning
+EDA Package Generation, Artifact Storage & Git Versioning
 ```
 
 ---
 
-## Technology Stack
+## Production Architecture & Subsystems
 
-- **Backend:** Python 3.10+, FastAPI, Pydantic v2, Typer, NumPy, SciPy
-- **Frontend:** Next.js, React 19, Tailwind CSS, Lucide Icons, TypeScript
-- **Databases & Storage:**
-  - **SurrealDB:** Multi-model relational, document, and graph database for project entities, constraints, and audit logs.
-  - **Qdrant:** Vector database for semantic datasheet retrieval and design pattern discovery.
-- **AI & Reasoning:** Google Agent Development Kit (ADK), Gemini, LlamaIndex for document grounding.
-- **Physics & Simulation:**
-  - SPICE nodal electrical solver
-  - 2D finite-difference steady-state thermal conduction solver
-  - Transmission line signal and power integrity (SI/PI) solver
-  - Physics-Informed Neural Network (PINN) fast thermal surrogate model
-- **Procurement & Payments:** Multi-distributor scrapers (DigiKey, Mouser, Robu, Robocraze), Nexar API, and x402 protocol preparation.
-- **VCS & Project Management:** Native Git & GitHub integration with `.wlipjt` deterministic project bundles.
+Workline is designed for modular, asynchronous, observable, and secure production deployment:
+
+### 1. Asynchronous Job & Worker Engine (`backend/workline/jobs/`)
+- **Lifecycle States:** `PENDING`, `QUEUED`, `RUNNING`, `SUCCEEDED`, `FAILED`, `CANCELLED`, `RETRYING`, `DEAD_LETTER`.
+- **Worker & Queue:** Pluggable `JobQueue` with thread-safe `LocalJobQueue` and background `JobWorker` supporting exponential backoff retries and Dead Letter Queue (DLQ) isolation.
+- **REST Endpoints:** Mounted at `/api/jobs` for job submission, cancellation, status tracking, and DLQ inspection.
+- **Background Dispatch:** Heavy compute (PINN training, finite-difference thermal simulations, multi-vendor procurement quotes) runs asynchronously without blocking HTTP requests.
+
+### 2. Durable Agent Execution State & Checkpoints (`backend/workline/agent_state/`)
+- **Telemetry & Tracing:** Comprehensive tracking of `AgentRun`, `ToolExecution`, `AgentCheckpoint`, and `AgentDecision`.
+- **Secret Scrubbing:** Automated scrubbing of sensitive API keys and tokens via `redacted_fields` before logging.
+- **Pause & Resume:** Persistent checkpoints enable agents to pause, await human input, and resume reliably.
+
+### 3. Pluggable Artifact Storage (`backend/workline/artifacts/`)
+- **Storage Abstraction:** Pluggable `ArtifactStore` with `FilesystemArtifactStore` and `S3ArtifactStore` (with graceful offline fallback).
+- **Integrity:** Automatic SHA-256 content hashing, size tracking, and project-isolated file organization.
+
+### 4. Centralized LLM Gateway (`backend/workline/llm/`)
+- **Multi-Provider Routing:** Centralized `LLMGateway` supporting AWS Bedrock (`BedrockProvider`) and offline local mock (`LocalMockProvider`).
+- **Telemetry & Costs:** Tracks token usage (prompt, completion) and estimated cost in USD.
+- **Offline Reliability:** Automatically falls back to deterministic local mock provider in development or CI/CD environments without cloud credentials.
+
+### 5. Unified Retrieval & Evidence Discovery (`backend/workline/retrieval_service/`)
+- Consolidated multi-source knowledge search combining vector embeddings (Qdrant), graph relationships (SurrealDB), and verified domain specifications (e.g., IPC-2221, IPC-7351) to return verified `Evidence` records with citations.
+
+### 6. Security, RBAC & 3-Tier Action Governance (`backend/workline/security/`)
+- **Role-Based Access Control:** Explicit roles (`ADMIN`, `ENGINEER`, `REVIEWER`, `PROCUREMENT`, `AGENT`).
+- **3-Tier Action Separation:**
+  - `RECOMMENDATION`: Autonomous read/analysis and proposals generated by agents.
+  - `AUTHORIZED_ACTION`: Formal sign-off and approval by human engineers/reviewers.
+  - `EXECUTED_ACTION`: State mutations, physical orders, or procurement dispatches. Autonomous agents are strictly barred from executing Tier 3 actions directly.
+
+### 7. Immutable Append-Only Audit Trail (`backend/workline/audit/`)
+- Thread-safe ledger capturing structured `AuditEvent` objects with actor identity, role, timestamp, correlation ID, and project context.
+
+### 8. Observability & Tracing (`backend/workline/observability/`)
+- Injects `X-Correlation-ID` and latency tracking (`X-Process-Time`) via ASGI `ObservabilityMiddleware`.
+- In-memory Prometheus-compatible `MetricsCollector` reporting request and job status metrics at `/api/observability/metrics`.
+
+### 9. Lifecycle Stage Gates (`backend/workline/pipeline/gates.py`)
+- **Thermal Safety Gate:** Rejects hardware releases if peak simulated temperature exceeds safe operating thresholds (>105°C).
+- **BOM Sourcing Gate:** Enforces human reviewer sign-off and blocks procurement if any component is obsolete, end-of-life (EOL), or discontinued.
 
 ---
 
-## Command Line Interface (`wline`)
+## Canonical Command Line Interface (`wline`)
 
-Workline provides a command-line interface (`wline`) to operate the complete engineering lifecycle:
+The canonical user-facing CLI command is **`wline`**:
 
 ```bash
-# General & Workspace
+# Core Workspace & Project Management
 wline init
+wline project create "Autonomous-Sensor" --description "IoT telemetry board"
 wline project list
-wline project open <name>
+wline project open <project-id>
 
-# Requirements & Validation
-wline requirement list
-wline component validate <id>
+# ArmourFlow Control Fabric & Domain Agents
+wline agents list
+wline agents info 14
+wline task run --capability thermal_analysis --project demo
+wline workflow run pcb_end_to_end --project demo
+wline engineering simulation --project demo
+wline engineering optimize --project demo
+wline evidence search "IPC-2221 clearance"
+wline documents generate --type architecture_spec
+wline security audit --project demo
+wline eval run --benchmark standard
+wline system health
 
-# Decision Support
-wline decision compare <id1> <id2>
-wline decision approve <id>
-
-# BOM & Procurement
-wline bom create
-wline bom validate
-wline procurement package
-
-# PCB & Multi-Physics Simulation
+# Asynchronous Jobs, PCB & Multi-Physics
 wline pcb create --width 100 --height 80
 wline pcb validate
 wline pcb analyze
@@ -79,46 +109,39 @@ wline pcb export --format kicad
 
 ---
 
-## Multi-Physics Simulation & Cross-Validation
+## Technology Stack
 
-```
-PCB DESIGN
-    ↓
-DESIGN VALIDATION
-    ↓
-SIMULATION ORCHESTRATOR
-    ├── SPICE → electrical
-    ├── Thermal Solver → thermal
-    ├── SI/PI Solver → signal/power integrity
-    └── PINN → fast surrogate prediction
-    ↓
-RESULT NORMALIZATION
-    ↓
-CROSS-VALIDATION
-    ↓
-PASS / FAIL / WARNING / UNKNOWN
-    ↓
-ENGINEERING REVIEW
-```
-
-- Discrepancy thresholds:
-  - $\le 5\%$ relative error: `PASS`
-  - $5\% - 15\%$ relative error: `WARNING`
-  - $> 15\%$ relative error: `FAIL` (Authoritative reference numerical solver takes precedence)
+- **Backend:** Python 3.12+, FastAPI, Pydantic v2, Typer, Rich, Strawberry GraphQL, NumPy, SciPy, PyTorch
+- **Frontend:** Next.js 14, React 19, Tailwind CSS, Lucide Icons, TypeScript
+- **Databases & Storage:**
+  - **SurrealDB:** Relational, document, and graph database for project entities, constraints, and relationships.
+  - **Qdrant:** Vector database for semantic datasheet retrieval and design pattern discovery.
+  - **SQLite:** In-memory and local ACID storage fallback for zero-dependency development.
+- **AI & Reasoning:** Google Agent Development Kit (ADK), Gemini, AWS Bedrock, LlamaIndex.
+- **Physics & Simulation:**
+  - SPICE nodal electrical solver
+  - 2D finite-difference steady-state thermal conduction solver
+  - Transmission line signal and power integrity (SI/PI) solver
+  - Physics-Informed Neural Network (PINN) fast thermal surrogate model
+- **Procurement & Settlement:** Multi-distributor search engine (DigiKey, Mouser, Robu, Robocraze) and Algorand x402 payment protocol.
+- **VCS & Project Bundles:** Native Git & GitHub integration with `.wlipjt` deterministic bundles.
 
 ---
 
-## Testing & Verification
+## Architecture Decision Records (ADRs)
 
-- **Automated Regression Suite:** 302 passed out of 302 unit/integration tests (100%).
-- **TypeScript Static Verification:** Clean build with 0 type errors.
-- **Testing Status:** Baseline frozen for full end-to-end multi-level verification (Level 0 through Phase 10K).
+Key architectural decisions are documented under [`docs/architecture/adr/`](docs/architecture/adr/):
+- **`ADR-001`**: Asynchronous Execution Engine & Dead-Letter Queue (DLQ)
+- **`ADR-002`**: Durable Agent State, Checkpoints & Secret Scrubbing
+- **`ADR-003`**: Pluggable Artifact Storage Abstraction
+- **`ADR-004`**: Centralized LLM Gateway & Offline Mock Provider
+- **`ADR-005`**: 3-Tier Action Separation & Lifecycle Governance Gates
 
 ---
 
-## Security & Invariants
+## Testing & Quality Gates
 
-- Deterministic numerical decisions are executed by code, not generative models.
-- Human engineering review and sign-off are required for architectural decisions, BOM approvals, and PCB releases.
-- Multi-tenant tenant/project isolation enforced across all database queries and vector indexes.
-- No automated financial order execution without explicit human x402 approval.
+- **Canonical CLI Tests:** 125/125 passing (`tests/cli/`)
+- **Upgraded Architecture Subsystems:** 10/10 passing (`tests/workline/test_upgraded_architecture.py`)
+- **Platform E2E & GraphQL Suites:** Full test coverage across GraphQL queries/mutations and control fabric routing.
+- **Zero-Credential Testing:** Fully functional test execution offline without external cloud API dependencies.
