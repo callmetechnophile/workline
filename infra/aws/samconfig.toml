@@ -1,32 +1,33 @@
 version = 0.1
+
 [default]
 [default.deploy]
 [default.deploy.parameters]
 stack_name = "workline-platform-dev"
-s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket"
+resolve_s3 = true
 s3_prefix = "workline-platform-dev"
 region = "us-east-1"
-confirm_changeset = true
-capabilities = "CAPABILITY_IAM CAPABILITY_AUTO_EXPAND"
+confirm_changeset = false
+capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND"
 parameter_overrides = "Environment=\"dev\""
 image_repositories = []
 
 [staging]
 [staging.deploy.parameters]
 stack_name = "workline-platform-staging"
-s3_bucket = "workline-deployment-artifacts-staging"
+resolve_s3 = true
 s3_prefix = "workline-platform-staging"
 region = "us-east-1"
 confirm_changeset = true
-capabilities = "CAPABILITY_IAM CAPABILITY_AUTO_EXPAND"
+capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND"
 parameter_overrides = "Environment=\"staging\""
 
 [production]
 [production.deploy.parameters]
 stack_name = "workline-platform-prod"
-s3_bucket = "workline-deployment-artifacts-prod"
+resolve_s3 = true
 s3_prefix = "workline-platform-prod"
 region = "us-east-1"
 confirm_changeset = true
-capabilities = "CAPABILITY_IAM CAPABILITY_AUTO_EXPAND"
+capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND"
 parameter_overrides = "Environment=\"prod\""
