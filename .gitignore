@@ -12,6 +12,7 @@ coverage/
 .coverage
 .netlify/
 .vercel/
+.aws-sam/
 
 # Python Virtual Environment & Caches
 .venv/

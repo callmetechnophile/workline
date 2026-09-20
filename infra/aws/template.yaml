@@ -20,9 +20,6 @@ Parameters:
     Default: t3.small.search
     Description: OpenSearch cluster instance type
 
-Conditions:
-  UseCognitoAuth: !Not [!Equals [!Ref CognitoUserPoolArn, '']]
-
 Globals:
   Function:
     Timeout: 30
@@ -38,11 +35,46 @@ Globals:
         WORKLINE_SQS_DLQ_URL: !Ref JobDLQ
         EVENTBRIDGE_BUS_NAME: !Ref PlatformEventBus
         SNS_ALERTS_TOPIC_ARN: !Ref PlatformAlertsTopic
-        STEP_FUNCTIONS_WORKFLOW_ARN: !Ref MultiAgentStateMachine
+        STEP_FUNCTIONS_WORKFLOW_ARN: !Sub 'arn:${AWS::Partition}:states:${AWS::Region}:${AWS::AccountId}:stateMachine:workline-multi-agent-orchestrator-${Environment}'
+        COGNITO_USER_POOL_ID: !Ref WorklineUserPool
+        COGNITO_APP_CLIENT_ID: !Ref WorklineUserPoolClient
+        COGNITO_JWKS_URL: !Sub 'https://cognito-idp.${AWS::Region}.amazonaws.com/${WorklineUserPool}/.well-known/jwks.json'
 
 Resources:
   # ============================================================================
-  # 1. API GATEWAY (HTTP API)
+  # 0. COGNITO USER POOL & CLIENT (AUTHENTICATION & RBAC)
+  # ============================================================================
+  WorklineUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: !Sub 'workline-users-${Environment}'
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: false
+      AutoVerifiedAttributes:
+        - email
+      UsernameAttributes:
+        - email
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: false
+          RequireUppercase: true
+
+  WorklineUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: !Sub 'workline-client-${Environment}'
+      UserPoolId: !Ref WorklineUserPool
+      GenerateSecret: false
+      ExplicitAuthFlows:
+        - ALLOW_USER_SRP_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+        - ALLOW_USER_PASSWORD_AUTH
+
+  # ============================================================================
+  # 1. API GATEWAY (HTTP API WITH COGNITO JWT AUTHORIZER)
   # ============================================================================
   WorklineHttpApi:
     Type: AWS::Serverless::HttpApi
@@ -63,9 +95,18 @@ Resources:
           - X-Correlation-ID
           - X-Amz-Date
         MaxAge: 600
+      Auth:
+        DefaultAuthorizer: CognitoAuthorizer
+        Authorizers:
+          CognitoAuthorizer:
+            IdentitySource: "$request.header.Authorization"
+            JwtConfiguration:
+              issuer: !Sub 'https://cognito-idp.${AWS::Region}.amazonaws.com/${WorklineUserPool}'
+              audience:
+                - !Ref WorklineUserPoolClient
 
   # ============================================================================
-  # 2. SERVERLESS BACKEND (API GATEWAY -> LAMBDA ASGI ADAPTER)
+  # 2. SERVERLESS BACKEND (AUTHENTICATED API GATEWAY -> LAMBDA ASGI ADAPTER)
   # ============================================================================
   WorklineApiFunction:
     Type: AWS::Serverless::Function
@@ -86,7 +127,7 @@ Resources:
         - SNSPublishMessagePolicy:
             TopicName: !GetAtt PlatformAlertsTopic.TopicName
         - StepFunctionsExecutionPolicy:
-            StateMachineName: !GetAtt MultiAgentStateMachine.Name
+            StateMachineName: !Sub 'workline-multi-agent-orchestrator-${Environment}'
         - CloudWatchPutMetricPolicy: {}
       Events:
         ApiRoot:
@@ -94,13 +135,33 @@ Resources:
           Properties:
             ApiId: !Ref WorklineHttpApi
             Path: /
-            Method: ANY
+            Method: GET
+            Auth:
+              Authorizer: NONE
+        ApiDocs:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref WorklineHttpApi
+            Path: /docs
+            Method: GET
+            Auth:
+              Authorizer: NONE
+        ApiOpenApi:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref WorklineHttpApi
+            Path: /openapi.json
+            Method: GET
+            Auth:
+              Authorizer: NONE
         ApiProxy:
           Type: HttpApi
           Properties:
             ApiId: !Ref WorklineHttpApi
             Path: /{proxy+}
             Method: ANY
+            Auth:
+              Authorizer: CognitoAuthorizer
 
   # ============================================================================
   # 3. DYNAMODB APPLICATION METADATA & IDEMPOTENCY STORE
@@ -313,3 +374,9 @@ Outputs:
   StepFunctionsStateMachineArn:
     Description: AWS Step Functions State Machine ARN
     Value: !Ref MultiAgentStateMachine
+  UserPoolId:
+    Description: Cognito User Pool ID
+    Value: !Ref WorklineUserPool
+  UserPoolClientId:
+    Description: Cognito User Pool Client ID
+    Value: !Ref WorklineUserPoolClient
