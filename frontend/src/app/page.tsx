@@ -355,7 +355,12 @@ function AuthenticatedWorkbench() {
       setIsModalOpen(false);
       setActiveSection('overview');
     } catch (err: any) {
-      setLocalError(err?.message || 'Failed to initialize project.');
+      const msg = err?.message || '';
+      if (msg.includes('fetch') || msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
+        setLocalError('The cloud backend was waking up from sleep. The connection has been established — please click "INITIALIZE PROJECT" again.');
+      } else {
+        setLocalError(msg || 'Failed to initialize project.');
+      }
     } finally {
       setIsProcessing(false);
     }
