@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useCognitoAuth } from '@/lib/CognitoAuthContext';
 import CognitoAuthModal from './CognitoAuthModal';
-import { ShieldCheck, LogOut, ChevronUp, UserCheck } from 'lucide-react';
+import { ShieldCheck, LogOut, ChevronUp, ChevronDown, UserCheck } from 'lucide-react';
 
 interface CognitoUserButtonProps {
   direction?: 'up' | 'down';
@@ -11,7 +11,7 @@ interface CognitoUserButtonProps {
 }
 
 export default function CognitoUserButton({
-  direction = 'up',
+  direction = 'down',
   className = '',
 }: CognitoUserButtonProps) {
   const { isSignedIn, userEmail, signOut } = useCognitoAuth();
@@ -63,9 +63,13 @@ export default function CognitoUserButton({
           </span>
         </div>
 
-        {/* Clearly visible up arrow sign */}
+        {/* Direction-aware arrow icon: ChevronUp at bottom of screen, ChevronDown at top of screen */}
         <div className="p-1 rounded bg-slate-800 border border-slate-650 group-hover:bg-slate-700 group-hover:border-slate-500 transition-colors shrink-0 flex items-center justify-center">
-          <ChevronUp className="w-3.5 h-3.5 text-white stroke-[2.5]" />
+          {direction === 'up' ? (
+            <ChevronUp className="w-3.5 h-3.5 text-white stroke-[2.5]" />
+          ) : (
+            <ChevronDown className="w-3.5 h-3.5 text-white stroke-[2.5]" />
+          )}
         </div>
       </button>
 
