@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { SignInButton, SignUpButton } from '@clerk/nextjs';
+import { useCognitoAuth } from '@/lib/CognitoAuthContext';
+import CognitoUserButton from '@/components/auth/CognitoUserButton';
 import {
   Sparkles,
   X,
@@ -97,6 +99,20 @@ import EngineeringBackground from '@/components/EngineeringBackground';
    No engineering data. No sidebar. No project context.
    ================================================================ */
 function PublicLandingPage() {
+  const { signInDemo } = useCognitoAuth();
+  const [isDemoSigningIn, setIsDemoSigningIn] = useState(false);
+
+  const handleDemoSignIn = async () => {
+    setIsDemoSigningIn(true);
+    try {
+      await signInDemo();
+    } catch (e) {
+      console.error('Demo sign in failed:', e);
+    } finally {
+      setIsDemoSigningIn(false);
+    }
+  };
+
   return (
     <div className="h-screen max-h-screen overflow-hidden bg-slate-950 text-slate-100 flex flex-col justify-between relative select-none">
       {/* 30% Blurry Engineering Background Layer (Robotics, Electronics, Code, AI) */}
@@ -112,16 +128,7 @@ function PublicLandingPage() {
             </span>
           </div>
           <div className="flex items-center gap-2.5">
-            <SignInButton mode="modal">
-              <button className="text-xs font-mono font-semibold px-3.5 py-1.5 rounded border border-slate-700/80 bg-slate-900/80 hover:bg-slate-800 text-slate-200 transition-all cursor-pointer backdrop-blur-sm">
-                Sign In
-              </button>
-            </SignInButton>
-            <SignUpButton mode="modal">
-              <button className="text-xs font-mono font-semibold px-3.5 py-1.5 rounded bg-indigo-600 hover:bg-indigo-500 text-white transition-all cursor-pointer shadow-md shadow-indigo-600/30">
-                Get Started
-              </button>
-            </SignUpButton>
+            <CognitoUserButton />
           </div>
         </div>
       </header>
@@ -148,18 +155,17 @@ function PublicLandingPage() {
             with deterministic verification at every gate.
           </p>
 
-          <div className="flex items-center justify-center gap-3 pt-1 md:pt-2">
-            <SignUpButton mode="modal">
-              <button className="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs sm:text-sm font-semibold shadow-lg shadow-indigo-600/30 transition-all cursor-pointer flex items-center gap-1.5 hover:translate-y-[-1px]">
-                <span>Start Engineering</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            </SignUpButton>
-            <SignInButton mode="modal">
-              <button className="px-5 py-2 border border-slate-700/80 bg-slate-900/80 hover:bg-slate-800 text-slate-200 rounded-lg text-xs sm:text-sm font-medium transition-all cursor-pointer backdrop-blur-sm">
-                Sign In
-              </button>
-            </SignInButton>
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-1 md:pt-2">
+            <button
+              onClick={handleDemoSignIn}
+              disabled={isDemoSigningIn}
+              className="px-5 py-2.5 bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-lg text-xs sm:text-sm font-semibold shadow-lg shadow-indigo-600/30 transition-all cursor-pointer flex items-center gap-2 hover:translate-y-[-1px] disabled:opacity-50"
+            >
+              <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
+              <span>{isDemoSigningIn ? 'Connecting to AWS Cognito...' : 'Launch Workbench (Quick Demo)'}</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+            <CognitoUserButton />
           </div>
 
           {/* Feature Highlights */}
@@ -259,9 +265,8 @@ function AuthenticatedWorkbench() {
     savedHistory,
     isSaving,
     saveSpec,
+    getToken,
   } = useProject();
-
-  const { getToken } = useAuth();
   const [localError, setLocalError] = useState<string | null>(null);
   const [projectDatasheets, setProjectDatasheets] = useState<SingleDatasheet[]>([]);
   const [isGeneratingDatasheets, setIsGeneratingDatasheets] = useState(false);
@@ -985,7 +990,11 @@ function EmptyProjectState({
    Authenticated   → ProjectProvider → AuthenticatedWorkbench
    ================================================================ */
 export default function Home() {
-  const { isSignedIn, isLoaded } = useAuth();
+  const clerkAuth = useAuth();
+  const cognitoAuth = useCognitoAuth();
+
+  const isLoaded = clerkAuth.isLoaded && cognitoAuth.isLoaded;
+  const isSignedIn = clerkAuth.isSignedIn || cognitoAuth.isSignedIn;
 
   if (!isLoaded) {
     return (

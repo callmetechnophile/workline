@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { useAuth } from '@clerk/nextjs';
+import { useCognitoAuth } from '@/lib/CognitoAuthContext';
 
 /**
  * Workline AI — Authoritative Project Context
@@ -72,6 +73,8 @@ export interface ProjectState {
   isSaving: boolean;
   /** Save current spec to user profile */
   saveSpec: () => Promise<void>;
+  /** Get authorization token (Cognito priority) */
+  getToken: () => Promise<string | null>;
 }
 
 const ProjectContext = createContext<ProjectState | undefined>(undefined);
@@ -103,7 +106,20 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [apiBase, setApiBase] = useState('');
 
-  const { getToken, userId } = useAuth();
+  const clerkAuth = useAuth();
+  const cognitoAuth = useCognitoAuth();
+
+  const getToken = useCallback(async (): Promise<string | null> => {
+    try {
+      const cogToken = await cognitoAuth.getToken();
+      if (cogToken) return cogToken;
+    } catch {
+      // Fallback
+    }
+    return (await clerkAuth.getToken().catch(() => null)) || null;
+  }, [cognitoAuth, clerkAuth]);
+
+  const userId = cognitoAuth.userId || clerkAuth.userId;
 
   // Resolve API base URL
   useEffect(() => {
@@ -294,6 +310,7 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
     refreshHistory,
     isSaving,
     saveSpec,
+    getToken,
   };
 
   return (

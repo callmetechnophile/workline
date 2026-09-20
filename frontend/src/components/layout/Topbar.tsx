@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Search, Moon, Sun, ShieldCheck, Sparkles, Terminal, Wallet } from 'lucide-react';
 import { SignInButton, SignUpButton, UserButton, useAuth } from '@clerk/nextjs';
+import CognitoUserButton from '@/components/auth/CognitoUserButton';
 import { peraWallet, WalletConnectionState } from '@/lib/peraWallet';
 
 interface TopbarProps {
@@ -117,23 +118,8 @@ export default function Topbar({
           {isLightMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
         </button>
 
-        {/* Auth Buttons */}
-        {!isSignedIn ? (
-          <div className="flex items-center gap-2">
-            <SignInButton mode="modal">
-              <button className="text-xs font-mono font-semibold px-3 py-1.5 rounded border border-slate-800 bg-slate-900 hover:bg-slate-800 text-slate-300 transition-all cursor-pointer">
-                Sign In
-              </button>
-            </SignInButton>
-            <SignUpButton mode="modal">
-              <button className="text-xs font-mono font-semibold px-3 py-1.5 rounded bg-indigo-600 hover:bg-indigo-500 text-white transition-all cursor-pointer">
-                Sign Up
-              </button>
-            </SignUpButton>
-          </div>
-        ) : (
-          <UserButton />
-        )}
+        {/* AWS Cognito Auth Button */}
+        <CognitoUserButton />
       </div>
     </header>
   );

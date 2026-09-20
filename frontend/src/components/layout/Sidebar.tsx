@@ -24,6 +24,8 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { UserButton, SignInButton, useAuth } from '@clerk/nextjs';
+import { useCognitoAuth } from '@/lib/CognitoAuthContext';
+import CognitoUserButton from '@/components/auth/CognitoUserButton';
 
 export type NavSection = 
   | 'overview'
@@ -62,7 +64,9 @@ export default function Sidebar({
   projectName,
   hasProject,
 }: SidebarProps) {
-  const { isSignedIn } = useAuth();
+  const clerkAuth = useAuth();
+  const cognitoAuth = useCognitoAuth();
+  const isSignedIn = clerkAuth.isSignedIn || cognitoAuth.isSignedIn;
 
   const engineeringNavItems = [
     { id: 'overview' as NavSection, label: 'Overview', icon: FolderKanban },
@@ -226,22 +230,20 @@ export default function Sidebar({
       {/* User Account Section */}
       <div className="p-3 border-t border-slate-800 bg-slate-950/90 flex items-center justify-between">
         {isSignedIn ? (
-          <div className="flex items-center gap-3 w-full">
-            <UserButton />
-            <div className="flex flex-col text-left overflow-hidden">
-              <span className="text-xs font-semibold text-slate-200 truncate">Engineer Profile</span>
+          <div className="flex items-center gap-2.5 w-full">
+            <CognitoUserButton />
+            <div className="flex flex-col text-left overflow-hidden min-w-0">
+              <span className="text-xs font-semibold text-slate-200 truncate">
+                {cognitoAuth.userEmail || 'Engineer Profile'}
+              </span>
               <span className="text-[10px] text-emerald-400 font-mono flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Verified Session
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> AWS Cognito
               </span>
             </div>
           </div>
         ) : (
-          <div className="w-full flex items-center justify-between gap-2">
-            <SignInButton mode="modal">
-              <button className="w-full py-1.5 px-3 text-xs font-mono font-bold rounded border border-slate-700 bg-slate-900 hover:bg-slate-800 text-slate-200 transition-all cursor-pointer">
-                Sign In
-              </button>
-            </SignInButton>
+          <div className="w-full">
+            <CognitoUserButton />
           </div>
         )}
       </div>
