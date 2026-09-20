@@ -1,0 +1,1251 @@
+version: 1.0.0
+cli: wline
+platform: Workline Engineering Lifecycle Platform
+commands:
+- id: system.status
+  command: wline system status
+  description: Display platform version, registered agent count, and active runtime
+    layers
+  category: system
+  status: active
+  backend: armourflow.fabric.fabric.AgentControlFabric
+  auth_required: false
+  roles:
+  - PUBLIC
+  sync_mode: synchronous-read
+  arguments: []
+  options:
+  - --json
+  output: structured-json-or-table
+  exit_codes:
+  - 0
+  - 5
+  deprecated: false
+  replacement: null
+- id: system.health
+  command: wline system health
+  description: Run live health probes across fabric, state DB, model provider, and
+    security boundary
+  category: system
+  status: active
+  backend: armourflow.fabric.fabric.AgentControlFabric.health_check
+  auth_required: false
+  roles:
+  - PUBLIC
+  sync_mode: synchronous-read
+  arguments: []
+  options:
+  - --json
+  output: structured-json-or-table
+  exit_codes:
+  - 0
+  - 5
+  deprecated: false
+  replacement: null
+- id: system.version
+  command: wline system version
+  description: Show CLI version, protocol version, and agent manifest schema version
+  category: system
+  status: active
+  backend: cli.wline.__version__
+  auth_required: false
+  roles:
+  - PUBLIC
+  sync_mode: synchronous-read
+  arguments: []
+  options:
+  - --json
+  output: structured-json-or-text
+  exit_codes:
+  - 0
+  deprecated: false
+  replacement: null
+- id: system.diagnostics
+  command: wline system diagnostics
+  description: Execute 13-point configuration and connectivity verification suite
+  category: system
+  status: active
+  backend: armourflow.config.validation.ConfigurationValidator
+  auth_required: false
+  roles:
+  - PUBLIC
+  sync_mode: synchronous-read
+  arguments: []
+  options:
+  - --json
+  output: structured-json-or-table
+  exit_codes:
+  - 0
+  - 3
+  deprecated: false
+  replacement: null
+- id: auth.login
+  command: wline auth login
+  description: Authenticate CLI against Workline Cloud Gateway (R1)
+  category: auth
+  status: active
+  backend: cli.wline.core.workspace.update_workspace_config
+  auth_required: false
+  roles:
+  - PUBLIC
+  sync_mode: synchronous
+  arguments: []
+  options:
+  - --token
+  - --url
+  output: status-message
+  exit_codes:
+  - 0
+  - 1
+  - 4
+  deprecated: false
+  replacement: null
+- id: auth.logout
+  command: wline auth logout
+  description: Clear local authentication session and tokens
+  category: auth
+  status: active
+  backend: cli.wline.core.workspace.update_workspace_config
+  auth_required: false
+  roles:
+  - PUBLIC
+  sync_mode: synchronous
+  arguments: []
+  options: []
+  output: status-message
+  exit_codes:
+  - 0
+  deprecated: false
+  replacement: null
+- id: auth.whoami
+  command: wline auth whoami
+  description: Display current user identity and active execution mode (Local/Cloud)
+  category: auth
+  status: active
+  backend: cli.wline.core.workspace.get_workspace_config
+  auth_required: false
+  roles:
+  - PUBLIC
+  sync_mode: synchronous-read
+  arguments: []
+  options: []
+  output: identity-panel
+  exit_codes:
+  - 0
+  deprecated: false
+  replacement: null
+- id: config.list
+  command: wline config list
+  description: List workspace paths, config location, and active project
+  category: config
+  status: active
+  backend: cli.wline.core.workspace.get_workspace_config
+  auth_required: false
+  roles:
+  - PUBLIC
+  sync_mode: synchronous-read
+  arguments: []
+  options: []
+  output: table
+  exit_codes:
+  - 0
+  deprecated: false
+  replacement: null
+- id: config.set
+  command: wline config set <key> <value>
+  description: Update workspace or CLI setting key
+  category: config
+  status: active
+  backend: cli.wline.core.workspace.update_workspace_config
+  auth_required: false
+  roles:
+  - PUBLIC
+  sync_mode: synchronous
+  arguments:
+  - key
+  - value
+  options: []
+  output: status-message
+  exit_codes:
+  - 0
+  - 1
+  - 2
+  deprecated: false
+  replacement: null
+- id: project.create
+  command: wline project create
+  description: Create new engineering project with manifest, directories, and Git
+    repo
+  category: project
+  status: active
+  backend: cli.wline.core.workspace.create_project
+  auth_required: false
+  roles:
+  - PUBLIC
+  sync_mode: synchronous
+  arguments: []
+  options:
+  - --name
+  - --description
+  - --domain
+  - --budget
+  - --timeline
+  - --complexity
+  - --platform
+  output: manifest-summary
+  exit_codes:
+  - 0
+  - 1
+  - 2
+  deprecated: false
+  replacement: null
+- id: project.list
+  command: wline project list
+  description: List all engineering projects in workspace
+  category: project
+  status: active
+  backend: cli.wline.core.workspace.list_projects
+  auth_required: false
+  roles:
+  - PUBLIC
+  sync_mode: synchronous-read
+  arguments: []
+  options:
+  - --json
+  output: table-or-json
+  exit_codes:
+  - 0
+  deprecated: false
+  replacement: null
+- id: project.open
+  command: wline project open <name>
+  description: Set specified project as the active project for subsequent commands
+  category: project
+  status: active
+  backend: cli.wline.core.paths.set_active_project_name
+  auth_required: false
+  roles:
+  - PUBLIC
+  sync_mode: synchronous
+  arguments:
+  - name
+  options: []
+  output: status-message
+  exit_codes:
+  - 0
+  - 1
+  deprecated: false
+  replacement: null
+- id: project.inspect
+  command: wline project inspect [name]
+  description: Inspect full metadata, constraints, budget, and timeline in project
+    manifest
+  category: project
+  status: active
+  backend: cli.wline.core.workspace.find_project
+  auth_required: false
+  roles:
+  - PUBLIC
+  sync_mode: synchronous-read
+  arguments:
+  - name?
+  options:
+  - --json
+  output: panel-or-json
+  exit_codes:
+  - 0
+  - 2
+  deprecated: false
+  replacement: null
+- id: project.status
+  command: wline project status [name]
+  description: Display lifecycle stage progression and active agent execution status
+  category: project
+  status: active
+  backend: cli.wline.ui.tables.render_lifecycle_status
+  auth_required: false
+  roles:
+  - PUBLIC
+  sync_mode: synchronous-read
+  arguments:
+  - name?
+  options: []
+  output: lifecycle-table
+  exit_codes:
+  - 0
+  - 1
+  deprecated: false
+  replacement: null
+- id: project.delete
+  command: wline project delete <name>
+  description: Delete project directory and manifest from workspace
+  category: project
+  status: active
+  backend: cli.wline.core.workspace.delete_project_dir
+  auth_required: true
+  roles:
+  - ADMIN
+  - OWNER
+  sync_mode: synchronous
+  arguments:
+  - name
+  options:
+  - --yes
+  output: status-message
+  exit_codes:
+  - 0
+  - 1
+  - 2
+  deprecated: false
+  replacement: null
+- id: project.export
+  command: wline project export [file]
+  description: Package project into verified .wlipjt archive
+  category: project
+  status: active
+  backend: backend.workline.project.export_service.export_service
+  auth_required: false
+  roles:
+  - ENGINEER
+  - ADMIN
+  sync_mode: synchronous
+  arguments:
+  - file?
+  options:
+  - --project
+  - --include-artifacts
+  - --include-vectors
+  - --include-git-history
+  - --force
+  output: archive-panel
+  exit_codes:
+  - 0
+  - 1
+  deprecated: false
+  replacement: null
+- id: project.import
+  command: wline project import <file>
+  description: Restore or merge a .wlipjt package into workspace
+  category: project
+  status: active
+  backend: backend.workline.project.import_service.import_service
+  auth_required: false
+  roles:
+  - ENGINEER
+  - ADMIN
+  sync_mode: synchronous
+  arguments:
+  - file
+  options:
+  - --name
+  - --strategy
+  - --overwrite
+  output: import-panel
+  exit_codes:
+  - 0
+  - 1
+  deprecated: false
+  replacement: null
+- id: agents.list
+  command: wline agents list
+  description: Enumerate all 27 internal Workline domain agents individually
+  category: agents
+  status: active
+  backend: armourflow.registry.registry.AuthoritativeAgentRegistry.list_agents
+  auth_required: false
+  roles:
+  - PUBLIC
+  sync_mode: synchronous-read
+  arguments: []
+  options:
+  - --json
+  output: table-or-json
+  exit_codes:
+  - 0
+  deprecated: false
+  replacement: null
+- id: agents.info
+  command: wline agents info <agent-id>
+  description: Display authoritative manifest metadata for an internal agent
+  category: agents
+  status: active
+  backend: armourflow.registry.registry.AuthoritativeAgentRegistry.get_agent
+  auth_required: false
+  roles:
+  - PUBLIC
+  sync_mode: synchronous-read
+  arguments:
+  - agent-id
+  options:
+  - --json
+  output: manifest-panel-or-json
+  exit_codes:
+  - 0
+  - 2
+  deprecated: false
+  replacement: null
+- id: agents.capabilities
+  command: wline agents capabilities [agent-id]
+  description: Query capabilities for a specific agent or across the platform
+  category: agents
+  status: active
+  backend: armourflow.registry.registry.AuthoritativeAgentRegistry.get_all_capabilities
+  auth_required: false
+  roles:
+  - PUBLIC
+  sync_mode: synchronous-read
+  arguments:
+  - agent-id?
+  options:
+  - --json
+  output: table-or-json
+  exit_codes:
+  - 0
+  - 2
+  deprecated: false
+  replacement: null
+- id: agents.health
+  command: wline agents health
+  description: Inspect importability and live health for all 27 internal agents
+  category: agents
+  status: active
+  backend: armourflow.registry.registry.AuthoritativeAgentRegistry.check_health
+  auth_required: false
+  roles:
+  - PUBLIC
+  sync_mode: synchronous-read
+  arguments: []
+  options:
+  - --json
+  output: table-or-json
+  exit_codes:
+  - 0
+  - 1
+  deprecated: false
+  replacement: null
+- id: agent.list
+  command: wline agent list
+  description: List registered remote external agents (Bindu/Corsair)
+  category: agent
+  status: active
+  backend: backend.workline.interoperability.registry.agent_registry.list_agents
+  auth_required: true
+  roles:
+  - ENGINEER
+  - ADMIN
+  sync_mode: synchronous-read
+  arguments: []
+  options:
+  - --protocol
+  output: table
+  exit_codes:
+  - 0
+  deprecated: false
+  replacement: null
+- id: agent.discover
+  command: wline agent discover
+  description: Discover available remote external agents across network providers
+  category: agent
+  status: active
+  backend: backend.workline.interoperability.registry.agent_registry.discover_agents
+  auth_required: true
+  roles:
+  - ENGINEER
+  - ADMIN
+  sync_mode: synchronous-read
+  arguments: []
+  options:
+  - --protocol
+  - --capability
+  output: discovery-list
+  exit_codes:
+  - 0
+  deprecated: false
+  replacement: null
+- id: agent.info
+  command: wline agent info <agent-id>
+  description: Display details, trust score, and protocol for external agent
+  category: agent
+  status: active
+  backend: backend.workline.interoperability.registry.agent_registry.get_agent
+  auth_required: true
+  roles:
+  - ENGINEER
+  - ADMIN
+  sync_mode: synchronous-read
+  arguments:
+  - agent-id
+  options: []
+  output: details-panel
+  exit_codes:
+  - 0
+  - 1
+  deprecated: false
+  replacement: null
+- id: agent.task
+  command: wline agent task <agent-id> <capability>
+  description: Delegate engineering subtask to external agent with human approval
+  category: agent
+  status: active
+  backend: backend.workline.interoperability.gateway.interoperability_gateway.submit_task
+  auth_required: true
+  roles:
+  - ENGINEER
+  - ADMIN
+  sync_mode: asynchronous-dispatch
+  arguments:
+  - agent-id
+  - capability
+  options:
+  - --team
+  - --yes
+  output: task-summary
+  exit_codes:
+  - 0
+  - 1
+  - 4
+  deprecated: false
+  replacement: null
+- id: agent.cancel
+  command: wline agent cancel <task-id>
+  description: Cancel active external agent subtask
+  category: agent
+  status: active
+  backend: backend.workline.interoperability.gateway.interoperability_gateway.cancel_task
+  auth_required: true
+  roles:
+  - ENGINEER
+  - ADMIN
+  sync_mode: synchronous
+  arguments:
+  - task-id
+  options: []
+  output: status-message
+  exit_codes:
+  - 0
+  - 1
+  deprecated: false
+  replacement: null
+- id: agent.status
+  command: wline agent status <task-id>
+  description: Inspect external agent task execution state
+  category: agent
+  status: active
+  backend: backend.workline.interoperability.gateway.interoperability_gateway.get_task
+  auth_required: true
+  roles:
+  - ENGINEER
+  - ADMIN
+  sync_mode: synchronous-read
+  arguments:
+  - task-id
+  options: []
+  output: task-details
+  exit_codes:
+  - 0
+  - 1
+  deprecated: false
+  replacement: null
+- id: task.create
+  command: wline task create
+  description: Enqueue task to Control Fabric and async Job Queue with durable idempotency
+  category: task
+  status: active
+  backend: armourflow.fabric.fabric.AgentControlFabric.submit_task
+  auth_required: true
+  roles:
+  - MEMBER
+  - ENGINEER
+  - ADMIN
+  sync_mode: asynchronous-enqueue
+  arguments: []
+  options:
+  - --agent
+  - --capability
+  - --project
+  - --payload
+  - --json
+  output: task-id-and-state
+  exit_codes:
+  - 0
+  - 2
+  - 4
+  - 5
+  deprecated: false
+  replacement: null
+- id: task.run
+  command: wline task run
+  description: Enqueue task and wait for background worker execution result
+  category: task
+  status: active
+  backend: armourflow.fabric.fabric.AgentControlFabric.submit_task
+  auth_required: true
+  roles:
+  - MEMBER
+  - ENGINEER
+  - ADMIN
+  sync_mode: synchronous-wait
+  arguments:
+  - task-id?
+  options:
+  - --agent
+  - --capability
+  - --project
+  - --payload
+  - --json
+  output: result-panel-or-json
+  exit_codes:
+  - 0
+  - 2
+  - 4
+  - 5
+  - 6
+  deprecated: false
+  replacement: null
+- id: task.status
+  command: wline task status <task-id>
+  description: Retrieve lifecycle state, worker progress, and output of task
+  category: task
+  status: active
+  backend: armourflow.fabric.fabric.AgentControlFabric.get_task
+  auth_required: true
+  roles:
+  - MEMBER
+  - ENGINEER
+  - ADMIN
+  sync_mode: synchronous-read
+  arguments:
+  - task-id
+  options:
+  - --json
+  - --watch
+  output: task-state-or-json
+  exit_codes:
+  - 0
+  - 2
+  - 6
+  - 8
+  deprecated: false
+  replacement: null
+- id: task.cancel
+  command: wline task cancel <task-id>
+  description: Cancel a queued or executing Control Fabric task
+  category: task
+  status: active
+  backend: armourflow.fabric.fabric.AgentControlFabric.cancel_task
+  auth_required: true
+  roles:
+  - ENGINEER
+  - ADMIN
+  sync_mode: synchronous
+  arguments:
+  - task-id
+  options:
+  - --json
+  output: cancellation-status
+  exit_codes:
+  - 0
+  - 2
+  - 6
+  deprecated: false
+  replacement: null
+- id: task.history
+  command: wline task history
+  description: List task audit trail and history for project
+  category: task
+  status: active
+  backend: armourflow.fabric.fabric.AgentControlFabric.list_tasks
+  auth_required: true
+  roles:
+  - MEMBER
+  - ENGINEER
+  - ADMIN
+  sync_mode: synchronous-read
+  arguments: []
+  options:
+  - --project
+  - --limit
+  - --json
+  output: history-table-or-json
+  exit_codes:
+  - 0
+  deprecated: false
+  replacement: null
+- id: workflow.list
+  command: wline workflow list
+  description: List catalogue of available named engineering workflows
+  category: workflow
+  status: active
+  backend: cli.wline.commands.workflow._WORKFLOWS
+  auth_required: false
+  roles:
+  - PUBLIC
+  sync_mode: synchronous-read
+  arguments: []
+  options:
+  - --json
+  output: workflow-table-or-json
+  exit_codes:
+  - 0
+  deprecated: false
+  replacement: null
+- id: workflow.validate
+  command: wline workflow validate <name>
+  description: Verify workflow capabilities and agent bindings
+  category: workflow
+  status: active
+  backend: armourflow.registry.registry.AuthoritativeAgentRegistry
+  auth_required: false
+  roles:
+  - PUBLIC
+  sync_mode: synchronous-read
+  arguments:
+  - name
+  options:
+  - --json
+  output: validation-report-or-json
+  exit_codes:
+  - 0
+  - 2
+  - 9
+  deprecated: false
+  replacement: null
+- id: workflow.run
+  command: wline workflow run <name>
+  description: Dispatch named workflow through Control Fabric
+  category: workflow
+  status: active
+  backend: armourflow.fabric.fabric.AgentControlFabric.submit_task
+  auth_required: true
+  roles:
+  - ENGINEER
+  - ADMIN
+  sync_mode: asynchronous-dispatch
+  arguments:
+  - name
+  options:
+  - --project
+  - --payload
+  - --json
+  output: workflow-result-or-json
+  exit_codes:
+  - 0
+  - 2
+  - 5
+  - 6
+  deprecated: false
+  replacement: null
+- id: workflow.status
+  command: wline workflow status <workflow-id>
+  description: Track execution state of a dispatched workflow task
+  category: workflow
+  status: active
+  backend: armourflow.fabric.fabric.AgentControlFabric.get_task
+  auth_required: true
+  roles:
+  - MEMBER
+  - ENGINEER
+  - ADMIN
+  sync_mode: synchronous-read
+  arguments:
+  - workflow-id
+  options:
+  - --json
+  output: state-panel-or-json
+  exit_codes:
+  - 0
+  - 2
+  deprecated: false
+  replacement: null
+- id: document.ingest
+  command: wline document ingest <file>
+  description: Parse datasheet/spec with Docling, extract entities with spaCy, and
+    index to Qdrant
+  category: document
+  status: active
+  backend: backend.workline.documents.service.document_service.ingest_document
+  auth_required: true
+  roles:
+  - ENGINEER
+  - ADMIN
+  sync_mode: synchronous
+  arguments:
+  - file
+  options:
+  - --project
+  - --id
+  output: ingest-summary
+  exit_codes:
+  - 0
+  - 1
+  - 2
+  deprecated: false
+  replacement: null
+- id: document.list
+  command: wline document list
+  description: List all ingested documents for project
+  category: document
+  status: active
+  backend: backend.workline.documents.service.document_service.list_documents
+  auth_required: true
+  roles:
+  - MEMBER
+  - ENGINEER
+  - ADMIN
+  sync_mode: synchronous-read
+  arguments: []
+  options:
+  - --project
+  output: table
+  exit_codes:
+  - 0
+  deprecated: false
+  replacement: null
+- id: document.generate
+  command: wline document generate
+  description: Author technical documentation via agent.27 (TechDocAgent)
+  category: document
+  status: active
+  backend: armourflow.fabric.fabric.AgentControlFabric.submit_task
+  auth_required: true
+  roles:
+  - ENGINEER
+  - ADMIN
+  sync_mode: asynchronous-dispatch
+  arguments: []
+  options:
+  - --title
+  - --type
+  - --project
+  - --payload
+  output: document-panel
+  exit_codes:
+  - 0
+  - 1
+  - 6
+  deprecated: false
+  replacement: null
+- id: engineering.simulation
+  command: wline engineering simulation
+  description: Run engineering simulation study via agent.19 (EngineeringSimulationAgent)
+  category: engineering
+  status: active
+  backend: armourflow.fabric.fabric.AgentControlFabric.submit_task
+  auth_required: true
+  roles:
+  - ENGINEER
+  - ADMIN
+  sync_mode: asynchronous-dispatch
+  arguments: []
+  options:
+  - --component
+  - --scenario
+  - --project
+  - --payload
+  output: simulation-panel
+  exit_codes:
+  - 0
+  - 1
+  - 6
+  deprecated: false
+  replacement: null
+- id: engineering.optimize
+  command: wline engineering optimize
+  description: Execute Pareto design optimization via agent.20 (EngineeringOptimizationAgent)
+  category: engineering
+  status: active
+  backend: armourflow.fabric.fabric.AgentControlFabric.submit_task
+  auth_required: true
+  roles:
+  - ENGINEER
+  - ADMIN
+  sync_mode: asynchronous-dispatch
+  arguments: []
+  options:
+  - --design
+  - --objectives
+  - --project
+  - --payload
+  output: optimization-panel
+  exit_codes:
+  - 0
+  - 1
+  - 6
+  deprecated: false
+  replacement: null
+- id: engineering.dfm
+  command: wline engineering dfm
+  description: Run DFM/DFA manufacturability analysis via agent.24 (ManufacturingDFMAgent)
+  category: engineering
+  status: active
+  backend: armourflow.fabric.fabric.AgentControlFabric.submit_task
+  auth_required: true
+  roles:
+  - ENGINEER
+  - ADMIN
+  sync_mode: asynchronous-dispatch
+  arguments: []
+  options:
+  - --component
+  - --project
+  - --payload
+  output: dfm-panel
+  exit_codes:
+  - 0
+  - 1
+  - 6
+  deprecated: false
+  replacement: null
+- id: pcb.create
+  command: wline pcb create
+  description: Construct authoritative PCB unit from BOM with standard footprints
+    and layer stackup
+  category: pcb
+  status: active
+  backend: backend.workline.pcb.services.pcb_service.create_pcb_project
+  auth_required: true
+  roles:
+  - ENGINEER
+  - ADMIN
+  sync_mode: synchronous
+  arguments: []
+  options:
+  - --project
+  - --width
+  - --height
+  output: pcb-summary
+  exit_codes:
+  - 0
+  - 1
+  deprecated: false
+  replacement: null
+- id: pcb.validate
+  command: wline pcb validate
+  description: Run DRC, netlist check, clearance, and thermal rules verification
+  category: pcb
+  status: active
+  backend: backend.workline.pcb.services.pcb_validation_service.validate_pcb_design
+  auth_required: true
+  roles:
+  - ENGINEER
+  - ADMIN
+  sync_mode: synchronous
+  arguments: []
+  options:
+  - --project
+  output: drc-table
+  exit_codes:
+  - 0
+  - 1
+  - 9
+  deprecated: false
+  replacement: null
+- id: pcb.pinn.train
+  command: wline pcb pinn train
+  description: Train Physics-Informed Neural Network surrogate heat conduction model
+  category: pcb
+  status: active
+  backend: backend.workline.pcb.services.physics_service.train_surrogate
+  auth_required: true
+  roles:
+  - ENGINEER
+  - ADMIN
+  sync_mode: synchronous
+  arguments: []
+  options:
+  - --project
+  - --epochs
+  output: training-metrics
+  exit_codes:
+  - 0
+  - 1
+  deprecated: false
+  replacement: null
+- id: pcb.pinn.predict
+  command: wline pcb pinn predict <x> <y> <power>
+  description: Run millisecond inferential thermal prediction at coordinates
+  category: pcb
+  status: active
+  backend: backend.workline.pcb.services.physics_service.predict_temperature
+  auth_required: true
+  roles:
+  - ENGINEER
+  - ADMIN
+  sync_mode: synchronous
+  arguments:
+  - x
+  - y
+  - power
+  options:
+  - --project
+  output: temperature-reading
+  exit_codes:
+  - 0
+  - 1
+  deprecated: false
+  replacement: null
+- id: bom.generate
+  command: wline bom generate
+  description: Generate engineering BOM with landed cost optimization from requirements
+  category: bom
+  status: active
+  backend: backend.workline.procurement.engine.procurement_engine.generate_project_bom
+  auth_required: true
+  roles:
+  - ENGINEER
+  - ADMIN
+  sync_mode: synchronous
+  arguments: []
+  options: []
+  output: bom-table
+  exit_codes:
+  - 0
+  - 1
+  deprecated: false
+  replacement: null
+- id: bom.approve
+  command: wline bom approve [bom-id]
+  description: Lock BOM line items for procurement and ordering
+  category: bom
+  status: active
+  backend: backend.workline.procurement.engine.procurement_engine.approve_bom
+  auth_required: true
+  roles:
+  - ENGINEER
+  - ADMIN
+  sync_mode: synchronous
+  arguments:
+  - bom-id?
+  options: []
+  output: status-message
+  exit_codes:
+  - 0
+  - 1
+  deprecated: false
+  replacement: null
+- id: component.search
+  command: wline component search <query>
+  description: Search hardware components across DigiKey, Mouser, Robu, Robocraze
+  category: component
+  status: active
+  backend: backend.workline.procurement.engine.procurement_engine.search_engine.search_vendors
+  auth_required: false
+  roles:
+  - PUBLIC
+  sync_mode: synchronous-read
+  arguments:
+  - query
+  options:
+  - --limit
+  output: component-list
+  exit_codes:
+  - 0
+  deprecated: false
+  replacement: null
+- id: order.create
+  command: wline order create <bom-id>
+  description: Construct vendor Order Plan and draft orders from approved BOM
+  category: order
+  status: active
+  backend: backend.workline.orders.service.order_service.create_order_plan
+  auth_required: true
+  roles:
+  - ENGINEER
+  - ADMIN
+  sync_mode: synchronous
+  arguments:
+  - bom-id
+  options:
+  - --project
+  output: order-plan-panels
+  exit_codes:
+  - 0
+  - 1
+  deprecated: false
+  replacement: null
+- id: order.approve
+  command: wline order approve <order-id>
+  description: Formally authorize vendor order placement
+  category: order
+  status: active
+  backend: backend.workline.orders.service.order_service.approve_order
+  auth_required: true
+  roles:
+  - ADMIN
+  - OWNER
+  sync_mode: synchronous
+  arguments:
+  - order-id
+  options: []
+  output: approval-confirmation
+  exit_codes:
+  - 0
+  - 1
+  - 4
+  deprecated: false
+  replacement: null
+- id: order.pay
+  command: wline order pay <order-id>
+  description: Authorize settlement session through x402 payment protocol
+  category: order
+  status: active
+  backend: backend.workline.orders.service.order_service.authorize_payment
+  auth_required: true
+  roles:
+  - ADMIN
+  - OWNER
+  sync_mode: synchronous
+  arguments:
+  - order-id
+  options:
+  - --method
+  output: settlement-receipt
+  exit_codes:
+  - 0
+  - 1
+  - 4
+  deprecated: false
+  replacement: null
+- id: payment.status
+  command: wline payment status <payment-id>
+  description: Inspect settlement timestamps, asset, and tx hash (read-only; no private
+    keys)
+  category: payment
+  status: active
+  backend: backend.workline.orders.service.order_service.session_manager.get_session
+  auth_required: true
+  roles:
+  - ENGINEER
+  - ADMIN
+  sync_mode: synchronous-read
+  arguments:
+  - payment-id
+  options: []
+  output: payment-panel
+  exit_codes:
+  - 0
+  deprecated: false
+  replacement: null
+- id: security.audit
+  command: wline security audit
+  description: Run ArmorIQ boundary check and compliance audit via agent.22
+  category: security
+  status: active
+  backend: armourflow.security.armoriq.get_security_boundary
+  auth_required: true
+  roles:
+  - ENGINEER
+  - ADMIN
+  sync_mode: asynchronous-dispatch
+  arguments: []
+  options:
+  - --scope
+  - --project
+  - --payload
+  output: audit-panel
+  exit_codes:
+  - 0
+  - 1
+  deprecated: false
+  replacement: null
+- id: security.scan
+  command: wline security scan
+  description: Execute targeted STRIDE or PASTA cyber-physical threat scan
+  category: security
+  status: active
+  backend: armourflow.fabric.fabric.AgentControlFabric.submit_task
+  auth_required: true
+  roles:
+  - ENGINEER
+  - ADMIN
+  sync_mode: asynchronous-dispatch
+  arguments: []
+  options:
+  - --target
+  - --model
+  - --project
+  output: threat-matrix
+  exit_codes:
+  - 0
+  - 1
+  deprecated: false
+  replacement: null
+- id: doctor
+  command: wline doctor
+  description: Run comprehensive local environment and runtime diagnostics
+  category: diagnostics
+  status: active
+  backend: cli.wline.commands.doctor.doctor_command
+  auth_required: false
+  roles:
+  - PUBLIC
+  sync_mode: synchronous-read
+  arguments: []
+  options: []
+  output: diagnostics-table
+  exit_codes:
+  - 0
+  - 1
+  deprecated: false
+  replacement: null
+- id: status.legacy
+  command: wline status
+  description: Root alias to project status
+  category: status
+  status: deprecated
+  backend: cli.wline.commands.project.project_status
+  auth_required: false
+  roles:
+  - PUBLIC
+  sync_mode: synchronous-read
+  arguments:
+  - name?
+  options: []
+  output: lifecycle-table
+  exit_codes:
+  - 0
+  - 1
+  deprecated: true
+  replacement: wline project status
+- id: agent.run.legacy
+  command: wline agent run <task>
+  description: Legacy inline multi-agent execution
+  category: agent
+  status: legacy
+  backend: backend.workline.agents.runtime.agent_runtime.start_execution
+  auth_required: true
+  roles:
+  - ENGINEER
+  sync_mode: asynchronous-dispatch
+  arguments:
+  - task
+  options:
+  - --stage
+  output: legacy-state
+  exit_codes:
+  - 0
+  - 1
+  deprecated: true
+  replacement: wline task run
+- id: documents.generate.legacy
+  command: wline documents generate
+  description: Plural document command
+  category: documents
+  status: deprecated
+  backend: cli.wline.commands.documents.documents_generate
+  auth_required: true
+  roles:
+  - ENGINEER
+  sync_mode: asynchronous-dispatch
+  arguments: []
+  options:
+  - --title
+  - --type
+  - --project
+  - --payload
+  output: panel
+  exit_codes:
+  - 0
+  - 1
+  deprecated: true
+  replacement: wline document generate

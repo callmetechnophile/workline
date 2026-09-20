@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import Response
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Any, Dict
 from backend.auth import get_current_user
 from backend.services.calendar_service import (
     generate_calendar_events,
@@ -76,15 +76,23 @@ async def download_ics(project_id: int):
         raise HTTPException(status_code=500, detail=str(e))
 
 class GenerateLinksSchema(BaseModel):
-    project_id: int
-    task_ids: List[str]
-    timezone: str
+    project_id: Optional[Any] = "default"
+    project_name: Optional[str] = "Engineering Project"
+    task_ids: Optional[List[str]] = None
+    tasks: Optional[List[Dict[str, Any]]] = None
+    timezone: Optional[str] = "UTC"
 
 @router.post("/generate-links")
-async def generate_links(payload: GenerateLinksSchema, user_id: str = Depends(get_current_user)):
+async def generate_links(payload: GenerateLinksSchema):
     try:
         from backend.services.google_calendar_export import generate_multiple_event_links
-        return generate_multiple_event_links(payload.project_id, payload.task_ids, payload.timezone)
+        return generate_multiple_event_links(
+            project_id=payload.project_id,
+            task_ids=payload.task_ids or [],
+            timezone=payload.timezone or "UTC",
+            tasks=payload.tasks,
+            project_name=payload.project_name
+        )
     except ValueError as ve:
         raise HTTPException(status_code=404, detail=str(ve))
     except Exception as e:

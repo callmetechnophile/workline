@@ -78,7 +78,161 @@ class CompareComponentsRequest(BaseModel):
     candidate_ids: List[str]
 
 
+class SynthesizeRequirementsRequest(BaseModel):
+    project_id: Optional[str] = "default_project"
+    idea: Optional[str] = None
+    system_specification: Optional[str] = None
+    custom_specifications: Optional[str] = None
+    template: Optional[str] = None
+
+
+class BatchRequirementsRequest(BaseModel):
+    project_id: str
+    requirements: List[Dict[str, Any]]
+    constraints: Optional[List[Dict[str, Any]]] = None
+
+
 # ==================== REQUIREMENT ENDPOINTS ====================
+
+@router.post("/api/requirements/synthesize")
+def synthesize_requirements_endpoint(payload: SynthesizeRequirementsRequest) -> Dict[str, Any]:
+    """
+    Decomposes an engineering idea into structured requirements and constraints,
+    incorporating any custom specifications entered by the user.
+    """
+    from backend.workline.pipeline.idea_understanding import analyze_engineering_idea
+    
+    idea_text = (
+        payload.system_specification
+        or payload.idea
+        or payload.template
+        or "Embedded Electronic Hardware System"
+    ).strip()
+    proj_id = (payload.project_id or "default_project").strip()
+
+    res = analyze_engineering_idea(
+        user_idea=idea_text,
+        project_id=proj_id,
+        custom_specifications=payload.custom_specifications,
+    )
+
+    # Automatically store requirements and constraints in validation service
+    for r in res.get("requirements", []):
+        try:
+            req_cat = getattr(RequirementCategory, (r.get("category") or "ELECTRICAL").upper(), RequirementCategory.ELECTRICAL)
+            req_prio = getattr(RequirementPriority, (r.get("priority") or "HIGH").upper(), RequirementPriority.HIGH)
+            validation_service.create_requirement(
+                requirement_id=r.get("requirement_id") or r.get("id"),
+                project_id=proj_id,
+                title=r.get("title"),
+                description=r.get("description", ""),
+                category=req_cat,
+                parameter=r.get("parameter"),
+                target_value=str(r.get("target_value")) if r.get("target_value") is not None else None,
+                unit=r.get("unit"),
+                priority=req_prio,
+                verification_method=r.get("verification_method", "Simulation"),
+                source=r.get("source", "Idea Decomposition"),
+            )
+        except Exception:
+            pass
+
+    for c in res.get("constraints", []):
+        try:
+            op_str = c.get("operator", "<=")
+            op_enum = ConstraintOperator.LESS_THAN_OR_EQUAL
+            for candidate in ConstraintOperator:
+                if candidate.value == op_str:
+                    op_enum = candidate
+                    break
+            validation_service.create_constraint(
+                constraint_id=c.get("constraint_id") or c.get("id"),
+                property_name=c.get("property") or "limit",
+                operator=op_enum,
+                required_value=str(c.get("required_value") if c.get("required_value") is not None else c.get("value", "")),
+                project_id=proj_id,
+                requirement_id=c.get("requirement_id"),
+                required_unit=c.get("unit") or c.get("required_unit"),
+                category=c.get("type", "TECHNICAL"),
+                severity=ConstraintSeverity.CRITICAL if (c.get("severity") or "").upper() == "CRITICAL" else ConstraintSeverity.HIGH,
+                source=c.get("source", "ENGINEERING_STANDARDS"),
+            )
+        except Exception:
+            pass
+
+    return {
+        "status": "SUCCESS",
+        "project_id": proj_id,
+        "understanding": res.get("understanding", {}),
+        "requirements": res.get("requirements", []),
+        "constraints": res.get("constraints", []),
+        "clarifications_needed": res.get("clarifications_needed", []),
+        "specification_text": res.get("specification_text", ""),
+        "custom_specifications": res.get("custom_specifications", ""),
+    }
+
+
+@router.post("/api/requirements/batch")
+def batch_save_requirements_endpoint(payload: BatchRequirementsRequest) -> Dict[str, Any]:
+    """
+    Saves or replaces requirements and constraints in bulk for a project.
+    """
+    proj_id = payload.project_id
+    saved_reqs = []
+    for r in payload.requirements:
+        try:
+            req_cat = getattr(RequirementCategory, (r.get("category") or "ELECTRICAL").upper(), RequirementCategory.ELECTRICAL)
+            req_prio = getattr(RequirementPriority, (r.get("priority") or "HIGH").upper(), RequirementPriority.HIGH)
+            req = validation_service.create_requirement(
+                requirement_id=r.get("requirement_id") or r.get("id") or f"REQ-{len(saved_reqs)+1:03d}",
+                project_id=proj_id,
+                title=r.get("title"),
+                description=r.get("description", ""),
+                category=req_cat,
+                parameter=r.get("parameter"),
+                target_value=str(r.get("target_value")) if r.get("target_value") is not None else None,
+                unit=r.get("unit"),
+                priority=req_prio,
+                verification_method=r.get("verification_method", "Simulation"),
+                source=r.get("source", "Manual Entry"),
+            )
+            saved_reqs.append(req.model_dump())
+        except Exception:
+            pass
+
+    saved_cons = []
+    if payload.constraints:
+        for c in payload.constraints:
+            try:
+                op_str = c.get("operator", "<=")
+                op_enum = ConstraintOperator.LESS_THAN_OR_EQUAL
+                for candidate in ConstraintOperator:
+                    if candidate.value == op_str:
+                        op_enum = candidate
+                        break
+                con = validation_service.create_constraint(
+                    constraint_id=c.get("constraint_id") or c.get("id") or f"CON-{len(saved_cons)+1:03d}",
+                    property_name=c.get("property") or "limit",
+                    operator=op_enum,
+                    required_value=str(c.get("required_value") if c.get("required_value") is not None else c.get("value", "")),
+                    project_id=proj_id,
+                    requirement_id=c.get("requirement_id"),
+                    required_unit=c.get("unit") or c.get("required_unit"),
+                    category=c.get("category") or c.get("type", "TECHNICAL"),
+                    severity=ConstraintSeverity.CRITICAL if (c.get("severity") or "").upper() == "CRITICAL" else ConstraintSeverity.HIGH,
+                    source=c.get("source", "User Entry"),
+                )
+                saved_cons.append(con.model_dump())
+            except Exception:
+                pass
+
+    return {
+        "status": "SUCCESS",
+        "project_id": proj_id,
+        "requirements_count": len(saved_reqs),
+        "constraints_count": len(saved_cons),
+    }
+
 
 @router.post("/api/requirements", response_model=EngineeringRequirement)
 def create_requirement_endpoint(req: CreateRequirementRequest) -> EngineeringRequirement:

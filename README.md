@@ -118,10 +118,23 @@ wline pcb export --format kicad
 - **Backend:** Python 3.12+, FastAPI, Pydantic v2, Typer, Rich, Strawberry GraphQL, NumPy, SciPy, PyTorch
 - **Frontend:** Next.js 14, React 19, Tailwind CSS, Lucide Icons, TypeScript
 - **Databases & Storage:**
-  - **SurrealDB:** Relational, document, and graph database for project entities, constraints, and relationships.
-  - **Qdrant:** Vector database for semantic datasheet retrieval and design pattern discovery.
-  - **SQLite:** In-memory and local ACID storage fallback for zero-dependency development.
-- **AI & Reasoning:** Google Agent Development Kit (ADK), Gemini, AWS Bedrock, LlamaIndex.
+  - **SurrealDB:** Authoritative relational and knowledge graph database for project entities, constraints, and relationships.
+  - **Qdrant:** Authoritative ANN vector database for semantic datasheet retrieval and design pattern discovery.
+  - **Amazon DynamoDB:** Serverless key-value storage for application metadata, idempotency locks, and job states.
+  - **Amazon S3:** Scalable, SSE-KMS encrypted object storage for generated artifacts, PDFs, and exports.
+  - **Amazon OpenSearch Service:** Full-text indexing layer for research papers, datasheets, and specifications.
+- **AWS Serverless & Messaging Architecture:**
+  - **Amazon CloudFront:** Global edge distribution and SSL/TLS termination.
+  - **Amazon API Gateway:** Managed HTTP/REST API endpoints.
+  - **AWS Lambda (Mangum):** Serverless ASGI execution of the FastAPI backend.
+  - **AWS Step Functions:** Multi-agent state machine orchestrating 27 engineering agents with parallel branches and error catching.
+  - **Amazon SQS + DLQ:** Asynchronous job queues with automatic dead-letter redrive.
+  - **Amazon EventBridge:** Decoupled domain event bus (`ProjectCreated`, `BOMOptimized`, `PolicyViolation`).
+  - **Amazon SNS:** Fan-out notification topics for critical validation warnings and security alerts.
+  - **Amazon Cognito:** User authentication and RS256 JWKS JWT role-based access control.
+  - **Amazon CloudWatch:** Centralized telemetry, EMF metrics, latency alarms, and security violation dashboards.
+- **AI & Reasoning:** Google Agent Development Kit (ADK), Amazon Bedrock (Claude 3.5 Sonnet, Haiku, Titan Embeddings), A2A Protocol, Bindu SDK.
+- **Cryptographic Governance:** ArmorIQ SDK (`capture_plan`, `delegate`, `invoke_tool`) with HMAC-signed verification receipts and policy enforcement.
 - **Physics & Simulation:**
   - SPICE nodal electrical solver
   - 2D finite-difference steady-state thermal conduction solver
@@ -132,20 +145,23 @@ wline pcb export --format kicad
 
 ---
 
-## Architecture Decision Records (ADRs)
+## AWS Migration & Cloud Documentation
 
-Key architectural decisions are documented under [`docs/architecture/adr/`](docs/architecture/adr/):
-- **`ADR-001`**: Asynchronous Execution Engine & Dead-Letter Queue (DLQ)
-- **`ADR-002`**: Durable Agent State, Checkpoints & Secret Scrubbing
-- **`ADR-003`**: Pluggable Artifact Storage Abstraction
-- **`ADR-004`**: Centralized LLM Gateway & Offline Mock Provider
-- **`ADR-005`**: 3-Tier Action Separation & Lifecycle Governance Gates
+Comprehensive specifications and operational guides for the AWS-native architecture:
+- [AWS_MIGRATION_AUDIT.md](AWS_MIGRATION_AUDIT.md) — Comprehensive dependency audit and service mapping.
+- [AWS_ARCHITECTURE.md](AWS_ARCHITECTURE.md) — Complete target architecture topology and data flows.
+- [DATABASE_ARCHITECTURE.md](DATABASE_ARCHITECTURE.md) — Multi-tier persistence (SurrealDB, Qdrant, DynamoDB, S3, OpenSearch).
+- [AGENT_ARCHITECTURE.md](AGENT_ARCHITECTURE.md) — Multi-agent orchestration, Google ADK, A2A, Bindu, and Step Functions.
+- [SECURITY.md](SECURITY.md) — Amazon Cognito, RBAC, and ArmorIQ cryptographic delegation security model.
+- [AWS_DEPLOYMENT.md](AWS_DEPLOYMENT.md) — AWS SAM deployment, CloudFront edge delivery, and verification guide.
+- [ROLLBACK.md](ROLLBACK.md) — Canary traffic shifting, disaster recovery, and zero-downtime rollback procedures.
 
 ---
 
 ## Testing & Quality Gates
 
+- **AWS Migration Test Suite:** 11/11 passing (`tests/aws/test_aws_migration_suite.py`)
+- **Canonical 27 Agents Test Suite:** 24/24 passing (`tests/cli/test_canonical_27_agents.py`)
 - **Canonical CLI Tests:** 125/125 passing (`tests/cli/`)
 - **Upgraded Architecture Subsystems:** 10/10 passing (`tests/workline/test_upgraded_architecture.py`)
-- **Platform E2E & GraphQL Suites:** Full test coverage across GraphQL queries/mutations and control fabric routing.
-- **Zero-Credential Testing:** Fully functional test execution offline without external cloud API dependencies.
+- **Zero-Credential Testing:** Fully functional test execution offline with local fallback stores and LocalStack support.

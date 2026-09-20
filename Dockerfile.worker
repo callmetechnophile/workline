@@ -1,0 +1,32 @@
+# ==============================================================================
+# Workline Agent Worker Pool Container
+# Compute worker running on AWS ECS Fargate consuming from Amazon SQS
+# ==============================================================================
+FROM python:3.11-slim-bookworm AS base
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    ca-certificates \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY backend/requirements.txt /app/backend/requirements.txt
+RUN pip install --no-cache-dir -r /app/backend/requirements.txt
+
+COPY backend /app/backend
+COPY research_agents /app/research_agents
+COPY armourflow /app/armourflow
+
+RUN useradd -m -u 10001 workline && \
+    chown -R workline:workline /app
+
+USER workline
+
+CMD ["python", "-m", "backend.workline.workers.worker_main"]

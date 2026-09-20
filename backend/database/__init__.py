@@ -912,3 +912,75 @@ def upsert_idempotency_record(
         "error": error,
         "updated_at": now_iso,
     }
+
+
+def get_project_by_id(project_id: str) -> Optional[Dict[str, Any]]:
+    """Retrieve a project record by ID from projects or packages table."""
+    conn = get_db_connection()
+    try:
+        # Check by id integer if numeric
+        if str(project_id).isdigit():
+            cursor = execute_query(conn, "SELECT * FROM projects WHERE id = ?", (int(project_id),))
+            row = cursor.fetchone()
+            if row:
+                d = dict(row)
+                for k in ["bom", "power", "dependencies", "wiring", "papers", "gantt", "code", "exports"]:
+                    if d.get(k) and isinstance(d[k], str):
+                        try:
+                            d[k] = json.loads(d[k])
+                        except Exception:
+                            pass
+                return d
+
+        # Check packages table where project_id or id matches
+        cursor = execute_query(conn, "SELECT * FROM packages WHERE project_id = ? OR id = ?", (str(project_id), str(project_id)))
+        row = cursor.fetchone()
+        if row:
+            d = dict(row)
+            data_dict = {}
+            if d.get("data") and isinstance(d["data"], str):
+                try:
+                    data_dict = json.loads(d["data"])
+                except Exception:
+                    data_dict = {}
+            return {
+                "id": d.get("project_id") or str(d.get("id")),
+                "name": d.get("project_name") or d.get("intent") or "Engineering Project",
+                "bom": data_dict.get("bom") or data_dict.get("components") or [],
+                "components": data_dict.get("components") or data_dict.get("bom") or [],
+            }
+        return None
+    finally:
+        conn.close()
+
+
+def save_project(project_data: Dict[str, Any]) -> Dict[str, Any]:
+    """Save or create a project record in the local database."""
+    conn = get_db_connection()
+    try:
+        name = project_data.get("name") or "Untitled Project"
+        user_id = project_data.get("user_id") or "default_user"
+        prompt = project_data.get("prompt") or ""
+        bom = json.dumps(project_data.get("bom") or project_data.get("components") or [])
+        power = json.dumps(project_data.get("power") or {})
+        deps = json.dumps(project_data.get("dependencies") or {})
+        wiring = json.dumps(project_data.get("wiring") or [])
+        papers = json.dumps(project_data.get("papers") or [])
+        gantt = json.dumps(project_data.get("gantt") or {})
+        code = json.dumps(project_data.get("code") or {})
+        exports = json.dumps(project_data.get("exports") or {})
+        now_iso = datetime.now().isoformat()
+
+        cursor = execute_query(conn, """
+            INSERT INTO projects (user_id, name, prompt, bom, power, dependencies, wiring, papers, gantt, code, exports, timestamp)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (user_id, name, prompt, bom, power, deps, wiring, papers, gantt, code, exports, now_iso))
+        conn.commit()
+        proj_id = cursor.lastrowid
+        return {
+            "id": proj_id,
+            "name": name,
+            "bom": json.loads(bom),
+        }
+    finally:
+        conn.close()

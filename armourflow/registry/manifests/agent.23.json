@@ -9,7 +9,7 @@
     "hardware.thermal",
     "hardware.signal_integrity"
   ],
-  "entrypoint": "research_agents.security_threat.agent:SecurityThreatModelingAgent",
+  "entrypoint": "research_agents.hardware_thermal_agent.agent:HardwareThermalAgent",
   "execution_level": "read_only",
   "dependencies": [
     "SurrealDB"

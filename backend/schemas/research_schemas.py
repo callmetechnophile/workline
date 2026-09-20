@@ -58,5 +58,19 @@ class ResearchResponse(BaseModel):
     thermal_analysis: Optional[List[Dict[str, Any]]] = None
     team_workspace: Optional[Dict[str, Any]] = None
     version_history: Optional[Dict[str, Any]] = None
+    # Section 35 & Workspace fields
+    understanding: Optional[Dict[str, Any]] = None
+    clarifications_needed: Optional[List[str]] = None
+    structured_requirements: Optional[List[Dict[str, Any]]] = None
+    structured_constraints: Optional[List[Dict[str, Any]]] = None
+    requirements: Optional[List[Dict[str, Any]]] = None
+    constraints: Optional[List[Dict[str, Any]]] = None
+    validation_results: Optional[List[Dict[str, Any]]] = None
+    recommended_components: Optional[List[Dict[str, Any]]] = None
+    alternative_components: Optional[List[Dict[str, Any]]] = None
+    component_evidence: Optional[List[Dict[str, Any]]] = None
+    violations: Optional[List[Dict[str, Any]]] = None
+    knowledge_graph_summary: Optional[Dict[str, Any]] = None
+    engineering_insights: Optional[Dict[str, Any]] = None
 
 

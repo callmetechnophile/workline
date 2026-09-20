@@ -1,0 +1,29 @@
+services:
+  localstack:
+    container_name: workline-localstack
+    image: localstack/localstack:latest
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=s3,sqs,sns,events,dynamodb,stepfunctions,cloudwatch
+      - AWS_DEFAULT_REGION=us-east-1
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    volumes:
+      - "${LOCALSTACK_VOLUME_DIR:-./.localstack}:/var/lib/localstack"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+
+  surrealdb:
+    container_name: workline-surrealdb
+    image: surrealdb/surrealdb:v2.0.4
+    ports:
+      - "8001:8000"
+    command: start --log info --user root --pass root memory
+
+  qdrant:
+    container_name: workline-qdrant
+    image: qdrant/qdrant:v1.12.1
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - ./qdrant_storage:/qdrant/storage

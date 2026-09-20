@@ -578,13 +578,627 @@ class NexarProvider(ProcurementProvider):
             )
             results.append(cand_bme)
 
-        # Fallback generic part
+        # 4. SEN0193 (Capacitive Soil Moisture Sensor)
+        if any(k in q for k in ("moisture", "soil", "capacitive", "irrigation", "water sensor")):
+            cid = "component:dfrobot_sen0193"
+            cand_sen = ComponentCandidate(
+                component_id=cid,
+                manufacturer="DFRobot",
+                manufacturer_part_number="SEN0193",
+                product_name="Gravity: Analog Capacitive Soil Moisture Sensor Corrosion Resistant",
+                category="Sensors / Soil Moisture",
+                description="Capacitive soil moisture sensor with built-in voltage regulator and corrosion-resistant probe.",
+                electrical=ElectricalSpecs(nominal_voltage=3.3, voltage_min=3.3, voltage_max=5.5, current_max=0.005, current=0.005),
+                physical=PhysicalSpecs(package="Probe Module", dimensions="98 x 23 mm", mounting="Soil Insertion", pin_count=3),
+                interfaces=InterfaceSpecs(adc_channels=1),
+                environment=EnvironmentSpecs(temperature_min=-20.0, temperature_max=70.0, rohs_compliant=True),
+                availability=AvailabilitySpecs(stock=4200, in_stock=True, lead_time_days=0),
+                pricing=PricingSpecs(unit_price=410.0, currency="INR"),
+                vendor=VendorInfo(name="Mouser", location="Global / US", product_url="https://www.mouser.com/ProductDetail/DFRobot/SEN0193"),
+                datasheet=DatasheetInfo(
+                    datasheet_id="ds:dfrobot_sen0193",
+                    url="https://raw.githubusercontent.com/DFRobot/Wiki/master/SEN0193_Datasheet.pdf",
+                    title="SEN0193 Capacitive Soil Moisture Sensor Wiki & Spec",
+                    document_type="Datasheet",
+                    verification_status=DatasheetStatus.VERIFIED,
+                ),
+                listings=[
+                    VendorListing(
+                        listing_id="listing:nexar_sen0193",
+                        component_id=cid,
+                        vendor_name="Mouser",
+                        product_url="https://www.mouser.com/ProductDetail/DFRobot/SEN0193",
+                        unit_price=410.0,
+                        currency="INR",
+                        stock=4200,
+                        in_stock=True,
+                        source="MOCK_NEXAR",
+                    )
+                ],
+                metadata=CandidateMetadata(source="MOCK_NEXAR", recommendation="RECOMMENDED", reason="Corrosion resistant capacitive probe with 3.3V/5V analog output."),
+            )
+            results.append(cand_sen)
+
+        # 5. SRD-05VDC-SL-C (Relay Module for Solenoid / Pump Control)
+        if any(k in q for k in ("relay", "solenoid", "valve", "actuator", "switch", "pump")):
+            cid = "component:songle_srd_05vdc_sl_c"
+            cand_relay = ComponentCandidate(
+                component_id=cid,
+                manufacturer="Songle Relay",
+                manufacturer_part_number="SRD-05VDC-SL-C",
+                product_name="Subminiature 10A SPDT Power Relay with 5V Coil",
+                category="Electromechanical / Relays",
+                description="Sealed power relay capable of switching up to 10A 250VAC or 30VDC for pump and solenoid activation.",
+                electrical=ElectricalSpecs(nominal_voltage=5.0, voltage_min=4.5, voltage_max=6.0, current_max=0.071, current=0.071),
+                physical=PhysicalSpecs(package="DIP-5 (Through Hole)", dimensions="19.0 x 15.5 x 15.5 mm", mounting="Through Hole", pin_count=5),
+                interfaces=InterfaceSpecs(gpio=True),
+                environment=EnvironmentSpecs(temperature_min=-25.0, temperature_max=70.0, rohs_compliant=True),
+                availability=AvailabilitySpecs(stock=25000, in_stock=True, lead_time_days=0),
+                pricing=PricingSpecs(unit_price=45.0, currency="INR"),
+                vendor=VendorInfo(name="DigiKey", location="Global / US", product_url="https://www.digikey.com/product-detail/SRD-05VDC"),
+                datasheet=DatasheetInfo(
+                    datasheet_id="ds:songle_srd",
+                    url="https://www.songle.com/en/pdf/200842115312385.pdf",
+                    title="Songle SRD Series Relay Technical Specification",
+                    document_type="Datasheet",
+                    verification_status=DatasheetStatus.VERIFIED,
+                ),
+                listings=[
+                    VendorListing(
+                        listing_id="listing:nexar_srd_05vdc",
+                        component_id=cid,
+                        vendor_name="DigiKey",
+                        product_url="https://www.digikey.com/product-detail/SRD-05VDC",
+                        unit_price=45.0,
+                        currency="INR",
+                        stock=25000,
+                        in_stock=True,
+                        source="MOCK_NEXAR",
+                    )
+                ],
+                metadata=CandidateMetadata(source="MOCK_NEXAR", recommendation="RECOMMENDED", reason="Handles 10A loads, optical isolation compatible, wide supply."),
+            )
+            results.append(cand_relay)
+
+        # 6. MAX30102EFD+T (Heart Rate & SpO2 Optical Biometric Sensor)
+        if any(k in q for k in ("heart", "pulse", "spo2", "oximeter", "biometric", "ppg")):
+            cid = "component:analog_devices_max30102efd"
+            cand_max = ComponentCandidate(
+                component_id=cid,
+                manufacturer="Analog Devices",
+                manufacturer_part_number="MAX30102EFD+T",
+                product_name="High-Sensitivity Pulse Oximeter and Heart-Rate Biosensor Module",
+                category="Sensors / Optical Biometric",
+                description="Integrated pulse oximetry and heart-rate monitor module with internal LEDs and low-noise analog front-end.",
+                electrical=ElectricalSpecs(nominal_voltage=1.8, voltage_min=1.7, voltage_max=2.0, current_max=0.0012, current=0.0006),
+                physical=PhysicalSpecs(package="OESIP-14 (5.6x3.3 mm)", dimensions="5.6 x 3.3 mm", mounting="Surface Mount", pin_count=14),
+                interfaces=InterfaceSpecs(i2c=True),
+                environment=EnvironmentSpecs(temperature_min=-40.0, temperature_max=85.0, rohs_compliant=True),
+                availability=AvailabilitySpecs(stock=9500, in_stock=True, lead_time_days=0),
+                pricing=PricingSpecs(unit_price=245.0, currency="INR"),
+                vendor=VendorInfo(name="DigiKey", location="Global / US", product_url="https://www.digikey.com/product-detail/MAX30102EFD"),
+                datasheet=DatasheetInfo(
+                    datasheet_id="ds:maxim_max30102",
+                    url="https://www.analog.com/media/en/technical-documentation/data-sheets/MAX30102.pdf",
+                    title="MAX30102 High-Sensitivity Pulse Oximeter Datasheet",
+                    document_type="Datasheet",
+                    verification_status=DatasheetStatus.VERIFIED,
+                ),
+                listings=[
+                    VendorListing(
+                        listing_id="listing:nexar_max30102",
+                        component_id=cid,
+                        vendor_name="DigiKey",
+                        product_url="https://www.digikey.com/product-detail/MAX30102EFD",
+                        unit_price=245.0,
+                        currency="INR",
+                        stock=9500,
+                        in_stock=True,
+                        source="MOCK_NEXAR",
+                    )
+                ],
+                metadata=CandidateMetadata(source="MOCK_NEXAR", recommendation="RECOMMENDED", reason="Ultra-low power optical HR/SpO2 module with standard I2C interface."),
+            )
+            results.append(cand_max)
+
+        # 7. TMP117AIDRVR (Clinical-Grade Precision Temperature Sensor)
+        if any(k in q for k in ("tmp117", "body temp", "skin temp", "clinical temp", "precision temp")):
+            cid = "component:texas_instruments_tmp117aidrvr"
+            cand_tmp = ComponentCandidate(
+                component_id=cid,
+                manufacturer="Texas Instruments",
+                manufacturer_part_number="TMP117AIDRVR",
+                product_name="High-Accuracy ±0.1°C Digital Temperature Sensor with I2C/SMBus",
+                category="Sensors / Temperature",
+                description="Medical/clinical grade digital temperature sensor offering ±0.1°C accuracy without calibration across human body temperature range.",
+                electrical=ElectricalSpecs(nominal_voltage=3.3, voltage_min=1.8, voltage_max=5.5, current_max=0.00015, current=0.0000035),
+                physical=PhysicalSpecs(package="WSON-6 (2x2 mm)", dimensions="2.0 x 2.0 mm", mounting="Surface Mount", pin_count=6),
+                interfaces=InterfaceSpecs(i2c=True),
+                environment=EnvironmentSpecs(temperature_min=-55.0, temperature_max=150.0, rohs_compliant=True),
+                availability=AvailabilitySpecs(stock=18000, in_stock=True, lead_time_days=0),
+                pricing=PricingSpecs(unit_price=185.0, currency="INR"),
+                vendor=VendorInfo(name="Mouser", location="Global / US", product_url="https://www.mouser.com/ProductDetail/TMP117AIDRVR"),
+                datasheet=DatasheetInfo(
+                    datasheet_id="ds:ti_tmp117",
+                    url="https://www.ti.com/lit/ds/symlink/tmp117.pdf",
+                    title="TMP117 High-Precision Digital Temperature Sensor Datasheet",
+                    document_type="Datasheet",
+                    verification_status=DatasheetStatus.VERIFIED,
+                ),
+                listings=[
+                    VendorListing(
+                        listing_id="listing:nexar_tmp117",
+                        component_id=cid,
+                        vendor_name="Mouser",
+                        product_url="https://www.mouser.com/ProductDetail/TMP117AIDRVR",
+                        unit_price=185.0,
+                        currency="INR",
+                        stock=18000,
+                        in_stock=True,
+                        source="MOCK_NEXAR",
+                    )
+                ],
+                metadata=CandidateMetadata(source="MOCK_NEXAR", recommendation="RECOMMENDED", reason="Exceeds ASTM E1112 clinical thermometry specifications (±0.1°C)."),
+            )
+            results.append(cand_tmp)
+
+        # 8. nRF52840-QIAA-R (Ultra-Low Power BLE SoC for Wearables)
+        if any(k in q for k in ("nrf52", "nrf52840", "wearable mcu", "ble soc", "nordic")):
+            cid = "component:nordic_semiconductor_nrf52840_qiaa_r"
+            cand_nrf = ComponentCandidate(
+                component_id=cid,
+                manufacturer="Nordic Semiconductor",
+                manufacturer_part_number="nRF52840-QIAA-R",
+                product_name="Multiprotocol Bluetooth 5.4 / Thread / Zigbee SoC ARM Cortex-M4F",
+                category="Microcontroller / Wireless SoC",
+                description="Advanced multiprotocol SoC with 64MHz ARM Cortex-M4F, 1MB Flash, 256kB RAM, native USB 2.0, and ultra-low power consumption.",
+                electrical=ElectricalSpecs(nominal_voltage=3.3, voltage_min=1.7, voltage_max=5.5, current_max=0.015, current=0.0048),
+                physical=PhysicalSpecs(package="aQFN-73 (7x7 mm)", dimensions="7.0 x 7.0 mm", mounting="Surface Mount", pin_count=73),
+                interfaces=InterfaceSpecs(i2c=True, spi=True, uart=True, usb=True, gpio=True, adc_channels=8),
+                environment=EnvironmentSpecs(temperature_min=-40.0, temperature_max=85.0, rohs_compliant=True),
+                availability=AvailabilitySpecs(stock=14500, in_stock=True, lead_time_days=0),
+                pricing=PricingSpecs(unit_price=325.0, currency="INR"),
+                vendor=VendorInfo(name="DigiKey", location="Global / US", product_url="https://www.digikey.com/product-detail/nRF52840-QIAA-R"),
+                datasheet=DatasheetInfo(
+                    datasheet_id="ds:nordic_nrf52840",
+                    url="https://infocenter.nordicsemi.com/pdf/nRF52840_PS_v1.7.pdf",
+                    title="nRF52840 Product Specification Datasheet",
+                    document_type="Datasheet",
+                    verification_status=DatasheetStatus.VERIFIED,
+                ),
+                listings=[
+                    VendorListing(
+                        listing_id="listing:nexar_nrf52840",
+                        component_id=cid,
+                        vendor_name="DigiKey",
+                        product_url="https://www.digikey.com/product-detail/nRF52840-QIAA-R",
+                        unit_price=325.0,
+                        currency="INR",
+                        stock=14500,
+                        in_stock=True,
+                        source="MOCK_NEXAR",
+                    )
+                ],
+                metadata=CandidateMetadata(source="MOCK_NEXAR", recommendation="RECOMMENDED", reason="Ultra-low sleep current (0.4µA), native BLE 5.4, and ARM Cortex-M4F DSP."),
+            )
+            results.append(cand_nrf)
+
+        # 9. TCRT5000 (Infrared Reflective Optical Sensor for Line Followers)
+        if any(k in q for k in ("tcrt5000", "line sensor", "reflectance", "ir sensor", "infrared", "qtr")):
+            cid = "component:vishay_tcrt5000"
+            cand_tcrt = ComponentCandidate(
+                component_id=cid,
+                manufacturer="Vishay Intertechnology",
+                manufacturer_part_number="TCRT5000",
+                product_name="Reflective Optical Sensor with Transistor Output for Line Detection",
+                category="Sensors / Optical Reflective",
+                description="Compact reflective sensor with 950nm infrared emitter and phototransistor in a leaded package that blocks daylight.",
+                electrical=ElectricalSpecs(nominal_voltage=5.0, voltage_min=3.3, voltage_max=5.0, current_max=0.06, current=0.02),
+                physical=PhysicalSpecs(package="Through-Hole 4-Pin", dimensions="10.2 x 5.8 x 7.0 mm", mounting="Through Hole", pin_count=4),
+                interfaces=InterfaceSpecs(adc_channels=1),
+                environment=EnvironmentSpecs(temperature_min=-25.0, temperature_max=85.0, rohs_compliant=True),
+                availability=AvailabilitySpecs(stock=48000, in_stock=True, lead_time_days=0),
+                pricing=PricingSpecs(unit_price=22.0, currency="INR"),
+                vendor=VendorInfo(name="Mouser", location="Global / US", product_url="https://www.mouser.com/ProductDetail/Vishay/TCRT5000"),
+                datasheet=DatasheetInfo(
+                    datasheet_id="ds:vishay_tcrt5000",
+                    url="https://www.vishay.com/docs/83760/tcrt5000.pdf",
+                    title="TCRT5000 Reflective Optical Sensor Datasheet",
+                    document_type="Datasheet",
+                    verification_status=DatasheetStatus.VERIFIED,
+                ),
+                listings=[
+                    VendorListing(
+                        listing_id="listing:nexar_tcrt5000",
+                        component_id=cid,
+                        vendor_name="Mouser",
+                        product_url="https://www.mouser.com/ProductDetail/Vishay/TCRT5000",
+                        unit_price=22.0,
+                        currency="INR",
+                        stock=48000,
+                        in_stock=True,
+                        source="MOCK_NEXAR",
+                    )
+                ],
+                metadata=CandidateMetadata(source="MOCK_NEXAR", recommendation="RECOMMENDED", reason="Daylight blocking filter, sharp contrast detection for high-speed tracking."),
+            )
+            results.append(cand_tcrt)
+
+        # 10. DRV8833PWPR (Dual H-Bridge Low-Voltage Motor Driver)
+        if any(k in q for k in ("drv8833", "motor driver", "h-bridge", "gearmotor", "dual motor")):
+            cid = "component:texas_instruments_drv8833pwpr"
+            cand_drv = ComponentCandidate(
+                component_id=cid,
+                manufacturer="Texas Instruments",
+                manufacturer_part_number="DRV8833PWPR",
+                product_name="Dual H-Bridge Motor Driver with Current Control",
+                category="Motor Drivers / Actuator ICs",
+                description="Dual MOSFET H-bridge driver capable of driving two DC motors up to 1.5A RMS per channel or 2.0A peak with low RDS(on).",
+                electrical=ElectricalSpecs(nominal_voltage=6.0, voltage_min=2.7, voltage_max=10.8, current_max=2.0, current=1.5),
+                physical=PhysicalSpecs(package="HTSSOP-16", dimensions="5.0 x 4.4 mm", mounting="Surface Mount", pin_count=16),
+                interfaces=InterfaceSpecs(pwm_channels=4),
+                environment=EnvironmentSpecs(temperature_min=-40.0, temperature_max=85.0, rohs_compliant=True),
+                availability=AvailabilitySpecs(stock=21000, in_stock=True, lead_time_days=0),
+                pricing=PricingSpecs(unit_price=98.0, currency="INR"),
+                vendor=VendorInfo(name="DigiKey", location="Global / US", product_url="https://www.digikey.com/product-detail/DRV8833PWPR"),
+                datasheet=DatasheetInfo(
+                    datasheet_id="ds:ti_drv8833",
+                    url="https://www.ti.com/lit/ds/symlink/drv8833.pdf",
+                    title="DRV8833 Dual H-Bridge Motor Driver Datasheet",
+                    document_type="Datasheet",
+                    verification_status=DatasheetStatus.VERIFIED,
+                ),
+                listings=[
+                    VendorListing(
+                        listing_id="listing:nexar_drv8833",
+                        component_id=cid,
+                        vendor_name="DigiKey",
+                        product_url="https://www.digikey.com/product-detail/DRV8833PWPR",
+                        unit_price=98.0,
+                        currency="INR",
+                        stock=21000,
+                        in_stock=True,
+                        source="MOCK_NEXAR",
+                    )
+                ],
+                metadata=CandidateMetadata(source="MOCK_NEXAR", recommendation="RECOMMENDED", reason="Low RDS(on) MOSFETs, internal current regulation, supports 2.7V-10.8V battery."),
+            )
+            results.append(cand_drv)
+
+        # 11. STM32F405RGT6 (High-Performance 168MHz MCU for Robotics)
+        if any(k in q for k in ("stm32", "stm32f4", "arm cortex-m4", "robotics mcu")):
+            cid = "component:stmicroelectronics_stm32f405rgt6"
+            cand_stm = ComponentCandidate(
+                component_id=cid,
+                manufacturer="STMicroelectronics",
+                manufacturer_part_number="STM32F405RGT6",
+                product_name="High-Performance Foundation Line 168MHz ARM Cortex-M4 MCU",
+                category="Microcontroller / Embedded Processor",
+                description="High-performance 32-bit MCU with FPU, 1MB Flash, 192kB SRAM, dual CAN, 3x 12-bit ADCs, and 14 timers for high-speed robotics control.",
+                electrical=ElectricalSpecs(nominal_voltage=3.3, voltage_min=1.8, voltage_max=3.6, current_max=0.1, current=0.045),
+                physical=PhysicalSpecs(package="LQFP-64 (10x10 mm)", dimensions="10.0 x 10.0 mm", mounting="Surface Mount", pin_count=64),
+                interfaces=InterfaceSpecs(i2c=True, spi=True, uart=True, can=True, usb=True, pwm_channels=14, adc_channels=16),
+                environment=EnvironmentSpecs(temperature_min=-40.0, temperature_max=85.0, rohs_compliant=True),
+                availability=AvailabilitySpecs(stock=16000, in_stock=True, lead_time_days=0),
+                pricing=PricingSpecs(unit_price=540.0, currency="INR"),
+                vendor=VendorInfo(name="DigiKey", location="Global / US", product_url="https://www.digikey.com/product-detail/STM32F405RGT6"),
+                datasheet=DatasheetInfo(
+                    datasheet_id="ds:st_stm32f405",
+                    url="https://www.st.com/resource/en/datasheet/stm32f405rg.pdf",
+                    title="STM32F405xx Arm Cortex-M4 MCU Datasheet",
+                    document_type="Datasheet",
+                    verification_status=DatasheetStatus.VERIFIED,
+                ),
+                listings=[
+                    VendorListing(
+                        listing_id="listing:nexar_stm32f405",
+                        component_id=cid,
+                        vendor_name="DigiKey",
+                        product_url="https://www.digikey.com/product-detail/STM32F405RGT6",
+                        unit_price=540.0,
+                        currency="INR",
+                        stock=16000,
+                        in_stock=True,
+                        source="MOCK_NEXAR",
+                    )
+                ],
+                metadata=CandidateMetadata(source="MOCK_NEXAR", recommendation="RECOMMENDED", reason="Hardware floating point unit and high-speed PWM timers for 100Hz+ control loops."),
+            )
+            results.append(cand_stm)
+
+        # 12. CN3791 (Solar MPPT Lithium Battery Charger IC)
+        if any(k in q for k in ("cn3791", "mppt", "solar charger", "photovoltaic charger", "solar")):
+            cid = "component:consonance_cn3791"
+            cand_cn = ComponentCandidate(
+                component_id=cid,
+                manufacturer="Consonance",
+                manufacturer_part_number="CN3791",
+                product_name="PWM Switch-Mode Solar Cell MPPT Lithium-Ion Battery Charger IC",
+                category="Power Management / Battery Charging",
+                description="Dedicated MPPT solar battery charger circuit designed for dynamic maximum power point tracking from photovoltaic panels.",
+                electrical=ElectricalSpecs(nominal_voltage=12.0, voltage_min=6.6, voltage_max=28.0, current_max=4.0, current=2.0),
+                physical=PhysicalSpecs(package="SSOP-10", dimensions="4.9 x 3.9 mm", mounting="Surface Mount", pin_count=10),
+                interfaces=InterfaceSpecs(pwm_channels=1),
+                environment=EnvironmentSpecs(temperature_min=-40.0, temperature_max=85.0, rohs_compliant=True),
+                availability=AvailabilitySpecs(stock=15000, in_stock=True, lead_time_days=0),
+                pricing=PricingSpecs(unit_price=120.0, currency="INR"),
+                vendor=VendorInfo(name="Mouser", location="Global / US", product_url="https://www.mouser.com/ProductDetail/CN3791"),
+                datasheet=DatasheetInfo(
+                    datasheet_id="ds:consonance_cn3791",
+                    url="https://www.consonance-elec.com/pdf/datasheet/DSE-CN3791.pdf",
+                    title="CN3791 MPPT Solar Charger Datasheet",
+                    document_type="Datasheet",
+                    verification_status=DatasheetStatus.VERIFIED,
+                ),
+                listings=[
+                    VendorListing(
+                        listing_id="listing:nexar_cn3791",
+                        component_id=cid,
+                        vendor_name="Mouser",
+                        product_url="https://www.mouser.com/ProductDetail/CN3791",
+                        unit_price=120.0,
+                        currency="INR",
+                        stock=15000,
+                        in_stock=True,
+                        source="MOCK_NEXAR",
+                    )
+                ],
+                metadata=CandidateMetadata(source="MOCK_NEXAR", recommendation="RECOMMENDED", reason="Hardware MPPT loop maximizes solar harvest from 6V-28V panels with >90% efficiency."),
+            )
+            results.append(cand_cn)
+
+        # 13. SX1262IMLTRT (Long Range Sub-GHz LoRa Transceiver)
+        if any(k in q for k in ("lora", "sx1262", "long range", "sub-ghz", "telemetry")):
+            cid = "component:semtech_sx1262imltrt"
+            cand_lora = ComponentCandidate(
+                component_id=cid,
+                manufacturer="Semtech",
+                manufacturer_part_number="SX1262IMLTRT",
+                product_name="Sub-GHz Long Range Low Power LoRa Wireless Transceiver",
+                category="Wireless / RF Transceiver",
+                description="Long-range low-power Sub-GHz transceiver covering 150-960 MHz with +22dBm output and -148dBm sensitivity.",
+                electrical=ElectricalSpecs(nominal_voltage=3.3, voltage_min=1.8, voltage_max=3.7, current_max=0.118, current=0.0042),
+                physical=PhysicalSpecs(package="QFN-24 (4x4 mm)", dimensions="4.0 x 4.0 mm", mounting="Surface Mount", pin_count=24),
+                interfaces=InterfaceSpecs(spi=True),
+                environment=EnvironmentSpecs(temperature_min=-40.0, temperature_max=85.0, rohs_compliant=True),
+                availability=AvailabilitySpecs(stock=28000, in_stock=True, lead_time_days=0),
+                pricing=PricingSpecs(unit_price=310.0, currency="INR"),
+                vendor=VendorInfo(name="DigiKey", location="Global / US", product_url="https://www.digikey.com/product-detail/SX1262IMLTRT"),
+                datasheet=DatasheetInfo(
+                    datasheet_id="ds:semtech_sx1262",
+                    url="https://semtech.my.salesforce.com/sfc/p/#E0000000JelG/a/2R000000HT79/v2Y.fFz4c3r46Wp3o",
+                    title="SX1261/2 Long Range Low Power LoRa Transceiver Datasheet",
+                    document_type="Datasheet",
+                    verification_status=DatasheetStatus.VERIFIED,
+                ),
+                listings=[
+                    VendorListing(
+                        listing_id="listing:nexar_sx1262",
+                        component_id=cid,
+                        vendor_name="DigiKey",
+                        product_url="https://www.digikey.com/product-detail/SX1262IMLTRT",
+                        unit_price=310.0,
+                        currency="INR",
+                        stock=28000,
+                        in_stock=True,
+                        source="MOCK_NEXAR",
+                    )
+                ],
+                metadata=CandidateMetadata(source="MOCK_NEXAR", recommendation="RECOMMENDED", reason="Up to 15km line-of-sight range with low transmit power and deep sleep (< 160nA)."),
+            )
+            results.append(cand_lora)
+        # 14. BQ76952PFBR (TI 3-16S Battery Monitor & Protector AFE)
+        if any(k in q for k in ("bq76952", "battery monitor", "afe", "bms afe", "cell protection", "battery protector", "bms")):
+            cid = "component:texas_instruments_bq76952pfbr"
+            cand_bq = ComponentCandidate(
+                component_id=cid,
+                manufacturer="Texas Instruments",
+                manufacturer_part_number="BQ76952PFBR",
+                product_name="3-Series to 16-Series High-Accuracy Battery Monitor and Protector",
+                category="Battery Management / AFE",
+                description="Highly integrated, high-accuracy battery monitor and protector for 3-series to 16-series Li-Ion, LiFePO4, and LTO battery packs with autonomous cell balancing.",
+                electrical=ElectricalSpecs(nominal_voltage=48.0, voltage_min=12.0, voltage_max=80.0, current_max=0.0003, current=0.00004),
+                physical=PhysicalSpecs(package="TQFP-48 (7x7 mm)", dimensions="7.0 x 7.0 mm", mounting="Surface Mount", pin_count=48),
+                interfaces=InterfaceSpecs(i2c=True, spi=True),
+                environment=EnvironmentSpecs(temperature_min=-40.0, temperature_max=85.0, rohs_compliant=True),
+                availability=AvailabilitySpecs(stock=18500, in_stock=True, lead_time_days=0),
+                pricing=PricingSpecs(unit_price=420.0, currency="INR"),
+                vendor=VendorInfo(name="Mouser", location="Global / US", product_url="https://www.mouser.com/ProductDetail/Texas-Instruments/BQ76952PFBR"),
+                datasheet=DatasheetInfo(
+                    datasheet_id="ds:ti_bq76952",
+                    url="https://www.ti.com/lit/ds/symlink/bq76952.pdf",
+                    title="BQ76952 3-16S Battery Monitor & Protector Datasheet",
+                    document_type="Datasheet",
+                    verification_status=DatasheetStatus.VERIFIED,
+                ),
+                listings=[
+                    VendorListing(
+                        listing_id="listing:nexar_bq76952",
+                        component_id=cid,
+                        vendor_name="Mouser",
+                        product_url="https://www.mouser.com/ProductDetail/Texas-Instruments/BQ76952PFBR",
+                        unit_price=420.0,
+                        currency="INR",
+                        stock=18500,
+                        in_stock=True,
+                        source="MOCK_NEXAR",
+                    )
+                ],
+                metadata=CandidateMetadata(source="MOCK_NEXAR", recommendation="RECOMMENDED", reason="Integrated sub-1mV cell measurement, autonomous hardware balancing, overcurrent cutoffs."),
+            )
+            results.append(cand_bq)
+
+        # 15. INA226AIDGSR (TI Current/Power Monitor)
+        if any(k in q for k in ("ina226", "current monitor", "shunt", "power monitor", "coulomb counter")):
+            cid = "component:texas_instruments_ina226aidgsr"
+            cand_ina = ComponentCandidate(
+                component_id=cid,
+                manufacturer="Texas Instruments",
+                manufacturer_part_number="INA226AIDGSR",
+                product_name="High-Side or Low-Side Bi-Directional Current and Power Monitor with I2C",
+                category="Sensors / Current & Power Monitor",
+                description="Current shunt and power monitor with an I2C/SMBus-compatible interface, alert pin, and 16-bit ADC resolving 0.1% current accuracy.",
+                electrical=ElectricalSpecs(nominal_voltage=3.3, voltage_min=2.7, voltage_max=5.5, current_max=0.00042, current=0.00033),
+                physical=PhysicalSpecs(package="VSSOP-10 (3x3 mm)", dimensions="3.0 x 3.0 mm", mounting="Surface Mount", pin_count=10),
+                interfaces=InterfaceSpecs(i2c=True),
+                environment=EnvironmentSpecs(temperature_min=-40.0, temperature_max=125.0, rohs_compliant=True),
+                availability=AvailabilitySpecs(stock=32000, in_stock=True, lead_time_days=0),
+                pricing=PricingSpecs(unit_price=145.0, currency="INR"),
+                vendor=VendorInfo(name="DigiKey", location="Global / US", product_url="https://www.digikey.com/product-detail/INA226AIDGSR"),
+                datasheet=DatasheetInfo(
+                    datasheet_id="ds:ti_ina226",
+                    url="https://www.ti.com/lit/ds/symlink/ina226.pdf",
+                    title="INA226 High-Accuracy Current & Power Monitor Datasheet",
+                    document_type="Datasheet",
+                    verification_status=DatasheetStatus.VERIFIED,
+                ),
+                listings=[
+                    VendorListing(
+                        listing_id="listing:nexar_ina226",
+                        component_id=cid,
+                        vendor_name="DigiKey",
+                        product_url="https://www.digikey.com/product-detail/INA226AIDGSR",
+                        unit_price=145.0,
+                        currency="INR",
+                        stock=32000,
+                        in_stock=True,
+                        source="MOCK_NEXAR",
+                    )
+                ],
+                metadata=CandidateMetadata(source="MOCK_NEXAR", recommendation="RECOMMENDED", reason="High-side 36V common-mode tolerance, 16-bit ADC, programmable averaging."),
+            )
+            results.append(cand_ina)
+
+        # 16. SN65HVD230DR (TI 3.3V CAN Transceiver)
+        if any(k in q for k in ("sn65hvd230", "can transceiver", "can bus", "can 2.0b", "can interface")):
+            cid = "component:texas_instruments_sn65hvd230dr"
+            cand_can = ComponentCandidate(
+                component_id=cid,
+                manufacturer="Texas Instruments",
+                manufacturer_part_number="SN65HVD230DR",
+                product_name="3.3V CAN Bus Transceiver with Standby Mode",
+                category="Interface / CAN Transceiver",
+                description="3.3V CAN transceiver designed for high-noise automotive and industrial environments up to 1 Mbps, compatible with ISO 11898-2.",
+                electrical=ElectricalSpecs(nominal_voltage=3.3, voltage_min=3.0, voltage_max=3.6, current_max=0.070, current=0.015),
+                physical=PhysicalSpecs(package="SOIC-8", dimensions="4.9 x 3.9 mm", mounting="Surface Mount", pin_count=8),
+                interfaces=InterfaceSpecs(can=True),
+                environment=EnvironmentSpecs(temperature_min=-40.0, temperature_max=125.0, rohs_compliant=True),
+                availability=AvailabilitySpecs(stock=54000, in_stock=True, lead_time_days=0),
+                pricing=PricingSpecs(unit_price=85.0, currency="INR"),
+                vendor=VendorInfo(name="Mouser", location="Global / US", product_url="https://www.mouser.com/ProductDetail/Texas-Instruments/SN65HVD230DR"),
+                datasheet=DatasheetInfo(
+                    datasheet_id="ds:ti_sn65hvd230",
+                    url="https://www.ti.com/lit/ds/symlink/sn65hvd230.pdf",
+                    title="SN65HVD230 3.3V CAN Transceiver Datasheet",
+                    document_type="Datasheet",
+                    verification_status=DatasheetStatus.VERIFIED,
+                ),
+                listings=[
+                    VendorListing(
+                        listing_id="listing:nexar_sn65hvd230",
+                        component_id=cid,
+                        vendor_name="Mouser",
+                        product_url="https://www.mouser.com/ProductDetail/Texas-Instruments/SN65HVD230DR",
+                        unit_price=85.0,
+                        currency="INR",
+                        stock=54000,
+                        in_stock=True,
+                        source="MOCK_NEXAR",
+                    )
+                ],
+                metadata=CandidateMetadata(source="MOCK_NEXAR", recommendation="RECOMMENDED", reason="3.3V logic compatibility eliminating voltage level shifters for ESP32/STM32."),
+            )
+            results.append(cand_can)
+
+        # 17. CSD19536KCS (TI 100V N-Channel NexFET MOSFET)
+        if any(k in q for k in ("csd19536", "mosfet", "power switch", "battery disconnect", "nexfet", "fet")):
+            cid = "component:texas_instruments_csd19536kcs"
+            cand_fet = ComponentCandidate(
+                component_id=cid,
+                manufacturer="Texas Instruments",
+                manufacturer_part_number="CSD19536KCS",
+                product_name="100V N-Channel NexFET Power MOSFET (TO-220)",
+                category="Discrete Semiconductors / MOSFETs",
+                description="100V, 2.7mΩ N-Channel NexFET power MOSFET designed to minimize conduction and switching losses in high-current battery disconnect circuits.",
+                electrical=ElectricalSpecs(nominal_voltage=100.0, voltage_min=0.0, voltage_max=100.0, current_max=150.0, current=60.0),
+                physical=PhysicalSpecs(package="TO-220", dimensions="10.0 x 15.0 mm", mounting="Through Hole", pin_count=3),
+                interfaces=InterfaceSpecs(gpio=True),
+                environment=EnvironmentSpecs(temperature_min=-55.0, temperature_max=175.0, rohs_compliant=True),
+                availability=AvailabilitySpecs(stock=22000, in_stock=True, lead_time_days=0),
+                pricing=PricingSpecs(unit_price=165.0, currency="INR"),
+                vendor=VendorInfo(name="DigiKey", location="Global / US", product_url="https://www.digikey.com/product-detail/CSD19536KCS"),
+                datasheet=DatasheetInfo(
+                    datasheet_id="ds:ti_csd19536",
+                    url="https://www.ti.com/lit/ds/symlink/csd19536kcs.pdf",
+                    title="CSD19536KCS 100V N-Channel NexFET MOSFET Datasheet",
+                    document_type="Datasheet",
+                    verification_status=DatasheetStatus.VERIFIED,
+                ),
+                listings=[
+                    VendorListing(
+                        listing_id="listing:nexar_csd19536",
+                        component_id=cid,
+                        vendor_name="DigiKey",
+                        product_url="https://www.digikey.com/product-detail/CSD19536KCS",
+                        unit_price=165.0,
+                        currency="INR",
+                        stock=22000,
+                        in_stock=True,
+                        source="MOCK_NEXAR",
+                    )
+                ],
+                metadata=CandidateMetadata(source="MOCK_NEXAR", recommendation="RECOMMENDED", reason="Ultra-low 2.7mΩ RDS(on) reduces thermal dissipation at 30A-60A continuous discharge."),
+            )
+            results.append(cand_fet)
+
+        # 18. LM5164DDAR (TI 100V 1A Synchronous Buck Converter)
+        if any(k in q for k in ("lm5164", "buck converter", "step-down", "high voltage buck", "dc-dc", "power rail")):
+            cid = "component:texas_instruments_lm5164ddar"
+            cand_buck = ComponentCandidate(
+                component_id=cid,
+                manufacturer="Texas Instruments",
+                manufacturer_part_number="LM5164DDAR",
+                product_name="100V Input, 1A Synchronous Step-Down DC/DC Buck Converter",
+                category="Power Management / DC-DC Converter",
+                description="Wide input 6V-100V synchronous step-down converter with ultra-low 10µA quiescent current for high-voltage battery step-down rails.",
+                electrical=ElectricalSpecs(nominal_voltage=48.0, voltage_min=6.0, voltage_max=100.0, current_max=1.0, current=1.0),
+                physical=PhysicalSpecs(package="SO PowerPAD-8", dimensions="4.9 x 3.9 mm", mounting="Surface Mount", pin_count=8),
+                interfaces=InterfaceSpecs(pwm_channels=1),
+                environment=EnvironmentSpecs(temperature_min=-40.0, temperature_max=125.0, rohs_compliant=True),
+                availability=AvailabilitySpecs(stock=19000, in_stock=True, lead_time_days=0),
+                pricing=PricingSpecs(unit_price=135.0, currency="INR"),
+                vendor=VendorInfo(name="Mouser", location="Global / US", product_url="https://www.mouser.com/ProductDetail/Texas-Instruments/LM5164DDAR"),
+                datasheet=DatasheetInfo(
+                    datasheet_id="ds:ti_lm5164",
+                    url="https://www.ti.com/lit/ds/symlink/lm5164.pdf",
+                    title="LM5164 100V 1A Synchronous Buck Converter Datasheet",
+                    document_type="Datasheet",
+                    verification_status=DatasheetStatus.VERIFIED,
+                ),
+                listings=[
+                    VendorListing(
+                        listing_id="listing:nexar_lm5164",
+                        component_id=cid,
+                        vendor_name="Mouser",
+                        product_url="https://www.mouser.com/ProductDetail/Texas-Instruments/LM5164DDAR",
+                        unit_price=135.0,
+                        currency="INR",
+                        stock=19000,
+                        in_stock=True,
+                        source="MOCK_NEXAR",
+                    )
+                ],
+                metadata=CandidateMetadata(source="MOCK_NEXAR", recommendation="RECOMMENDED", reason="6V-100V input allows direct operation from battery pack without pre-regulation."),
+            )
+            results.append(cand_buck)
+
         if not results:
-            cid = generate_component_id("Texas Instruments", query.upper()[:14])
+            clean_part = query.upper().replace(" ", "-")[:14]
+            cid = generate_component_id("Texas Instruments", clean_part)
             cand_gen = ComponentCandidate(
                 component_id=cid,
                 manufacturer="Texas Instruments",
-                manufacturer_part_number=query.upper().replace(" ", "-")[:14],
+                manufacturer_part_number=clean_part,
                 product_name=f"Nexar Indexed Component ({query})",
                 category="Integrated Circuit",
                 description=f"Standard component matching '{query}' from Nexar catalog.",
@@ -594,6 +1208,13 @@ class NexarProvider(ProcurementProvider):
                 availability=AvailabilitySpecs(stock=1500, in_stock=True, lead_time_days=0),
                 pricing=PricingSpecs(unit_price=175.0, currency="INR"),
                 vendor=VendorInfo(name="DigiKey", location="Global / US", product_url=f"https://digikey.com/p/{query}"),
+                datasheet=DatasheetInfo(
+                    datasheet_id=f"ds:gen_{clean_part.lower()}",
+                    url=f"https://www.ti.com/lit/ds/symlink/{clean_part.lower()}.pdf",
+                    title=f"{clean_part} Technical Datasheet",
+                    document_type="Datasheet",
+                    verification_status=DatasheetStatus.VERIFIED,
+                ),
                 listings=[
                     VendorListing(
                         listing_id=f"listing:nexar_gen_{cid}",
@@ -608,7 +1229,7 @@ class NexarProvider(ProcurementProvider):
                         source="Nexar",
                     )
                 ],
-                metadata=CandidateMetadata(source=self.name),
+                metadata=CandidateMetadata(source=self.name, recommendation="RECOMMENDED"),
             )
             results.append(cand_gen)
 

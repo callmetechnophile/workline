@@ -6,6 +6,7 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 
+# pyrefly: ignore [missing-import]
 from armourflow.config.environment import EnvironmentMode, get_environment
 
 # Load .env safely from root
@@ -102,7 +103,15 @@ class PlatformSettings(BaseModel):
         default_factory=lambda: os.getenv("TAVILY_API_KEY")
     )
 
-    # External Tools: FreePHDLabor
+    # External Tools: arXiv (Academic Literature)
+    arxiv_enabled: bool = Field(
+        default_factory=lambda: os.getenv("ARXIV_ENABLED", "true").lower() in ("true", "1", "yes")
+    )
+    arxiv_endpoint: str = Field(
+        default_factory=lambda: os.getenv("ARXIV_BASE_URL", "https://export.arxiv.org/api/query")
+    )
+
+    # External Tools: FreePHDLabor (Legacy)
     freephdlabor_enabled: bool = Field(
         default_factory=lambda: os.getenv("FREEPHDLABOR_ENABLED", "true").lower() in ("true", "1", "yes")
     )

@@ -11,7 +11,55 @@ def ask_connection_assistant(message: str, context: Dict[str, Any]) -> str:
     """
     msg_lower = message.lower()
     
-    # 1. Route through centralized Amazon Bedrock Model Router (DeepSeek R1)
+    # 1. Check if user is asking for component selection / sourcing via Nexar MCP
+    if any(k in msg_lower for k in ("find", "recommend", "regulator", "mcu", "resistor", "sensor", "converter", "ldo", "transistor", "component")):
+        try:
+            import asyncio
+            from backend.mcp.nexar_client import nexar_mcp_client
+            loop = None
+            try:
+                loop = asyncio.get_running_loop()
+            except RuntimeError:
+                pass
+
+            candidates_data = []
+            if loop and loop.is_running():
+                # Scheduled in active loop
+                import concurrent.futures
+                with concurrent.futures.ThreadPoolExecutor() as pool:
+                    mcp_res = pool.submit(asyncio.run, nexar_mcp_client.execute_tool(nexar_mcp_client.TOOL_SEARCH_COMPONENTS, {"query": message, "limit": 3})).result()
+                    if mcp_res.success and mcp_res.data:
+                        candidates_data = mcp_res.data
+            else:
+                mcp_res = asyncio.run(nexar_mcp_client.execute_tool(nexar_mcp_client.TOOL_SEARCH_COMPONENTS, {"query": message, "limit": 3}))
+                if mcp_res.success and mcp_res.data:
+                    candidates_data = mcp_res.data
+
+            if candidates_data:
+                comp_lines = []
+                for idx, c in enumerate(candidates_data[:3], 1):
+                    mpn = c.get("manufacturer_part_number") or c.get("mpn")
+                    mfr = c.get("manufacturer")
+                    desc = c.get("description", "")
+                    price = c.get("pricing", {}).get("unit_price", "N/A")
+                    stock = c.get("availability", {}).get("stock", 0)
+                    ds = c.get("datasheet", {}).get("url", "")
+                    comp_lines.append(
+                        f"{idx}. **{mfr} {mpn}**: {desc}\n"
+                        f"   - Stock: {stock:,} units | Price: INR {price}\n"
+                        f"   - Datasheet: {ds or 'Not listed'}"
+                    )
+                
+                return (
+                    f"🔍 **[Octopart / Nexar MCP Intelligence]**\n"
+                    f"Found the following component candidates matching your project constraints:\n\n"
+                    + "\n\n".join(comp_lines) +
+                    "\n\n👉 *To add any of these parts to your Bill of Materials or Knowledge Base, please select 'Add to BOM' or 'Save to Knowledge Base' in the Documents Index.*"
+                )
+        except Exception:
+            pass
+
+    # 2. Route through centralized Amazon Bedrock Model Router (DeepSeek R1)
     try:
         from backend.workline.ai.bedrock.router import model_router
         bom_summary = ", ".join([c.get("component") or c.get("name", "") for c in context.get("bom", [])])

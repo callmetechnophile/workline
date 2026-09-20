@@ -3,13 +3,17 @@
 import asyncio
 import os
 import socket
+import time
 from typing import Any, Dict, List, Optional
 from urllib.parse import urlparse
+from dotenv import load_dotenv
 import httpx
 from surrealdb import AsyncSurreal
 
+load_dotenv()
 
-def is_port_open(url: str, timeout: float = 0.5) -> bool:
+
+def is_port_open(url: str, timeout: float = 0.4) -> bool:
     """Fast non-blocking TCP socket check to determine if database port is listening."""
     try:
         parsed = urlparse(url)
@@ -50,8 +54,8 @@ class SurrealDBManager:
 
     async def connect(self) -> bool:
         """Establish asynchronous connection and authenticate with SurrealDB."""
-        # Ultra-fast socket pre-check
-        if not is_port_open(self.url):
+        # Socket pre-check with 2.5s timeout for cloud endpoints
+        if not is_port_open(self.url, timeout=2.5):
             self._is_connected = False
             return False
 
@@ -65,13 +69,13 @@ class SurrealDBManager:
                 conn_url += "/rpc"
 
             self.client = AsyncSurreal(conn_url)
-            await asyncio.wait_for(self.client.connect(), timeout=3.0)
+            await asyncio.wait_for(self.client.connect(), timeout=5.0)
             try:
-                await asyncio.wait_for(self.client.signin({"username": self.user, "password": self.password}), timeout=3.0)
+                await asyncio.wait_for(self.client.signin({"username": self.user, "password": self.password}), timeout=5.0)
             except Exception:
-                await asyncio.wait_for(self.client.signin({"user": self.user, "pass": self.password}), timeout=3.0)
+                await asyncio.wait_for(self.client.signin({"user": self.user, "pass": self.password}), timeout=5.0)
 
-            await asyncio.wait_for(self.client.use(self.namespace, self.database), timeout=3.0)
+            await asyncio.wait_for(self.client.use(self.namespace, self.database), timeout=5.0)
             self._is_connected = True
             return True
         except Exception:
@@ -105,10 +109,16 @@ class SurrealDBManager:
             return False
 
     async def is_connected(self) -> bool:
-        """Return connectivity status."""
+        """Return connectivity status with fast cached TTL."""
         if self.client and self._is_connected:
             return True
-        return await self.check_http_health()
+        now = time.time()
+        if hasattr(self, "_last_conn_check") and (now - self._last_conn_check < 30.0):
+            return getattr(self, "_last_conn_result", False)
+        self._last_conn_check = now
+        res = await self.check_http_health()
+        self._last_conn_result = res
+        return res
 
     async def query(self, sql: str, vars: Optional[Dict[str, Any]] = None) -> Any:
         """Execute a SurrealQL query."""
@@ -118,7 +128,7 @@ class SurrealDBManager:
             except Exception:
                 pass
 
-        if not is_port_open(self.url):
+        if not is_port_open(self.url, timeout=2.5):
             raise ConnectionError("SurrealDB service is offline.")
 
         http_url = self.url.rstrip("/")
@@ -137,6 +147,50 @@ class SurrealDBManager:
             if res.status_code in (200, 201):
                 return res.json()
             raise RuntimeError(f"SurrealDB query failed with status {res.status_code}: {res.text}")
+
+    async def select(self, thing: str) -> Any:
+        """Select records from a table or by ID."""
+        if not self._is_connected:
+            await self.connect()
+        if self.client and self._is_connected:
+            try:
+                return await self.client.select(thing)
+            except Exception:
+                pass
+        return await self.query(f"SELECT * FROM {thing};")
+
+    async def create(self, thing: str, data: Dict[str, Any]) -> Any:
+        """Create a new record in SurrealDB."""
+        if not self._is_connected:
+            await self.connect()
+        if self.client and self._is_connected:
+            try:
+                return await self.client.create(thing, data)
+            except Exception:
+                pass
+        return await self.query(f"CREATE {thing} CONTENT $data;", {"data": data})
+
+    async def upsert(self, thing: str, data: Dict[str, Any]) -> Any:
+        """Upsert a record in SurrealDB."""
+        if not self._is_connected:
+            await self.connect()
+        if self.client and self._is_connected:
+            try:
+                return await self.client.upsert(thing, data)
+            except Exception:
+                pass
+        return await self.query(f"UPSERT {thing} CONTENT $data;", {"data": data})
+
+    async def delete(self, thing: str) -> Any:
+        """Delete records from a table or by ID."""
+        if not self._is_connected:
+            await self.connect()
+        if self.client and self._is_connected:
+            try:
+                return await self.client.delete(thing)
+            except Exception:
+                pass
+        return await self.query(f"DELETE {thing};")
 
 
 # Singleton instance

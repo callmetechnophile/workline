@@ -10,7 +10,19 @@ from pydantic import BaseModel, Field
 class ResearchPaperAgentConfig(BaseModel):
     """Configuration for ResearchPaperAgent and Freephdlabor provider."""
 
-    # Freephdlabor Provider Settings
+    # arXiv Provider Settings (Primary)
+    arxiv_base_url: str = Field(
+        default_factory=lambda: os.getenv(
+            "ARXIV_BASE_URL", "https://export.arxiv.org/api/query"
+        )
+    )
+
+    # Provider Selection
+    provider_name: str = Field(
+        default_factory=lambda: os.getenv("RESEARCH_PAPER_PROVIDER", "arxiv").lower()
+    )
+
+    # Freephdlabor Provider Settings (Legacy fallback)
     freephdlabor_api_key: str = Field(
         default_factory=lambda: os.getenv("FREEPHDLABOR_API_KEY", "")
     )
@@ -21,11 +33,13 @@ class ResearchPaperAgentConfig(BaseModel):
     )
     timeout_seconds: float = Field(
         default_factory=lambda: float(
-            os.getenv("FREEPHDLABOR_TIMEOUT_SECONDS", "15.0")
+            os.getenv("ARXIV_TIMEOUT_SECONDS")
+            or os.getenv("FREEPHDLABOR_TIMEOUT_SECONDS")
+            or "15.0"
         )
     )
     max_retries: int = Field(
-        default_factory=lambda: int(os.getenv("FREEPHDLABOR_MAX_RETRIES", "3"))
+        default_factory=lambda: int(os.getenv("RESEARCH_MAX_RETRIES") or os.getenv("FREEPHDLABOR_MAX_RETRIES") or "3")
     )
 
     # Retrieval and Scoring Parameters

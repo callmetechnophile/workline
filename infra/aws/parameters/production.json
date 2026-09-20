@@ -1,0 +1,7 @@
+{
+  "Parameters": {
+    "Environment": "prod",
+    "CognitoUserPoolArn": "",
+    "OpenSearchInstanceType": "r6g.large.search"
+  }
+}

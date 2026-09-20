@@ -1,0 +1,7 @@
+{
+  "Parameters": {
+    "Environment": "staging",
+    "CognitoUserPoolArn": "",
+    "OpenSearchInstanceType": "t3.medium.search"
+  }
+}

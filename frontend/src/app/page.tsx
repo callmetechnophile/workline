@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { SignInButton, SignUpButton } from '@clerk/nextjs';
 import {
@@ -14,6 +14,8 @@ import {
   Cpu,
   Layers,
   Zap,
+  Check,
+  CheckCircle2,
 } from 'lucide-react';
 
 // Layout Primitives
@@ -58,7 +60,7 @@ import { RequirementsWorkspace } from '@/components/RequirementsWorkspace';
 import ResearchPapers from '@/components/ResearchPapers';
 import ContradictionViewer from '@/components/ContradictionViewer';
 
-import DatasheetPanel from '@/components/DatasheetPanel';
+import DatasheetPanel, { SingleDatasheet } from '@/components/DatasheetPanel';
 import { DocumentLibrary } from '@/components/DocumentLibrary';
 import GraphExplorer from '@/components/GraphExplorer';
 
@@ -73,6 +75,7 @@ import GanttRoadmap from '@/components/GanttRoadmap';
 import AuditTrail from '@/components/AuditTrail';
 
 // System & Agent Operations
+import { AgentOperationsWorkspace } from '@/components/AgentOperationsWorkspace';
 import { AgentRegistry } from '@/components/AgentRegistry';
 import { AgentCapabilityPanel } from '@/components/AgentCapabilityPanel';
 import { AgentTaskPanel } from '@/components/AgentTaskPanel';
@@ -202,6 +205,32 @@ function AuthenticatedWorkbench() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCopilotOpen, setIsCopilotOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [loadingStage, setLoadingStage] = useState(0);
+
+  const PIPELINE_LOADING_STAGES = [
+    { label: "Analyzing engineering idea...", sub: "Decomposing requirements, functional boundaries, and target domain" },
+    { label: "Extracting requirements and constraints...", sub: "Synthesizing electrical, thermal, and mechanical limits" },
+    { label: "Querying Nexar / Octopart component intelligence...", sub: "Grounding verified MPNs, datasheets, and real distributor stock" },
+    { label: "Searching arXiv, Crossref, and Semantic Scholar...", sub: "Retrieving literature, peer-reviewed DOIs, and citations" },
+    { label: "Analyzing voltage and power compatibility...", sub: "Verifying pin mapping, power rail sequencing, and thermal limits" },
+    { label: "Generating knowledge graph connections...", sub: "Indexing nodes and relational constraints into SurrealDB" },
+    { label: "Finalizing verified engineering package...", sub: "Assembling revision lineage, BOM, and deterministic gates" },
+  ];
+
+  useEffect(() => {
+    let interval: any;
+    if (isProcessing) {
+      setLoadingStage(0);
+      interval = setInterval(() => {
+        setLoadingStage((prev) => (prev < 6 ? prev + 1 : prev));
+      }, 2000);
+    } else {
+      setLoadingStage(0);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isProcessing]);
 
   const {
     projectData,
@@ -222,6 +251,55 @@ function AuthenticatedWorkbench() {
 
   const { getToken } = useAuth();
   const [localError, setLocalError] = useState<string | null>(null);
+  const [projectDatasheets, setProjectDatasheets] = useState<SingleDatasheet[]>([]);
+  const [isGeneratingDatasheets, setIsGeneratingDatasheets] = useState(false);
+
+  const fetchProjectDatasheets = async () => {
+    const pId = projectId || projectData?.project_id || 'default-project';
+    try {
+      const res = await fetch(`${apiBase}/api/documents/datasheets?project_id=${pId}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          setProjectDatasheets(data);
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to load project datasheets:', e);
+    }
+  };
+
+  const handleGenerateKnowledgeBase = async () => {
+    const pId = projectId || projectData?.project_id || 'default-project';
+    setIsGeneratingDatasheets(true);
+    try {
+      const res = await fetch(`${apiBase}/api/documents/nexar/generate-knowledge-base`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          project_id: pId,
+          idea: systemSpecification || projectName,
+          components: projectData?.components || projectData?.bom || [],
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.datasheets && Array.isArray(data.datasheets) && data.datasheets.length > 0) {
+          setProjectDatasheets(data.datasheets);
+        } else {
+          await fetchProjectDatasheets();
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to generate knowledge base:', e);
+    } finally {
+      setIsGeneratingDatasheets(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProjectDatasheets();
+  }, [projectId, projectData]);
 
   const handleCreateProject = async (
     name: string,
@@ -291,16 +369,68 @@ function AuthenticatedWorkbench() {
   const renderActiveWorkspace = () => {
     if (isProcessing) {
       return (
-        <div className="flex flex-col items-center justify-center p-16 space-y-4 text-center">
-          <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
-          <div className="space-y-1">
-            <h2 className="text-sm font-bold text-slate-100">
-              Running Autonomous Engineering Analysis
+        <div className="flex flex-col items-center justify-center p-8 max-w-xl mx-auto my-8 space-y-6">
+          <div className="text-center space-y-2">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-950/80 border border-indigo-700/40 text-[11px] font-mono text-indigo-300">
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-400" />
+              <span>AUTONOMOUS ENGINEERING PIPELINE RUNNING</span>
+            </div>
+            <h2 className="text-lg font-bold text-slate-100">
+              Synthesizing Hardware Architecture
             </h2>
-            <p className="text-xs text-slate-400 max-w-sm">
-              Synthesizing requirements, querying literature vectors, calculating
-              BOM costs, and solving thermal PINN models...
+            <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
+              Progressing through deterministic design gates, querying component distributor intelligence, and indexing research literature.
             </p>
+          </div>
+
+          {/* Progress Bar */}
+          <div className="w-full bg-slate-900 border border-slate-800 rounded-full h-1.5 overflow-hidden">
+            <div
+              className="bg-indigo-500 h-full transition-all duration-500 ease-out"
+              style={{ width: `${Math.round(((loadingStage + 1) / PIPELINE_LOADING_STAGES.length) * 100)}%` }}
+            />
+          </div>
+
+          {/* 7 Sequential Stages */}
+          <div className="w-full bg-slate-900/90 border border-slate-800 rounded-xl p-4 space-y-3">
+            {PIPELINE_LOADING_STAGES.map((stage, idx) => {
+              const isCompleted = idx < loadingStage;
+              const isCurrent = idx === loadingStage;
+              return (
+                <div
+                  key={idx}
+                  className={`flex items-start gap-3 p-2.5 rounded-lg transition-all ${
+                    isCurrent
+                      ? 'bg-indigo-950/50 border border-indigo-700/50 text-slate-100'
+                      : isCompleted
+                      ? 'bg-slate-950/40 text-slate-300'
+                      : 'opacity-40 text-slate-500'
+                  }`}
+                >
+                  <div className="mt-0.5 flex-shrink-0">
+                    {isCompleted ? (
+                      <div className="w-4 h-4 rounded-full bg-emerald-950 border border-emerald-500 flex items-center justify-center text-emerald-400">
+                        <Check className="w-2.5 h-2.5" />
+                      </div>
+                    ) : isCurrent ? (
+                      <Loader2 className="w-4 h-4 animate-spin text-indigo-400" />
+                    ) : (
+                      <div className="w-4 h-4 rounded-full border border-slate-700 flex items-center justify-center text-[9px] font-mono">
+                        {idx + 1}
+                      </div>
+                    )}
+                  </div>
+                  <div className="space-y-0.5 text-xs">
+                    <div className={`font-mono font-semibold ${isCurrent ? 'text-indigo-200' : isCompleted ? 'text-slate-200' : 'text-slate-500'}`}>
+                      {stage.label}
+                    </div>
+                    <div className="text-[11px] text-slate-400">
+                      {stage.sub}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       );
@@ -346,11 +476,29 @@ function AuthenticatedWorkbench() {
         if (!hasProject) {
           return <EmptyProjectState onOpenNewProject={() => setIsModalOpen(true)} label="research" />;
         }
+        const activePapersList =
+          Array.isArray(projectData?.research_papers) && projectData.research_papers.length > 0
+            ? projectData.research_papers
+            : (Array.isArray(projectData?.papers) ? projectData.papers : []);
         return (
           <div className="space-y-6">
             <ResearchPapers
-              papers={Array.isArray(projectData?.research_papers) ? projectData.research_papers : []}
-              summary={projectData?.research_summary}
+              papers={activePapersList}
+              summary={projectData?.research_summary || projectData?.paper_summary}
+              intent={systemSpecification || projectName}
+              projectId={projectId || projectData?.project_id}
+              projectName={projectName}
+              apiBase={apiBase}
+              onPapersUpdated={(newPapers, newSummary) => {
+                const updated = {
+                  ...(projectData || {}),
+                  research_papers: newPapers,
+                  papers: newPapers,
+                  research_summary: newSummary,
+                  paper_summary: typeof newSummary === 'object' ? newSummary : { summary: newSummary },
+                };
+                setProject(updated, projectName, targetDays);
+              }}
             />
             <ContradictionViewer contradictions={Array.isArray(projectData?.contradictions) ? projectData.contradictions : []} />
           </div>
@@ -359,8 +507,16 @@ function AuthenticatedWorkbench() {
       case 'knowledge':
         return (
           <div className="space-y-6">
-            <DatasheetPanel />
-            <DocumentLibrary />
+            <DatasheetPanel
+              datasheets={projectDatasheets}
+              onFetchDatasheets={handleGenerateKnowledgeBase}
+              isGenerating={isGeneratingDatasheets}
+            />
+            <DocumentLibrary
+              projectId={projectId || projectData?.project_id || 'default-project'}
+              apiBase={apiBase}
+              onKnowledgeBaseGenerated={fetchProjectDatasheets}
+            />
             <GraphExplorer
               projectName={projectName || 'Active Engineering Project'}
               apiBase={apiBase}
@@ -404,7 +560,7 @@ function AuthenticatedWorkbench() {
               <AlternativeComponents components={safeBomItems} />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <PinMappingTable />
+              <PinMappingTable pins={projectData?.architecture?.pin_mapping || projectData?.pin_mapping} />
               <VoltageRiskTable />
             </div>
           </div>
@@ -443,8 +599,18 @@ function AuthenticatedWorkbench() {
               thermalAnalysis={projectData?.thermal_reports}
               apiBase={apiBase}
             />
-            <BoardCanvas />
-            <ComponentPlacement />
+            <BoardCanvas
+              projectComponents={safeBomItems}
+              projectName={projectName}
+              systemSpecification={systemSpecification}
+              pinMapping={projectData?.architecture?.pin_mapping || projectData?.pin_mapping}
+            />
+            <ComponentPlacement
+              projectComponents={safeBomItems}
+              projectName={projectName}
+              systemSpecification={systemSpecification}
+              pinMapping={projectData?.architecture?.pin_mapping || projectData?.pin_mapping}
+            />
           </div>
         );
 
@@ -529,7 +695,9 @@ function AuthenticatedWorkbench() {
             <GanttRoadmap
               roadmap={projectData?.roadmap || []}
               gantt={projectData?.gantt || []}
-              projectName={projectName}
+              projectName={projectName || projectData?.name}
+              projectId={projectId || projectData?.project_id}
+              apiBase={apiBase}
             />
             <AuditTrail logs={projectData?.audit_trail || []} />
           </div>
@@ -555,12 +723,12 @@ function AuthenticatedWorkbench() {
 
       case 'agents':
         return (
-          <div className="space-y-6">
-            <AgentRegistry agents={[]} />
-            <AgentCapabilityPanel agent={null} />
-            <AgentTaskPanel tasks={[]} />
-            <AgentExecutionTimeline externalTasks={[]} />
-          </div>
+          <AgentOperationsWorkspace
+            apiBase={apiBase}
+            projectId={projectData?.project_id || (hasProject ? projectName : 'proj_smart_battery_management_system_bms_for_4s')}
+            projectName={projectName || 'Smart Battery Management System (BMS) for 4S'}
+            teamId={projectData?.team_id || 'default_team'}
+          />
         );
 
       case 'services':
@@ -744,6 +912,7 @@ function AuthenticatedWorkbench() {
         onSubmit={handleCreateProject}
         isProcessing={isProcessing}
         errorMessage={localError}
+        apiBase={apiBase}
       />
     </div>
   );

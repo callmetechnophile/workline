@@ -14,6 +14,7 @@ from research_agents.research_paper_agent.providers.base import (
     BasePaperProvider,
     ProviderError,
 )
+from research_agents.research_paper_agent.providers.arxiv import ArxivProvider
 from research_agents.research_paper_agent.providers.freephdlabor import FreephdlaborProvider
 from research_agents.research_paper_agent.schemas import (
     NormalizedPaper,
@@ -33,13 +34,13 @@ from research_agents.research_paper_agent.services.search import QueryPlanner
 class ResearchPaperAgent:
     """
     Google ADK-compliant Research Paper Acquisition Agent.
-    Discovers, collects, deduplicates, and ranks academic research papers via Freephdlabor.
+    Discovers, collects, deduplicates, and ranks academic research papers via arXiv and research providers.
     """
 
     NAME = "ResearchPaperAgent"
     DESCRIPTION = (
         "Discovers and retrieves engineering research papers relevant to a "
-        "supplied project context using Freephdlabor."
+        "supplied project context using arXiv."
     )
     CAPABILITIES = ["research.search", "research.retrieve", "research.list"]
 
@@ -51,7 +52,12 @@ class ResearchPaperAgent:
         deduplicator: Optional[PaperDeduplicator] = None,
         scorer: Optional[RelevanceScorer] = None,
     ):
-        self.provider = provider or FreephdlaborProvider()
+        if provider:
+            self.provider = provider
+        elif research_config.provider_name == "freephdlabor" and research_config.freephdlabor_api_key:
+            self.provider = FreephdlaborProvider()
+        else:
+            self.provider = ArxivProvider()
         self.cache = cache or QueryCache()
         self.planner = planner or QueryPlanner()
         self.deduplicator = deduplicator or PaperDeduplicator()

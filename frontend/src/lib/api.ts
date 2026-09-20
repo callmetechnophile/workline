@@ -1,13 +1,13 @@
 /**
- * Workline Frontend Centralized API Client
- * Connects the Next.js frontend strictly to Render R1 Core Gateway.
+ * Workline / ArmourFlow Frontend Centralized API Client
+ * Seamlessly interfaces with Amazon API Gateway, CloudFront, or local development backend.
  */
 
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ||
   (typeof window !== "undefined" && window.location.hostname === "localhost"
-    ? "http://localhost:10000"
-    : "http://localhost:10000");
+    ? "http://localhost:8000"
+    : "");
 
 export async function fetchApi<T = any>(
   path: string,

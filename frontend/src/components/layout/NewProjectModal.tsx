@@ -9,6 +9,7 @@ interface NewProjectModalProps {
   onSubmit: (projectName: string, systemSpecification: string, targetDays: number, template?: string) => void;
   isProcessing: boolean;
   errorMessage?: string | null;
+  apiBase?: string;
 }
 
 const TEMPLATE_SUGGESTIONS = [
@@ -20,18 +21,33 @@ const TEMPLATE_SUGGESTIONS = [
   "Smart Battery Management System (BMS) for 4S LiFePO4 pack with SMBus",
 ];
 
+const QUICK_SPEC_CHIPS = [
+  "+ 12V / 24V DC Rail",
+  "+ 4S LiFePO4 (12.8V)",
+  "+ 30A Continuous / 60A Peak",
+  "+ Active Cell Balancing",
+  "+ I2C / SMBus Telemetry",
+  "+ CAN 2.0B Bus",
+  "+ -40°C to +85°C Operating Temp",
+  "+ Hardware Overcurrent Protection",
+  "+ Reverse Polarity Protection",
+  "+ IP65 / IP67 Enclosure",
+];
+
 export default function NewProjectModal({
   isOpen,
   onClose,
   onSubmit,
   isProcessing,
   errorMessage,
+  apiBase,
 }: NewProjectModalProps) {
   const [projectName, setProjectName] = useState('');
   const [systemSpecification, setSystemSpecification] = useState('');
   const [targetDays, setTargetDays] = useState(30);
   const [selectedTemplate, setSelectedTemplate] = useState<string>('');
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [isSynthesizing, setIsSynthesizing] = useState(false);
 
   if (!isOpen) return null;
 
@@ -58,9 +74,46 @@ export default function NewProjectModal({
     setSystemSpecification(template);
     // Do not overwrite projectName if user has already entered one
     if (!projectName.trim()) {
-      // Suggest short title if empty, preserving user flexibility
       setProjectName(template.slice(0, 45));
     }
+  };
+
+  const handleAutoSynthesize = async () => {
+    const query = projectName.trim() || systemSpecification.trim() || selectedTemplate;
+    if (!query) return;
+
+    setIsSynthesizing(true);
+    setValidationError(null);
+    try {
+      const baseUrl = apiBase || (typeof window !== 'undefined' && window.location.port === '3000' ? 'http://localhost:8000' : '');
+      const res = await fetch(`${baseUrl}/api/requirements/synthesize`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          idea: query,
+          custom_specifications: systemSpecification.trim() || undefined,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.specification_text) {
+          setSystemSpecification(data.specification_text);
+        }
+      }
+    } catch (err: any) {
+      console.warn('Auto-synthesis error:', err);
+    } finally {
+      setIsSynthesizing(false);
+    }
+  };
+
+  const handleAddSpecChip = (chipText: string) => {
+    const cleanChip = chipText.replace(/^\+\s*/, '').trim();
+    setSystemSpecification((prev) => {
+      const trimmed = prev.trim();
+      if (!trimmed) return `• ${cleanChip}`;
+      return `${trimmed}\n• ${cleanChip}`;
+    });
   };
 
   const activeError = validationError || errorMessage;
@@ -123,11 +176,27 @@ export default function NewProjectModal({
 
           {/* 2. SYSTEM SPECIFICATION & ENGINEERING GOAL (Technical Requirement) */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-mono font-semibold text-slate-300 uppercase">
-              System Specification & Engineering Goal <span className="text-red-400">*</span>
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-mono font-semibold text-slate-300 uppercase">
+                System Specification & Engineering Goal <span className="text-red-400">*</span>
+              </label>
+              <button
+                type="button"
+                onClick={handleAutoSynthesize}
+                disabled={isSynthesizing || (!projectName.trim() && !systemSpecification.trim())}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-indigo-950/90 border border-indigo-700/60 text-[11px] font-mono font-semibold text-indigo-300 hover:text-white hover:bg-indigo-900/80 transition disabled:opacity-40 cursor-pointer shadow-sm"
+                title="Automatically generate full technical specifications from your project idea"
+              >
+                {isSynthesizing ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-400" />
+                ) : (
+                  <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+                )}
+                <span>{isSynthesizing ? 'Synthesizing...' : 'Auto-Generate Specs'}</span>
+              </button>
+            </div>
             <textarea
-              rows={3}
+              rows={4}
               required
               placeholder="e.g. Design a 4-layer PCB buck converter with 95% efficiency, overvoltage protection, and automotive-grade component sourcing..."
               value={systemSpecification}
@@ -137,6 +206,25 @@ export default function NewProjectModal({
               }}
               className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 font-sans leading-relaxed"
             />
+
+            {/* Quick-Add Specification Chips */}
+            <div className="space-y-1 pt-1">
+              <div className="flex items-center justify-between text-[10px] font-mono text-slate-400">
+                <span>Quick-Add Specifications (click to customize):</span>
+              </div>
+              <div className="flex flex-wrap gap-1.5 max-h-20 overflow-y-auto">
+                {QUICK_SPEC_CHIPS.map((chip, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => handleAddSpecChip(chip)}
+                    className="px-2 py-0.5 rounded text-[10px] font-mono bg-slate-950/80 border border-slate-800 text-slate-400 hover:text-indigo-300 hover:border-indigo-700/50 transition cursor-pointer"
+                  >
+                    {chip}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* 3. Timeline Parameter */}

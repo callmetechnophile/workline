@@ -1,0 +1,315 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Workline / ArmourFlow Engineering Platform
+  Production-ready AWS Serverless Architecture: API Gateway, Lambda, Step Functions,
+  SQS, SNS, EventBridge, S3, DynamoDB, Cognito, CloudWatch, and OpenSearch.
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues: [dev, staging, prod]
+    Description: Application deployment environment
+  CognitoUserPoolArn:
+    Type: String
+    Default: ''
+    Description: Optional existing Cognito User Pool ARN for authorizer
+  OpenSearchInstanceType:
+    Type: String
+    Default: t3.small.search
+    Description: OpenSearch cluster instance type
+
+Conditions:
+  UseCognitoAuth: !Not [!Equals [!Ref CognitoUserPoolArn, '']]
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 1024
+    Runtime: python3.11
+    Tracing: Active
+    Environment:
+      Variables:
+        WORKLINE_ENV: !Ref Environment
+        DYNAMODB_TABLE_NAME: !Ref MetadataTable
+        WORKLINE_ARTIFACTS_BUCKET: !Ref ArtifactsBucket
+        WORKLINE_SQS_QUEUE_URL: !Ref JobQueue
+        WORKLINE_SQS_DLQ_URL: !Ref JobDLQ
+        EVENTBRIDGE_BUS_NAME: !Ref PlatformEventBus
+        SNS_ALERTS_TOPIC_ARN: !Ref PlatformAlertsTopic
+        STEP_FUNCTIONS_WORKFLOW_ARN: !Ref MultiAgentStateMachine
+
+Resources:
+  # ============================================================================
+  # 1. API GATEWAY (HTTP API)
+  # ============================================================================
+  WorklineHttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: !Ref Environment
+      CorsConfiguration:
+        AllowOrigins:
+          - '*'
+        AllowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+        AllowHeaders:
+          - Authorization
+          - Content-Type
+          - X-Correlation-ID
+          - X-Amz-Date
+        MaxAge: 600
+
+  # ============================================================================
+  # 2. SERVERLESS BACKEND (API GATEWAY -> LAMBDA ASGI ADAPTER)
+  # ============================================================================
+  WorklineApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../../
+      Handler: backend.lambda_handler.handler
+      Description: Workline FastAPI backend running via Mangum on Lambda
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - DynamoDBCrudPolicy:
+            TableName: !Ref MetadataTable
+        - S3CrudPolicy:
+            BucketName: !Ref ArtifactsBucket
+        - SQSSendMessagePolicy:
+            QueueName: !GetAtt JobQueue.QueueName
+        - EventBridgePutEventsPolicy:
+            EventBusName: !Ref PlatformEventBus
+        - SNSPublishMessagePolicy:
+            TopicName: !GetAtt PlatformAlertsTopic.TopicName
+        - StepFunctionsExecutionPolicy:
+            StateMachineName: !GetAtt MultiAgentStateMachine.Name
+        - CloudWatchPutMetricPolicy: {}
+      Events:
+        ApiRoot:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref WorklineHttpApi
+            Path: /
+            Method: ANY
+        ApiProxy:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref WorklineHttpApi
+            Path: /{proxy+}
+            Method: ANY
+
+  # ============================================================================
+  # 3. DYNAMODB APPLICATION METADATA & IDEMPOTENCY STORE
+  # ============================================================================
+  MetadataTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub 'workline-metadata-${Environment}'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: PK
+          AttributeType: S
+        - AttributeName: SK
+          AttributeType: S
+      KeySchema:
+        - AttributeName: PK
+          KeyType: HASH
+        - AttributeName: SK
+          KeyType: RANGE
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+
+  # ============================================================================
+  # 4. S3 ARTIFACT & OBJECT STORE (SSE-KMS)
+  # ============================================================================
+  ArtifactsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub 'workline-artifacts-${Environment}-${AWS::AccountId}'
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: aws:kms
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: Enabled
+
+  # ============================================================================
+  # 5. AMAZON SQS ASYNC JOB QUEUE & DLQ
+  # ============================================================================
+  JobDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub 'workline-jobs-dlq-${Environment}'
+      MessageRetentionPeriod: 1209600 # 14 days
+
+  JobQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub 'workline-jobs-${Environment}'
+      VisibilityTimeout: 300
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt JobDLQ.Arn
+        maxReceiveCount: 3
+
+  # ============================================================================
+  # 6. AMAZON EVENTBRIDGE CUSTOM EVENT BUS
+  # ============================================================================
+  PlatformEventBus:
+    Type: AWS::Events::EventBus
+    Properties:
+      Name: !Sub 'workline-events-${Environment}'
+
+  # ============================================================================
+  # 7. AMAZON SNS ALERT FAN-OUT TOPIC
+  # ============================================================================
+  PlatformAlertsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub 'workline-alerts-${Environment}'
+
+  # ============================================================================
+  # 8. AWS STEP FUNCTIONS MULTI-AGENT STATE MACHINE
+  # ============================================================================
+  MultiAgentStateMachineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: states.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: MultiAgentStateMachinePolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - sns:Publish
+                Resource: !Ref PlatformAlertsTopic
+
+  MultiAgentStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Name: !Sub 'workline-multi-agent-orchestrator-${Environment}'
+      DefinitionUri: stepfunctions/multi_agent_workflow.asl.json
+      DefinitionSubstitutions:
+        PlannerAgentFunctionArn: !GetAtt WorklineApiFunction.Arn
+        ResearchAgentFunctionArn: !GetAtt WorklineApiFunction.Arn
+        ExtractionAgentFunctionArn: !GetAtt WorklineApiFunction.Arn
+        BOMAgentFunctionArn: !GetAtt WorklineApiFunction.Arn
+        OptimizationAgentFunctionArn: !GetAtt WorklineApiFunction.Arn
+        ThermalAgentFunctionArn: !GetAtt WorklineApiFunction.Arn
+        ValidationAgentFunctionArn: !GetAtt WorklineApiFunction.Arn
+        ReportAgentFunctionArn: !GetAtt WorklineApiFunction.Arn
+        AlertsTopicArn: !Ref PlatformAlertsTopic
+      Role: !GetAtt MultiAgentStateMachineRole.Arn
+      Type: STANDARD
+      Tracing:
+        Enabled: true
+
+  # ============================================================================
+  # 9. CLOUDWATCH METRICS DASHBOARD
+  # ============================================================================
+  PlatformDashboard:
+    Type: AWS::CloudWatch::Dashboard
+    Properties:
+      DashboardName: !Sub 'Workline-Platform-${Environment}'
+      DashboardBody: !Sub |
+        {
+          "widgets": [
+            {
+              "type": "metric",
+              "x": 0, "y": 0, "width": 12, "height": 6,
+              "properties": {
+                "title": "API Gateway Requests & Latency",
+                "metrics": [
+                  ["AWS/ApiGateway", "Count", "ApiId", "${WorklineHttpApi}"],
+                  [".", "Latency", ".", ".", {"stat": "p95"}]
+                ],
+                "period": 300,
+                "region": "${AWS::Region}"
+              }
+            },
+            {
+              "type": "metric",
+              "x": 12, "y": 0, "width": 12, "height": 6,
+              "properties": {
+                "title": "ArmorIQ Security Policy Violations",
+                "metrics": [
+                  ["Workline/Platform", "ArmorIQPolicyViolations"]
+                ],
+                "period": 300,
+                "region": "${AWS::Region}",
+                "stat": "Sum"
+              }
+            },
+            {
+              "type": "metric",
+              "x": 0, "y": 6, "width": 12, "height": 6,
+              "properties": {
+                "title": "SQS Job Queue Depth & DLQ",
+                "metrics": [
+                  ["AWS/SQS", "ApproximateNumberOfMessagesVisible", "QueueName", "${JobQueue.QueueName}"],
+                  [".", "ApproximateNumberOfMessagesVisible", "QueueName", "${JobDLQ.QueueName}"]
+                ],
+                "period": 300,
+                "region": "${AWS::Region}"
+              }
+            },
+            {
+              "type": "metric",
+              "x": 12, "y": 6, "width": 12, "height": 6,
+              "properties": {
+                "title": "Lambda Invocations & Errors",
+                "metrics": [
+                  ["AWS/Lambda", "Invocations", "FunctionName", "${WorklineApiFunction}"],
+                  [".", "Errors", "FunctionName", "${WorklineApiFunction}", {"stat": "Sum"}]
+                ],
+                "period": 300,
+                "region": "${AWS::Region}"
+              }
+            }
+          ]
+        }
+
+Outputs:
+  ApiEndpoint:
+    Description: HTTP API Gateway Endpoint URL
+    Value: !Sub 'https://${WorklineHttpApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/'
+  JobQueueUrl:
+    Description: Amazon SQS Job Queue URL
+    Value: !Ref JobQueue
+  ArtifactsBucketName:
+    Description: Amazon S3 Artifacts Bucket Name
+    Value: !Ref ArtifactsBucket
+  DynamoDBTableName:
+    Description: DynamoDB Metadata Table Name
+    Value: !Ref MetadataTable
+  EventBusName:
+    Description: Amazon EventBridge Platform EventBus Name
+    Value: !Ref PlatformEventBus
+  AlertsTopicArn:
+    Description: Amazon SNS Alerts Topic ARN
+    Value: !Ref PlatformAlertsTopic
+  StepFunctionsStateMachineArn:
+    Description: AWS Step Functions State Machine ARN
+    Value: !Ref MultiAgentStateMachine

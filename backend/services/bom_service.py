@@ -245,6 +245,10 @@ def generate_optimized_bom(components: List[Dict[str, Any]], mode: str = "normal
         else:
             eta = "7-10 Days"
             
+        import re
+        mpn_match = re.search(r'\b([A-Z0-9]{3,}[A-Z0-9\-\/]{2,})\b', name)
+        extracted_mpn = mpn_match.group(1) if mpn_match else name.split()[0]
+
         optimized_items.append({
             "name": name,
             "cost": float(final_cost) / 83.0,
@@ -252,15 +256,25 @@ def generate_optimized_bom(components: List[Dict[str, Any]], mode: str = "normal
             "component": name,
             "category": comp.get("category", ""),
             "selected_vendor": best["vendor"],
+            "supplier": best["vendor"],
             "vendor_location": best["location"],
             "base_cost": base_cost,
+            "unit_price": base_cost,
+            "unitPrice": base_cost,
             "shipping_cost": shipping_cost,
             "distance": f"{dist} km",
             "final_cost": final_cost,
             "stock": best["stock"],
             "eta": eta,
             "alternatives": alts,
-            "url": best["url"]
+            "url": best["url"],
+            "ref": f"U{len(optimized_items) + 1}",
+            "reference_designator": f"U{len(optimized_items) + 1}",
+            "part_number": extracted_mpn,
+            "ordering_code": extracted_mpn,
+            "mpn": extracted_mpn,
+            "qty": 1,
+            "status": "PASS",
         })
         
     grand_total = electronics_total + mechanical_total + shipping_total

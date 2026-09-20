@@ -16,6 +16,7 @@ class SourceType(str, Enum):
     GIT = "GIT"
     WLIPJT = "WLIPJT"
     GENERATED = "GENERATED"
+    OCTOPART_NEXAR = "OCTOPART_NEXAR"
     OTHER = "OTHER"
 
 

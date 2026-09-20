@@ -1,0 +1,188 @@
+{
+  "Comment": "Workline / ArmourFlow Engineering Multi-Agent Lifecycle Workflow",
+  "StartAt": "ProjectPlanning",
+  "States": {
+    "ProjectPlanning": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${PlannerAgentFunctionArn}",
+        "Payload": {
+          "project_id.$": "$.project_id",
+          "user_intent.$": "$.user_intent",
+          "context.$": "$.context"
+        }
+      },
+      "ResultPath": "$.planning_result",
+      "Next": "ResearchAndExtractionParallel",
+      "Retry": [
+        {
+          "ErrorEquals": ["Lambda.ServiceException", "Lambda.AWSLambdaException", "Lambda.SdkClientException"],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 3,
+          "BackoffRate": 2.0
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "ResultPath": "$.error",
+          "Next": "WorkflowFailed"
+        }
+      ]
+    },
+    "ResearchAndExtractionParallel": {
+      "Type": "Parallel",
+      "ResultPath": "$.research_data",
+      "Branches": [
+        {
+          "StartAt": "DeepResearch",
+          "States": {
+            "DeepResearch": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName": "${ResearchAgentFunctionArn}",
+                "Payload": {
+                  "project_id.$": "$.project_id",
+                  "queries.$": "$.planning_result.Payload.research_queries"
+                }
+              },
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "ComponentExtraction",
+          "States": {
+            "ComponentExtraction": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName": "${ExtractionAgentFunctionArn}",
+                "Payload": {
+                  "project_id.$": "$.project_id",
+                  "specifications.$": "$.planning_result.Payload.specifications"
+                }
+              },
+              "End": true
+            }
+          }
+        }
+      ],
+      "Next": "BOMGeneration"
+    },
+    "BOMGeneration": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${BOMAgentFunctionArn}",
+        "Payload": {
+          "project_id.$": "$.project_id",
+          "components.$": "$.research_data[1].Payload.components"
+        }
+      },
+      "ResultPath": "$.bom_result",
+      "Next": "EngineeringOptimization"
+    },
+    "EngineeringOptimization": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${OptimizationAgentFunctionArn}",
+        "Payload": {
+          "project_id.$": "$.project_id",
+          "bom.$": "$.bom_result.Payload.bom"
+        }
+      },
+      "ResultPath": "$.optimization_result",
+      "Next": "ValidationAndSimulation"
+    },
+    "ValidationAndSimulation": {
+      "Type": "Parallel",
+      "ResultPath": "$.validation_simulation_result",
+      "Branches": [
+        {
+          "StartAt": "ThermalAndPowerAnalysis",
+          "States": {
+            "ThermalAndPowerAnalysis": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName": "${ThermalAgentFunctionArn}",
+                "Payload": {
+                  "project_id.$": "$.project_id",
+                  "bom.$": "$.optimization_result.Payload.optimized_bom"
+                }
+              },
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "ArchitectureValidation",
+          "States": {
+            "ArchitectureValidation": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName": "${ValidationAgentFunctionArn}",
+                "Payload": {
+                  "project_id.$": "$.project_id",
+                  "architecture.$": "$.planning_result.Payload.architecture"
+                }
+              },
+              "End": true
+            }
+          }
+        }
+      ],
+      "Next": "EvaluationGate"
+    },
+    "EvaluationGate": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.validation_simulation_result[1].Payload.is_valid",
+          "BooleanEquals": false,
+          "Next": "ValidationFailureNotice"
+        }
+      ],
+      "Default": "FinalReportAndExport"
+    },
+    "ValidationFailureNotice": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sns:publish",
+      "Parameters": {
+        "TopicArn": "${AlertsTopicArn}",
+        "Subject": "Workline Architecture Validation Failed",
+        "Message": {
+          "project_id.$": "$.project_id",
+          "violations.$": "$.validation_simulation_result[1].Payload.violations"
+        }
+      },
+      "Next": "WorkflowFailed"
+    },
+    "FinalReportAndExport": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${ReportAgentFunctionArn}",
+        "Payload": {
+          "project_id.$": "$.project_id",
+          "summary.$": "$.optimization_result.Payload"
+        }
+      },
+      "ResultPath": "$.final_report",
+      "Next": "WorkflowSuccess"
+    },
+    "WorkflowSuccess": {
+      "Type": "Succeed"
+    },
+    "WorkflowFailed": {
+      "Type": "Fail",
+      "Error": "WorkflowExecutionError",
+      "Cause": "The multi-agent workflow encountered an unrecoverable validation or execution failure."
+    }
+  }
+}

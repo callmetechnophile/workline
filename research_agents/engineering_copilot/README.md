@@ -57,7 +57,7 @@ USER
 
 ---
 
-## 3. Evidence-First Grounding & Zero Hallucination
+## 3. Evidence-Grounded Data Integrity
 
 $$\text{GRAPH} \longrightarrow \text{EVIDENCE} \longrightarrow \text{REASONING} \longrightarrow \text{ANSWER}$$
 

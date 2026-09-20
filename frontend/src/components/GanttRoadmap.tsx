@@ -25,12 +25,34 @@ interface RoadmapPhase {
 interface GanttRoadmapProps {
   roadmap: RoadmapPhase[];
   gantt: GanttTask[];
-  projectId?: number;
+  projectId?: string | number;
   projectName?: string;
+  apiBase?: string;
 }
 
-export default function GanttRoadmap({ roadmap, gantt, projectId, projectName }: GanttRoadmapProps) {
+export default function GanttRoadmap({
+  roadmap,
+  gantt,
+  projectId,
+  projectName,
+  apiBase
+}: GanttRoadmapProps) {
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [zoomMode, setZoomMode] = useState<'auto' | 'compact' | 'spacious'>('auto');
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = useState<number>(1100);
+
+  React.useEffect(() => {
+    const updateWidth = () => {
+      if (containerRef.current) {
+        setContainerWidth(containerRef.current.clientWidth);
+      }
+    };
+    updateWidth();
+    window.addEventListener('resize', updateWidth);
+    return () => window.removeEventListener('resize', updateWidth);
+  }, []);
+
   if (!roadmap || roadmap.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-8 text-slate-400">
@@ -41,26 +63,74 @@ export default function GanttRoadmap({ roadmap, gantt, projectId, projectName }:
   }
 
   // Calculate coordinates for SVG Gantt Chart
-  const taskHeight = 35;
-  const gap = 15;
-  const paddingLeft = 160;
-  const chartHeight = gantt.length * (taskHeight + gap) + 40;
-  
-  // Estimate time grid
-  const daysTotal = roadmap.reduce((sum, r) => sum + r.duration_days, 0) || 20;
-  const scale = 22; // pixels per day
+  const taskHeight = 38;
+  const gap = 16;
+  const paddingLeft = 280; // Expanded to prevent truncation of phase names
+  const chartHeight = Math.max(gantt.length * (taskHeight + gap) + 46, 220);
+
+  // Time grid calculation
+  const daysTotal = roadmap.reduce((sum, r) => sum + r.duration_days, 0) || 25;
+
+  // Dynamic scaling to fill available space and keep it free
+  let scale = 36;
+  const availableTimelineWidth = Math.max(containerWidth - paddingLeft - 70, 450);
+
+  if (zoomMode === 'auto') {
+    scale = Math.max(34, Math.floor(availableTimelineWidth / Math.max(daysTotal, 1)));
+  } else if (zoomMode === 'compact') {
+    scale = 26;
+  } else if (zoomMode === 'spacious') {
+    scale = 55;
+  }
+
   const timelineWidth = daysTotal * scale;
-  
+  const totalSvgWidth = Math.max(paddingLeft + timelineWidth + 60, containerWidth - 48);
+
   return (
     <div className="space-y-6">
       {/* Gantt Chart SVG */}
-      <div className="glass-panel p-6 border border-blue-500/20 overflow-hidden">
-        <div className="flex justify-between items-center mb-4 border-b border-blue-900/40 pb-3">
-          <h3 className="text-md font-semibold text-cyan-400 glow-cyan flex items-center gap-2">
-            <Calendar className="w-5 h-5" />
-            Execution Timeline (Gantt Schedule)
-          </h3>
-          <div className="flex items-center gap-3">
+      <div ref={containerRef} className="glass-panel p-6 border border-blue-500/20 overflow-hidden w-full">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 border-b border-blue-900/40 pb-3">
+          <div className="space-y-0.5">
+            <h3 className="text-md font-semibold text-cyan-400 glow-cyan flex items-center gap-2">
+              <Calendar className="w-5 h-5" />
+              Execution Timeline (Gantt Schedule)
+            </h3>
+            <p className="text-[11px] text-slate-400">
+              Deterministic critical-path milestones & deliverable dependencies
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3 flex-wrap">
+            {/* Zoom / Viewport Mode Selector */}
+            <div className="flex items-center bg-slate-950/80 p-0.5 rounded-lg border border-slate-800 text-[11px] font-mono">
+              <button
+                onClick={() => setZoomMode('auto')}
+                className={`px-2.5 py-1 rounded transition cursor-pointer ${
+                  zoomMode === 'auto' ? 'bg-cyan-600 text-white font-bold' : 'text-slate-400 hover:text-slate-200'
+                }`}
+                title="Automatically fits the timeline across the entire card width"
+              >
+                Auto-Fit
+              </button>
+              <button
+                onClick={() => setZoomMode('compact')}
+                className={`px-2.5 py-1 rounded transition cursor-pointer ${
+                  zoomMode === 'compact' ? 'bg-cyan-600 text-white font-bold' : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                Compact
+              </button>
+              <button
+                onClick={() => setZoomMode('spacious')}
+                className={`px-2.5 py-1 rounded transition cursor-pointer ${
+                  zoomMode === 'spacious' ? 'bg-cyan-600 text-white font-bold' : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                Spacious
+              </button>
+            </div>
+
             <button
               onClick={() => setIsExportModalOpen(true)}
               title="Export your engineering timeline directly to Google Calendar."
@@ -69,30 +139,34 @@ export default function GanttRoadmap({ roadmap, gantt, projectId, projectName }:
               <Calendar className="w-3.5 h-3.5" />
               📅 Export to Google Calendar
             </button>
-            <span className="text-xs text-slate-400">Scale: 1 day = 22px</span>
+            <span className="text-[11px] text-slate-400 font-mono">
+              Scale: 1d = {scale}px
+            </span>
           </div>
         </div>
-        
-        <div className="overflow-x-auto pb-2">
-          <svg width={paddingLeft + timelineWidth + 50} height={chartHeight} className="text-xs">
+
+        <div className="overflow-x-auto pb-2 w-full">
+          <svg width={totalSvgWidth} height={chartHeight} className="text-xs w-full block">
             {/* Grid Header Days */}
             {(() => {
-              const textInterval = daysTotal > 50 ? 10 : (daysTotal > 20 ? 5 : 2);
+              const textInterval = daysTotal > 40 ? 5 : (daysTotal > 15 ? 5 : 2);
               return Array.from({ length: daysTotal + 1 }).map((_, d) => {
                 const x = paddingLeft + d * scale;
+                const isMajor = d % textInterval === 0;
                 return (
                   <g key={`grid-day-${d}`}>
-                    <line 
-                      x1={x} 
-                      y1={25} 
-                      x2={x} 
-                      y2={chartHeight - 10} 
-                      stroke="rgba(59, 130, 246, 0.08)" 
-                      strokeWidth={1} 
+                    <line
+                      x1={x}
+                      y1={28}
+                      x2={x}
+                      y2={chartHeight - 10}
+                      stroke={isMajor ? "rgba(59, 130, 246, 0.18)" : "rgba(59, 130, 246, 0.05)"}
+                      strokeWidth={isMajor ? 1.2 : 1}
+                      strokeDasharray={isMajor ? "none" : "2 2"}
                     />
-                    {d % textInterval === 0 && (
-                      <text x={x} y={15} fill="#64748b" textAnchor="middle" className="font-mono text-[9px]">
-                        D{d}
+                    {isMajor && (
+                      <text x={x} y={18} fill="#94a3b8" textAnchor="middle" className="font-mono text-[10px] font-semibold">
+                        Day {d}
                       </text>
                     )}
                   </g>
@@ -109,76 +183,123 @@ export default function GanttRoadmap({ roadmap, gantt, projectId, projectName }:
               const projectStart = gantt[0] ? parseDate(gantt[0].start) : new Date();
 
               return gantt.map((task, idx) => {
-                const y = 30 + idx * (taskHeight + gap);
+                const y = 32 + idx * (taskHeight + gap);
                 const taskStart = parseDate(task.start);
                 const taskEnd = parseDate(task.end);
-                
+
                 const dayOffset = Math.round((taskStart.getTime() - projectStart.getTime()) / (1000 * 3600 * 24));
-                const duration = Math.round((taskEnd.getTime() - taskStart.getTime()) / (1000 * 3600 * 24)) || 1;
-                
+                const duration = Math.max(Math.round((taskEnd.getTime() - taskStart.getTime()) / (1000 * 3600 * 24)), 1);
+
                 const xStart = paddingLeft + dayOffset * scale;
-                const barWidth = duration * scale;
+                const barWidth = Math.max(duration * scale, 30);
+
+                // Full title or clean title
+                const displayName = task.name.length > 38 ? `${task.name.substring(0, 36)}...` : task.name;
 
                 return (
                   <g key={task.id} className="group">
-                    {/* Task Name Label */}
-                    <text 
-                      x={10} 
-                      y={y + taskHeight / 2 + 4} 
-                      fill="#e2e8f0" 
-                      className="font-semibold text-[11px] select-none"
+                    {/* Row hover highlight background */}
+                    <rect
+                      x={8}
+                      y={y - 4}
+                      width={totalSvgWidth - 16}
+                      height={taskHeight + 8}
+                      rx={6}
+                      fill="transparent"
+                      className="group-hover:fill-slate-800/30 transition-colors"
+                    />
+
+                    {/* Phase tag circle badge */}
+                    <rect
+                      x={10}
+                      y={y + 8}
+                      width={22}
+                      height={20}
+                      rx={4}
+                      fill="rgba(6, 182, 212, 0.15)"
+                      stroke="rgba(6, 182, 212, 0.4)"
+                    />
+                    <text
+                      x={21}
+                      y={y + 22}
+                      textAnchor="middle"
+                      fill="#38bdf8"
+                      className="font-mono text-[9px] font-bold"
                     >
-                      {task.name.length > 25 ? `${task.name.substring(0, 22)}...` : task.name}
+                      P{idx + 1}
                     </text>
-                    
+
+                    {/* Task Name Label - Spacious, uncompressed */}
+                    <text
+                      x={38}
+                      y={y + taskHeight / 2 + 4}
+                      fill="#e2e8f0"
+                      className="font-semibold text-[11px] select-none group-hover:fill-cyan-300 transition-colors"
+                    >
+                      {displayName}
+                    </text>
+                    <title>{task.name} ({duration} days)</title>
+
                     {/* Task bar container background */}
-                    <rect 
-                      x={xStart} 
-                      y={y} 
-                      width={barWidth} 
-                      height={taskHeight} 
-                      rx={4} 
-                      fill="rgba(59, 130, 246, 0.05)" 
-                      stroke="rgba(59, 130, 246, 0.15)"
+                    <rect
+                      x={xStart}
+                      y={y}
+                      width={barWidth}
+                      height={taskHeight}
+                      rx={6}
+                      fill="rgba(30, 58, 138, 0.2)"
+                      stroke="rgba(59, 130, 246, 0.35)"
+                      strokeWidth={1}
                     />
-                    
+
                     {/* Task progress fill */}
-                    <rect 
-                      x={xStart} 
-                      y={y} 
-                      width={barWidth * (task.progress / 100 || 0.15)} 
-                      height={taskHeight} 
-                      rx={4} 
-                      fill="url(#gantt-gradient)" 
+                    <rect
+                      x={xStart}
+                      y={y}
+                      width={barWidth * Math.max((task.progress || 25) / 100, 0.2)}
+                      height={taskHeight}
+                      rx={6}
+                      fill="url(#gantt-gradient)"
                     />
-                    
-                    {/* Progress Text overlay on hover */}
-                    <text 
-                      x={xStart + barWidth / 2} 
-                      y={y + taskHeight / 2 + 4} 
-                      fill="#ffffff" 
-                      textAnchor="middle" 
-                      className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-[10px] font-bold"
+
+                    {/* Duration badge inside bar */}
+                    <text
+                      x={xStart + barWidth - 8}
+                      y={y + taskHeight / 2 + 4}
+                      fill="rgba(255, 255, 255, 0.85)"
+                      textAnchor="end"
+                      className="font-mono text-[10px] font-bold pointer-events-none"
                     >
-                      {task.progress > 0 ? `${task.progress}% Complete` : 'Scheduled'}
+                      {duration}d
                     </text>
-                    
+
+                    {/* Progress Text overlay on hover */}
+                    <text
+                      x={xStart + barWidth / 2}
+                      y={y + taskHeight / 2 + 4}
+                      fill="#ffffff"
+                      textAnchor="middle"
+                      className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-[10px] font-mono font-bold drop-shadow"
+                    >
+                      {task.progress > 0 ? `${task.progress}% Complete` : `${duration} Days`}
+                    </text>
+
                     {/* Connection line dependency arrow */}
                     {task.dependencies && (
                       <path
-                        d={`M ${xStart - 10} ${y - gap} L ${xStart - 10} ${y + taskHeight / 2} L ${xStart} ${y + taskHeight / 2}`}
+                        d={`M ${xStart - 12} ${y - gap} L ${xStart - 12} ${y + taskHeight / 2} L ${xStart} ${y + taskHeight / 2}`}
                         fill="none"
                         stroke="#f59e0b"
-                        strokeWidth={1.2}
-                        strokeDasharray="2 2"
-                        className="opacity-70"
+                        strokeWidth={1.5}
+                        strokeDasharray="3 3"
+                        className="opacity-80"
                       />
                     )}
                   </g>
                 );
               });
             })()}
-            
+
             {/* Defs for gradients */}
             <defs>
               <linearGradient id="gantt-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -234,6 +355,7 @@ export default function GanttRoadmap({ roadmap, gantt, projectId, projectName }:
         projectId={projectId || 1}
         projectName={projectName || "WorkflowGuide Project"}
         ganttTasks={gantt}
+        apiBase={apiBase}
       />
     </div>
   );

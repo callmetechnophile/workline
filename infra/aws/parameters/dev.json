@@ -1,0 +1,7 @@
+{
+  "Parameters": {
+    "Environment": "dev",
+    "CognitoUserPoolArn": "",
+    "OpenSearchInstanceType": "t3.small.search"
+  }
+}

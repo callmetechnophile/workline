@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from backend.schemas.research_schemas import ResearchRequest, ResearchResponse
 from backend.agents.planner_agent import run_engineering_pipeline
 
@@ -52,6 +52,140 @@ def execute_research(payload: ResearchRequest):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Engineering pipeline failed: {str(e)}")
+
+
+class HarvestRequest(BaseModel):
+    project_id: Optional[str] = "PROJ-DEFAULT"
+    project_name: Optional[str] = None
+    system_specification: Optional[str] = None
+    keywords: Optional[str] = None
+
+
+@router.get("/research/papers")
+def get_research_papers(project_id: Optional[str] = None, query: Optional[str] = None):
+    """Retrieve peer-reviewed research papers for an active project or search query."""
+    try:
+        from backend.database import get_pipeline_runs_for_project, get_pipeline_stages_for_run
+        from backend.workline.pipeline.scholarly_research import search_scholarly_research
+
+        resolved_id = project_id or "PROJ-DEFAULT"
+        
+        # 1. Try to fetch from completed pipeline stages for this project
+        runs = get_pipeline_runs_for_project(resolved_id)
+        if runs:
+            for run in runs:
+                stages = get_pipeline_stages_for_run(run["run_id"])
+                for st in stages:
+                    if st.get("stage") == "R3_RESEARCH" and st.get("stage_data"):
+                        data = st["stage_data"]
+                        if data.get("research_papers"):
+                            return {
+                                "project_id": resolved_id,
+                                "papers": data.get("research_papers", []),
+                                "research_papers": data.get("research_papers", []),
+                                "summary": data.get("findings", ""),
+                                "contradictions": data.get("contradictions", []),
+                            }
+
+        # 2. If not found in runs or query provided, run live scholarly search
+        search_query = (query or resolved_id.replace("PROJ-", "")).strip() or "Hardware Engineering Architecture"
+        papers = search_scholarly_research(
+            idea=search_query,
+            requirements=[],
+            domain="Hardware Engineering",
+            project_id=resolved_id,
+            max_papers=6,
+        )
+        return {
+            "project_id": resolved_id,
+            "papers": papers,
+            "research_papers": papers,
+            "summary": f"Synthesized peer-reviewed engineering literature for '{search_query}'.",
+            "contradictions": [],
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch research papers: {str(e)}")
+
+
+@router.post("/research/harvest")
+def harvest_research_papers(payload: HarvestRequest):
+    """Harvest real academic research papers on-demand for a project using arXiv, Crossref, and Semantic Scholar."""
+    try:
+        from backend.workline.pipeline.scholarly_research import search_scholarly_research
+        from backend.agents.research_agent import run_research
+        from backend.armoriq.delegation import capture_plan, delegate, invoke_tool
+
+        project_id = payload.project_id or "PROJ-DEFAULT"
+        query = (
+            payload.keywords
+            or payload.system_specification
+            or payload.project_name
+            or project_id.replace("PROJ-", "")
+        ).strip() or "Hardware Engineering Architecture"
+
+        root_receipt = capture_plan(query)
+        research_receipt = delegate(
+            agent_name="Research Agent",
+            requested_scope=["search_scholarly_papers", "search_papers", "summarize_papers"],
+            parent_receipt=root_receipt.model_dump(),
+        )
+
+        papers = invoke_tool(
+            agent_name="Research Agent",
+            tool_name="search_scholarly_papers",
+            args={
+                "idea": query,
+                "requirements": [f"Hardware design and implementation of {query}"],
+                "domain": "Hardware Engineering",
+                "project_id": project_id,
+                "max_papers": 6,
+            },
+            receipt_dict=research_receipt.model_dump(),
+        )
+
+        if not papers:
+            papers = search_scholarly_research(
+                idea=query,
+                requirements=[],
+                domain="Hardware Engineering",
+                project_id=project_id,
+                max_papers=6,
+            )
+
+        # Detect contradictions
+        contradictions = []
+        try:
+            contradiction_receipt = delegate(
+                agent_name="ContradictionAgent",
+                requested_scope=["detect_contradictions"],
+                parent_receipt=root_receipt.model_dump(),
+            )
+            con_res = invoke_tool(
+                agent_name="ContradictionAgent",
+                tool_name="detect_contradictions",
+                args={"papers": papers},
+                receipt_dict=contradiction_receipt.model_dump(),
+            )
+            contradictions = con_res if isinstance(con_res, list) else con_res.get("contradictions", [])
+        except Exception:
+            pass
+
+        summaries = []
+        for p in papers[:3]:
+            abstract = p.get("abstract") or p.get("summary") or ""
+            summaries.append(f"### {p.get('title')} ({p.get('publication_year', 2024)})\n* **Authors**: {p.get('authors')}\n* **DOI**: {p.get('doi', 'N/A')}\n* **Summary**: {abstract[:300]}")
+        summary_text = "\n\n".join(summaries) if summaries else f"Synthesized research for {query}."
+
+        return {
+            "status": "SUCCESS",
+            "project_id": project_id,
+            "papers": papers,
+            "research_papers": papers,
+            "summary": summary_text,
+            "contradictions": contradictions,
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to harvest research papers: {str(e)}")
 
 @router.post("/chat")
 def chat_advisor(payload: ChatRequest):

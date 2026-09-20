@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Layers, Download } from 'lucide-react';
+import { Layers, Download, Info } from 'lucide-react';
 
 interface ComponentItem {
   component: string;
@@ -23,10 +23,21 @@ interface ComponentTableProps {
 
 export default function ComponentTable({ components = [] }: ComponentTableProps) {
   const safeComps = Array.isArray(components) ? components : [];
+  const totalBaseCost = safeComps.reduce((sum, item) => sum + (item?.base_cost || 0), 0);
+  const totalShippingCost = safeComps.reduce((sum, item) => sum + (item?.shipping_cost || 0), 0);
   const totalLandedCost = safeComps.reduce((sum, item) => sum + (item?.final_cost || 0), 0);
 
   const handleExportCSV = () => {
-    const headers = ["Component", "Optimal Vendor", "Base Cost (INR)", "Shipping Cost (INR)", "Distance", "Final Landed Cost (INR)", "Stock Status", "Estimated Delivery (ETA)"];
+    const headers = [
+      "Component",
+      "Optimal Vendor",
+      "Base Catalog Cost (INR)",
+      "Courier Shipping (INR)",
+      "Distance",
+      "Final Landed Cost (INR)",
+      "Stock Status",
+      "Estimated Delivery (ETA)"
+    ];
     const rows = safeComps.map(item => [
       `"${(item.component || '').replace(/"/g, '""')}"`,
       `"${(item.selected_vendor || '').replace(/"/g, '""')}"`,
@@ -40,7 +51,7 @@ export default function ComponentTable({ components = [] }: ComponentTableProps)
     
     // Add total row
     rows.push([]);
-    rows.push(["Grand Landed Total", "", "", "", "", totalLandedCost, "", ""]);
+    rows.push(["Grand Landed Total", "", totalBaseCost, totalShippingCost, "", totalLandedCost, "", ""]);
 
     const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
     
@@ -55,7 +66,6 @@ export default function ComponentTable({ components = [] }: ComponentTableProps)
   };
 
   if (!safeComps || safeComps.length === 0 || !safeComps[0]?.selected_vendor) {
-
     return (
       <div className="flex flex-col items-center justify-center p-8 text-slate-400">
         <Layers className="w-12 h-12 mb-2 stroke-1 text-slate-600" />
@@ -65,13 +75,31 @@ export default function ComponentTable({ components = [] }: ComponentTableProps)
   }
 
   return (
-    <div className="glass-panel p-6 border border-blue-500/20 bg-zinc-950/40">
-      <div className="flex justify-between items-center mb-4 border-b border-blue-900/40 pb-3">
-        <h3 className="text-md font-semibold text-cyan-400 glow-cyan flex items-center gap-2">
-          <Layers className="w-5 h-5" />
-          Smart BOM Optimization Engine
-        </h3>
-        <div className="flex items-center gap-3">
+    <div className="glass-panel p-6 border border-blue-500/20 bg-zinc-950/40 space-y-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between pb-3 border-b border-blue-900/40 gap-3">
+        <div>
+          <h3 className="text-md font-semibold text-cyan-400 glow-cyan flex items-center gap-2">
+            <Layers className="w-5 h-5" />
+            Smart BOM Optimization Engine
+          </h3>
+          <p className="text-xs text-slate-400 mt-0.5">
+            Optimal vendor selection, catalog base costs, and landed logistics routing
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <div className="text-xs font-mono bg-slate-900/70 border border-slate-800 px-2.5 py-1.5 rounded-md flex items-center gap-1.5 text-slate-400">
+            <span>Base:</span>
+            <span className="font-bold text-slate-200">₹{totalBaseCost.toLocaleString('en-IN')}</span>
+          </div>
+          <div className="text-xs font-mono bg-slate-900/70 border border-slate-800 px-2.5 py-1.5 rounded-md flex items-center gap-1.5 text-slate-400">
+            <span>Shipping:</span>
+            <span className="font-bold text-slate-200">₹{totalShippingCost.toLocaleString('en-IN')}</span>
+          </div>
+          <div className="text-xs text-slate-400 flex items-center gap-1.5 bg-emerald-950/60 border border-emerald-500/40 px-3 py-1.5 rounded-md font-mono">
+            <span className="text-emerald-300">Final Landed Budget:</span>
+            <span className="text-emerald-400 font-bold font-mono text-sm">₹{totalLandedCost.toLocaleString('en-IN')}</span>
+          </div>
           <button
             onClick={handleExportCSV}
             className="text-xs font-mono font-bold text-cyan-400 bg-cyan-950/40 border border-cyan-800 hover:bg-cyan-900/40 px-3 py-1.5 rounded-md transition-all flex items-center gap-1.5 cursor-pointer shadow-lg shadow-cyan-950/20"
@@ -79,11 +107,15 @@ export default function ComponentTable({ components = [] }: ComponentTableProps)
             <Download className="w-3.5 h-3.5" />
             Export CSV
           </button>
-          <div className="text-xs text-slate-400 flex items-center gap-1.5 bg-slate-900/60 border border-slate-800 px-3 py-1.5 rounded-md font-mono">
-            <span>Final Landed Budget:</span>
-            <span className="text-emerald-400 font-bold font-mono text-sm">₹{totalLandedCost.toLocaleString('en-IN')}</span>
-          </div>
         </div>
+      </div>
+
+      {/* Synchronized Pricing Explainer Note */}
+      <div className="bg-blue-950/20 border border-blue-900/30 rounded px-3 py-1.5 text-[11px] font-mono text-cyan-300 flex items-center gap-2">
+        <Info className="w-3.5 h-3.5 text-cyan-400 flex-shrink-0" />
+        <span>
+          <strong>Pricing Sync:</strong> <strong>Base Cost</strong> reflects the vendor catalog unit price (matches BOM Line Items). <strong>Final Cost</strong> adds courier shipping & freight (₹{totalShippingCost.toLocaleString('en-IN')}) for true landed procurement.
+        </span>
       </div>
 
       <div className="overflow-x-auto">
@@ -95,7 +127,7 @@ export default function ComponentTable({ components = [] }: ComponentTableProps)
               <th className="py-2.5 px-3 text-right">Base Cost</th>
               <th className="py-2.5 px-3 text-right">Shipping</th>
               <th className="py-2.5 px-3 text-right">Distance</th>
-              <th className="py-2.5 px-3 text-right">Final Cost</th>
+              <th className="py-2.5 px-3 text-right">Final Landed Cost</th>
               <th className="py-2.5 px-3 text-center">Stock</th>
               <th className="py-2.5 px-3 text-right">ETA</th>
             </tr>
@@ -127,13 +159,13 @@ export default function ComponentTable({ components = [] }: ComponentTableProps)
                 <td className="py-3 px-3 text-center">
                   <span className={`inline-block text-[9px] px-1.5 py-0.5 rounded border ${
                     item.stock === "In Stock" 
-                      ? "bg-emerald-950/20 border-emerald-500/30 text-emerald-400"
+                      ? "bg-emerald-950/20 border-emerald-500/30 text-emerald-400" 
                       : "bg-amber-950/20 border-amber-500/30 text-amber-400"
                   }`}>
                     {item.stock}
                   </span>
                 </td>
-                <td className="py-3 px-3 text-right text-cyan-300 font-semibold whitespace-nowrap">{item.eta}</td>
+                <td className="py-3 px-3 text-right text-slate-300">{item.eta}</td>
               </tr>
             ))}
           </tbody>

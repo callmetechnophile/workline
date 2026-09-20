@@ -6,6 +6,8 @@ import { ExternalAgentItem } from "./ExternalAgentsPanel";
 
 interface AgentRegistryProps {
   agents: ExternalAgentItem[];
+  selectedAgentId?: string | null;
+  onSelectAgent?: (agent: ExternalAgentItem) => void;
   onRegisterAgent?: (newAgent: Partial<ExternalAgentItem>) => Promise<void>;
   onUnregisterAgent?: (agentId: string) => Promise<void>;
   onRefresh?: () => void;
@@ -13,6 +15,8 @@ interface AgentRegistryProps {
 
 export const AgentRegistry: React.FC<AgentRegistryProps> = ({
   agents,
+  selectedAgentId,
+  onSelectAgent,
   onRegisterAgent,
   onUnregisterAgent,
   onRefresh,
@@ -82,29 +86,44 @@ export const AgentRegistry: React.FC<AgentRegistryProps> = ({
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-800/60">
-            {agents.map((ag) => (
-              <tr key={ag.agent_id} className="hover:bg-zinc-950/40">
-                <td className="px-3 py-2.5 font-semibold text-zinc-100">{ag.name}</td>
-                <td className="px-3 py-2.5 font-mono text-zinc-400">{ag.protocol}</td>
-                <td className="px-3 py-2.5 font-mono text-zinc-500">{ag.endpoint || "Internal Mock"}</td>
-                <td className="px-3 py-2.5">
-                  <span className="px-2 py-0.5 rounded text-[11px] bg-zinc-800 text-zinc-300 font-mono">
-                    {ag.status}
-                  </span>
-                </td>
-                <td className="px-3 py-2.5 text-right">
-                  {onUnregisterAgent && (
-                    <button
-                      onClick={() => onUnregisterAgent(ag.agent_id)}
-                      className="text-zinc-500 hover:text-rose-400 transition"
-                      title="Unregister Agent"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  )}
-                </td>
-              </tr>
-            ))}
+            {agents.map((ag) => {
+              const isSelected = selectedAgentId === ag.agent_id;
+              return (
+                <tr
+                  key={ag.agent_id}
+                  onClick={() => onSelectAgent?.(ag)}
+                  className={`cursor-pointer transition ${
+                    isSelected ? "bg-indigo-950/40 border-l-2 border-indigo-500" : "hover:bg-zinc-950/40"
+                  }`}
+                >
+                  <td className="px-3 py-2.5 font-semibold text-zinc-100 flex items-center gap-2">
+                    {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>}
+                    <span>{ag.name}</span>
+                  </td>
+                  <td className="px-3 py-2.5 font-mono text-zinc-400">{ag.protocol}</td>
+                  <td className="px-3 py-2.5 font-mono text-zinc-500">{ag.endpoint || "Internal Agent"}</td>
+                  <td className="px-3 py-2.5">
+                    <span className="px-2 py-0.5 rounded text-[11px] bg-zinc-800 text-zinc-300 font-mono">
+                      {ag.status}
+                    </span>
+                  </td>
+                  <td className="px-3 py-2.5 text-right">
+                    {onUnregisterAgent && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onUnregisterAgent(ag.agent_id);
+                        }}
+                        className="text-zinc-500 hover:text-rose-400 transition p-1"
+                        title="Unregister Agent"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

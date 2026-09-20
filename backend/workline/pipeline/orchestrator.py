@@ -139,6 +139,7 @@ class SequentialPipelineOrchestrator:
                 constraints=r2_output["constraints"],
                 user_intent=user_intent,
                 root_receipt_dict=root_receipt_dict,
+                idea_understanding=r2_output.get("understanding", {}),
             )
 
             res_rev = r3_output["research_revision"]
@@ -165,6 +166,8 @@ class SequentialPipelineOrchestrator:
                 research_findings=r3_output["findings"],
                 user_intent=user_intent,
                 root_receipt_dict=root_receipt_dict,
+                idea_understanding=r2_output.get("understanding", {}),
+                structured_requirements=r2_output.get("structured_requirements", []),
             )
 
             arch_rev = r4_output["architecture_revision"]
@@ -265,6 +268,19 @@ class SequentialPipelineOrchestrator:
         )
 
         try:
+            # 1. Analyze engineering idea through Planner Agent using Bedrock + deterministic domain rules
+            planner_receipt = delegate(
+                agent_name="Planner Agent",
+                requested_scope=["analyze_engineering_idea", "generate_dependency_graph"],
+                parent_receipt=root_receipt_dict,
+            )
+            idea_analysis = invoke_tool(
+                agent_name="Planner Agent",
+                tool_name="analyze_engineering_idea",
+                args={"idea": user_intent, "project_id": project_id},
+                receipt_dict=planner_receipt.model_dump(),
+            )
+
             # Query Knowledge Graph
             graph_receipt = delegate(
                 agent_name="KnowledgeGraphAgent",
@@ -273,26 +289,39 @@ class SequentialPipelineOrchestrator:
             )
             graph_context = run_knowledge_graph_agent(user_intent, graph_receipt.model_dump())
 
-            # Synthesize structured requirements
+            structured_reqs = idea_analysis.get("requirements", [])
+            structured_constraints = idea_analysis.get("constraints", [])
+            clarifications_needed = idea_analysis.get("clarifications_needed", [])
+            understanding = idea_analysis.get("understanding", {})
+
+            # Synthesize structured requirements list
             requirements_list = [
-                f"Core Objective: {user_intent}",
-                f"Target Timeline: {target_days} Days autonomous execution",
-                f"Target Architecture Standard: {engineering_template or 'Industrial Prototype'}",
-                "Power Domain: Regulated DC supply with short-circuit protection",
-                "Thermal Boundary: Max operating junction delta < 45C under full load",
+                f"{r.get('id', 'REQ')}: {r.get('title', '')} — {r.get('statement', '')}"
+                if isinstance(r, dict) else str(r)
+                for r in structured_reqs
             ]
+            if not requirements_list:
+                requirements_list = [
+                    f"Core Objective: {user_intent}",
+                    f"Target Timeline: {target_days} Days autonomous execution",
+                    f"Target Architecture Standard: {engineering_template or 'Industrial Prototype'}",
+                    "Power Domain: Regulated DC supply with short-circuit protection",
+                    "Thermal Boundary: Max operating junction delta < 45C under full load",
+                ]
 
             constraints = {
                 "target_days": target_days,
                 "engineering_template": engineering_template or "Standard",
                 "max_voltage_ripple_pct": 2.0,
                 "thermal_limit_celsius": 85.0,
+                "structured_constraints": structured_constraints,
             }
 
             validation = {
-                "readiness_score": 90,
-                "risk_score": 15,
+                "readiness_score": 92 if not clarifications_needed else 80,
+                "risk_score": 12 if not clarifications_needed else 25,
                 "domain_fit": "EXCELLENT",
+                "clarifications_needed": clarifications_needed,
             }
 
             requirements_revision = 1
@@ -301,9 +330,13 @@ class SequentialPipelineOrchestrator:
                 "project_id": project_id,
                 "requirements_revision": requirements_revision,
                 "requirements": requirements_list,
+                "structured_requirements": structured_reqs,
                 "constraints": constraints,
+                "structured_constraints": structured_constraints,
                 "validation": validation,
                 "graph_context": graph_context,
+                "understanding": understanding,
+                "clarifications_needed": clarifications_needed,
             }
 
             save_pipeline_stage_run(
@@ -335,10 +368,11 @@ class SequentialPipelineOrchestrator:
         constraints: Dict[str, Any],
         user_intent: str,
         root_receipt_dict: Dict[str, Any],
+        idea_understanding: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """
         R3 — RESEARCH STAGE
-        Queries scientific literature, standards, datasheets, and checks contradictions.
+        Queries scientific literature (arXiv, Crossref, Semantic Scholar), standards, datasheets, and checks contradictions.
         """
         save_pipeline_stage_run(
             run_id=self.run_id,
@@ -352,7 +386,7 @@ class SequentialPipelineOrchestrator:
             # 1. ArmorIQ Blocking Test
             research_receipt = delegate(
                 agent_name="Research Agent",
-                requested_scope=["search_papers", "summarize_papers"],
+                requested_scope=["search_papers", "summarize_papers", "search_scholarly_papers", "retrieve_datasheet"],
                 parent_receipt=root_receipt_dict,
             )
             try:
@@ -365,23 +399,29 @@ class SequentialPipelineOrchestrator:
             except ScopeViolationError:
                 pass  # ArmorIQ working as intended
 
-            # 2. Run Research Search
-            research_res = run_research(user_intent, research_receipt.model_dump())
-
-            # 3. Paper Ranking
-            ranking_receipt = delegate(
+            # 2. Scholarly Research via arXiv, Crossref, Semantic Scholar
+            domain = (idea_understanding or {}).get("domain", "")
+            scholarly_papers = invoke_tool(
                 agent_name="Research Agent",
-                requested_scope=["rank_papers"],
-                parent_receipt=root_receipt_dict,
-            )
-            ranked_papers = invoke_tool(
-                agent_name="Research Agent",
-                tool_name="rank_papers",
-                args={"papers": research_res.get("papers", []), "query": user_intent},
-                receipt_dict=ranking_receipt.model_dump(),
+                tool_name="search_scholarly_papers",
+                args={
+                    "idea": user_intent,
+                    "requirements": requirements,
+                    "domain": domain,
+                    "project_id": project_id,
+                    "max_papers": 6,
+                },
+                receipt_dict=research_receipt.model_dump(),
             )
 
-            # 4. Contradiction Analysis
+            # Combine or fallback with research search
+            if not scholarly_papers:
+                research_res = run_research(user_intent, research_receipt.model_dump())
+                ranked_papers = research_res.get("papers", [])
+            else:
+                ranked_papers = scholarly_papers
+
+            # 3. Contradiction Analysis
             contradiction_receipt = delegate(
                 agent_name="ContradictionAgent",
                 requested_scope=["detect_contradictions"],
@@ -397,18 +437,18 @@ class SequentialPipelineOrchestrator:
             # Summaries
             summaries = []
             for paper in ranked_papers[:3]:
-                paper_sum = invoke_tool(
-                    agent_name="Research Agent",
-                    tool_name="summarize_papers",
-                    args={"paper_id": paper["id"]},
-                    receipt_dict=research_receipt.model_dump(),
+                authors = paper.get("authors", [])
+                authors_str = ", ".join(authors) if isinstance(authors, list) else str(authors)
+                year = paper.get("publish_year") or paper.get("year", 2024)
+                doi = paper.get("doi", "N/A")
+                source = paper.get("source", "SCHOLARLY_INDEX")
+                abstract = paper.get("abstract") or paper.get("summary") or "Literature research grounding requirements."
+                summaries.append(
+                    f"### {paper.get('title', 'Paper')} ({year})\n"
+                    f"* **Authors**: {authors_str or 'Engineering Researchers'}\n"
+                    f"* **Source**: {source} | **DOI**: {doi}\n"
+                    f"* **Summary**: {abstract}\n"
                 )
-                if paper_sum:
-                    summaries.append(
-                        f"### {paper['title']} ({paper.get('publish_year', 2024)})\n"
-                        f"* **Score**: {paper.get('score', 90)}/100\n"
-                        f"* **Summary**: {paper_sum}\n"
-                    )
             research_summary = "\n".join(summaries) if summaries else f"Synthesized research for {user_intent}"
 
             contradictions_list = (
@@ -462,10 +502,12 @@ class SequentialPipelineOrchestrator:
         research_findings: str,
         user_intent: str,
         root_receipt_dict: Dict[str, Any],
+        idea_understanding: Optional[Dict[str, Any]] = None,
+        structured_requirements: Optional[List[Dict[str, Any]]] = None,
     ) -> Dict[str, Any]:
         """
         R4 — ENGINEERING ARCHITECTURE & SIMULATION STAGE
-        Extracts components, checks voltage, maps pins, power budget, dependency graph, wiring diagram.
+        Extracts components via Nexar/Octopart MCP, checks voltage, maps pins, power budget, dependency graph, wiring diagram.
         """
         save_pipeline_stage_run(
             run_id=self.run_id,
@@ -479,40 +521,73 @@ class SequentialPipelineOrchestrator:
         )
 
         try:
-            # 1. Retrieval
-            retrieval_receipt = delegate(
+            # 1. Component Discovery & Intelligence via Octopart/Nexar MCP
+            comp_research_receipt = delegate(
                 agent_name="Retrieval Agent",
-                requested_scope=["search_projects", "fetch_sources"],
+                requested_scope=["research_components", "recommend_components", "search_projects", "fetch_sources"],
                 parent_receipt=root_receipt_dict,
             )
-            retrieval_res = run_retrieval(user_intent, retrieval_receipt.model_dump())
-            retrieved_text = (
-                retrieval_res.get("source_details", {}).get("content_markdown", "")
-                if retrieval_res.get("source_details")
-                else user_intent
+            comp_res = invoke_tool(
+                agent_name="Retrieval Agent",
+                tool_name="research_components",
+                args={
+                    "idea_understanding": idea_understanding or {},
+                    "requirements": structured_requirements or requirements,
+                    "constraints": constraints.get("structured_constraints", []),
+                    "project_id": project_id,
+                },
+                receipt_dict=comp_research_receipt.model_dump(),
             )
-
-            # 2. Dynamic Component Extraction
-            extraction_receipt = delegate(
-                agent_name="Extraction Agent",
-                requested_scope=["extract_components"],
-                parent_receipt=root_receipt_dict,
-            )
-            extraction_input = f"{user_intent}\n\n{retrieved_text}"
-            extraction_res = run_extraction(extraction_input, extraction_receipt.model_dump())
-            raw_components = extraction_res.get("components", [])
+            recommended_components = comp_res.get("recommended_components", [])
+            alternative_components = comp_res.get("alternatives", [])
+            component_evidence = comp_res.get("evidence", [])
+            violations = comp_res.get("violations", [])
 
             # Format components
             components = []
-            for c in raw_components:
-                part_name = c.get("name") or c.get("component") or "Component"
-                components.append({
-                    "name": part_name,
-                    "component": part_name,
-                    "category": c.get("category", "General"),
-                    "cost": float(c.get("cost", 5.0)),
-                    "notes": c.get("notes", ""),
-                })
+            if recommended_components:
+                for c in recommended_components:
+                    part_name = c.get("mpn") or c.get("component") or c.get("name") or "Component"
+                    components.append({
+                        "name": part_name,
+                        "component": part_name,
+                        "mpn": c.get("mpn"),
+                        "manufacturer": c.get("manufacturer"),
+                        "category": c.get("subsystem") or c.get("category", "General"),
+                        "subsystem": c.get("subsystem"),
+                        "cost": float(c.get("unit_price_usd") or 5.0),
+                        "unit_price_usd": float(c.get("unit_price_usd") or 5.0),
+                        "notes": c.get("description", ""),
+                        "why_recommended": c.get("why_recommended", ""),
+                        "datasheet_url": c.get("datasheet_url", ""),
+                        "source": c.get("source", "NEXAR"),
+                        "parameters": c.get("parameters", {}),
+                        "supply": c.get("supply", {}),
+                    })
+            else:
+                retrieval_res = run_retrieval(user_intent, comp_research_receipt.model_dump())
+                retrieved_text = (
+                    retrieval_res.get("source_details", {}).get("content_markdown", "")
+                    if retrieval_res.get("source_details")
+                    else user_intent
+                )
+                extraction_receipt = delegate(
+                    agent_name="Extraction Agent",
+                    requested_scope=["extract_components"],
+                    parent_receipt=root_receipt_dict,
+                )
+                extraction_input = f"{user_intent}\n\n{retrieved_text}"
+                extraction_res = run_extraction(extraction_input, extraction_receipt.model_dump())
+                raw_components = extraction_res.get("components", [])
+                for c in raw_components:
+                    part_name = c.get("name") or c.get("component") or "Component"
+                    components.append({
+                        "name": part_name,
+                        "component": part_name,
+                        "category": c.get("category", "General"),
+                        "cost": float(c.get("cost", 5.0)),
+                        "notes": c.get("notes", ""),
+                    })
 
             voltage_components = [{"name": c["name"], "category": c["category"]} for c in components]
 
@@ -608,6 +683,10 @@ class SequentialPipelineOrchestrator:
                     "datasheets": datasheets_res,
                 },
                 "components": components,
+                "recommended_components": recommended_components or components,
+                "alternative_components": alternative_components,
+                "component_evidence": component_evidence,
+                "violations": violations,
                 "simulation_inputs": {
                     "ambient_temp_c": 25.0,
                     "max_power_dissipation_w": power_res.get("total_power_w", 15.0),
@@ -802,6 +881,127 @@ class SequentialPipelineOrchestrator:
             opt_receipt.model_dump(),
         )
 
+        # 4. Populate SurrealDB Knowledge Graph
+        kg_receipt = delegate(
+            agent_name="KnowledgeGraphAgent",
+            requested_scope=["populate_knowledge_graph", "graph.read", "graph.insert", "graph.update"],
+            parent_receipt=root_receipt.model_dump(),
+        )
+        kg_summary = invoke_tool(
+            agent_name="KnowledgeGraphAgent",
+            tool_name="populate_knowledge_graph",
+            args={
+                "project_id": project_id,
+                "project_name": project_name,
+                "system_specification": system_specification,
+                "requirements": r2_data.get("structured_requirements", []),
+                "constraints": r2_data.get("structured_constraints", []),
+                "components": r4_data.get("recommended_components", []),
+                "research_papers": r3_data.get("research_papers", []),
+                "violations": r4_data.get("violations", []),
+            },
+            receipt_dict=kg_receipt.model_dump(),
+        )
+
+        # 5. Normalize requirements & constraints for RequirementsWorkspace
+        formatted_requirements = []
+        for idx, req in enumerate(r2_data.get("structured_requirements", [])):
+            if isinstance(req, dict):
+                formatted_requirements.append({
+                    "requirement_id": req.get("requirement_id") or req.get("id") or f"REQ-{idx+1:03d}",
+                    "project_id": project_id,
+                    "title": req.get("title", f"Requirement {idx+1}"),
+                    "description": req.get("description") or req.get("statement", ""),
+                    "category": (req.get("category") or "ELECTRICAL").upper(),
+                    "parameter": req.get("parameter"),
+                    "target_value": str(req.get("target_value")) if req.get("target_value") is not None else None,
+                    "unit": req.get("unit"),
+                    "priority": (req.get("priority") or "HIGH").upper(),
+                    "verification_method": req.get("verification_method", "Simulation"),
+                    "source": req.get("source", "Project Specification"),
+                    "status": (req.get("status") or "ACTIVE").upper(),
+                })
+        if not formatted_requirements:
+            for idx, r_str in enumerate(r2_data.get("requirements", [])):
+                formatted_requirements.append({
+                    "requirement_id": f"REQ-{idx+1:03d}",
+                    "project_id": project_id,
+                    "title": str(r_str)[:40],
+                    "description": str(r_str),
+                    "category": "FUNCTIONAL",
+                    "priority": "HIGH",
+                    "verification_method": "Simulation",
+                    "source": "Project Specification",
+                    "status": "ACTIVE",
+                })
+
+        formatted_constraints = []
+        for idx, con in enumerate(r2_data.get("structured_constraints", [])):
+            if isinstance(con, dict):
+                req_val = str(con.get("required_value") if con.get("required_value") is not None else con.get("value", ""))
+                c_unit = con.get("unit") or con.get("required_unit", "")
+                formatted_constraints.append({
+                    "constraint_id": con.get("constraint_id") or con.get("id") or f"CON-{idx+1:03d}",
+                    "project_id": project_id,
+                    "requirement_id": con.get("requirement_id"),
+                    "title": con.get("title", f"Constraint {idx+1}"),
+                    "description": con.get("description", ""),
+                    "property": con.get("property") or con.get("parameter") or con.get("constraint_type") or "voltage",
+                    "operator": con.get("operator", "<="),
+                    "required_value": req_val,
+                    "required_unit": c_unit,
+                    "unit": c_unit,
+                    "severity": (con.get("severity") or "CRITICAL").upper(),
+                    "type": con.get("type", "TECHNICAL"),
+                    "source": con.get("source", "ENGINEERING_STANDARDS"),
+                    "status": (con.get("status") or "ACTIVE").upper(),
+                })
+
+        validation_results = []
+        for v in r4_data.get("violations", []):
+            if isinstance(v, dict):
+                validation_results.append({
+                    "requirement_id": v.get("constraint_id", "REQ-001"),
+                    "property": v.get("property_name", "Limit"),
+                    "required_value": v.get("allowed_value", "Within specs"),
+                    "actual_value": v.get("detected_value", "Exceeded"),
+                    "status": "FAIL",
+                    "reason": v.get("details", "Constraint limit exceeded"),
+                    "source_document": f"Datasheet {v.get('component_mpn', '')}",
+                })
+
+        power_analysis_res = r4_data["architecture"].get("power_analysis", {})
+        total_p_w = power_analysis_res.get("total_power_w", 12.5) if isinstance(power_analysis_res, dict) else 12.5
+
+        datasheets_list = []
+        for comp in r4_data.get("recommended_components", []):
+            if isinstance(comp, dict) and comp.get("datasheet_url"):
+                datasheets_list.append({
+                    "mpn": comp.get("mpn"),
+                    "manufacturer": comp.get("manufacturer"),
+                    "subsystem": comp.get("subsystem"),
+                    "url": comp.get("datasheet_url"),
+                    "source": comp.get("source", "NEXAR"),
+                })
+
+        engineering_insights = {
+            "potential_design_risks": [
+                v.get("details") for v in r4_data.get("violations", []) if isinstance(v, dict) and v.get("details")
+            ] or [
+                "Ensure sufficient transient voltage suppression (TVS) on input supply rail.",
+                "Verify ground isolation between high-current actuator returns and low-noise sensor analog ADC lines.",
+            ],
+            "thermal_considerations": [
+                f"Peak system power dissipation evaluated at {total_p_w}W.",
+                "Ensure solid thermal copper pours under switching regulators with thermal vias to internal GND planes.",
+            ],
+            "power_budget_summary": power_analysis_res,
+            "manufacturing_recommendations": [
+                "Target IPC-2221A Class 2 trace spacing and clearances for power rails.",
+                "Utilize automated optical inspection (AOI) for fine-pitch sensor SMD packages.",
+            ],
+        }
+
         # Build comprehensive response
         return {
             "run_id": self.run_id,
@@ -819,6 +1019,20 @@ class SequentialPipelineOrchestrator:
                 "architecture_revision": r4_data["architecture_revision"],
                 "bom_revision": r5_data["bom_revision"],
             },
+            # SECTION 35 & Workspace Data Structures
+            "understanding": r2_data.get("understanding", {}),
+            "clarifications_needed": r2_data.get("clarifications_needed", []),
+            "structured_requirements": r2_data.get("structured_requirements", []),
+            "structured_constraints": r2_data.get("structured_constraints", []),
+            "requirements": formatted_requirements,
+            "constraints": formatted_constraints,
+            "validation_results": validation_results,
+            "recommended_components": r4_data.get("recommended_components", []),
+            "alternative_components": r4_data.get("alternative_components", []),
+            "component_evidence": r4_data.get("component_evidence", []),
+            "violations": r4_data.get("violations", []),
+            "knowledge_graph_summary": kg_summary,
+            "engineering_insights": engineering_insights,
             "bom": r5_data["bom"],
             "totals": r5_data["totals"],
             "total_usd": r5_data["total_usd"],
@@ -826,7 +1040,7 @@ class SequentialPipelineOrchestrator:
             "research_papers": r3_data["research_papers"],
             "research_summary": r3_data["findings"],
             "contradictions": r3_data["contradictions"],
-            "datasheets": r4_data["architecture"]["datasheets"],
+            "datasheets": datasheets_list or r4_data["architecture"].get("datasheets", []),
             "power_analysis": r4_data["architecture"]["power_analysis"],
             "dependency_graph": r4_data["architecture"]["dependency_graph"],
             "wiring_diagram": r4_data["architecture"]["wiring_diagram"],

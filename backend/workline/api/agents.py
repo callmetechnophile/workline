@@ -99,13 +99,17 @@ def get_project_agent_status(project_id: str):
 
 
 # ============================================================================
-# Phase 10: External Agent Interoperability Endpoints
+# Phase 10: External Agent & Architecture Cluster Interoperability Endpoints
 # ============================================================================
 
+import hashlib
+from datetime import datetime, timezone
+from loguru import logger
+from backend.workline.database.repositories.agent_repository import agent_repository
 from backend.workline.interoperability.capabilities import AgentCapability, AgentStatus
 from backend.workline.interoperability.gateway import interoperability_gateway
 from backend.workline.interoperability.registry import ExternalAgent, agent_registry
-from backend.workline.interoperability.tasks import AgentTask
+from backend.workline.interoperability.tasks import AgentTask, TaskStatus
 
 
 class AgentDiscoverRequest(BaseModel):
@@ -127,11 +131,40 @@ class AgentTaskSubmitRequest(BaseModel):
     timeout: float = 30.0
 
 
-@router.get("", response_model=list[ExternalAgent])
-@router.get("/", response_model=list[ExternalAgent])
-def list_external_agents(status: Optional[AgentStatus] = None):
-    """List all registered external agents."""
-    return agent_registry.list_agents(status=status)
+@router.get("")
+@router.get("/")
+async def list_external_agents(
+    project_id: Optional[str] = None,
+    status: Optional[str] = None,
+    cluster: Optional[str] = None,
+):
+    """List all registered agents from SurrealDB / repository (canonical R1-R5 cluster and external agents)."""
+    return await agent_repository.list_agents(project_id=project_id, status=status, cluster=cluster)
+
+
+@router.post("/sync")
+async def sync_agents():
+    """Sync all canonical cluster agents to SurrealDB."""
+    await agent_repository.sync_to_surrealdb()
+    agents = await agent_repository.list_agents()
+    return {"status": "SYNCED", "count": len(agents)}
+
+
+@router.get("/tasks")
+async def list_agent_tasks(
+    project_id: Optional[str] = None,
+    status: Optional[str] = None,
+):
+    """List agent tasks, optionally filtered by project_id and status from SurrealDB."""
+    return await agent_repository.list_tasks(project_id=project_id, status=status)
+
+
+@router.get("/executions")
+async def list_agent_executions(
+    project_id: Optional[str] = None,
+):
+    """List execution history and timeline events with ArmorIQ provenance hashes."""
+    return await agent_repository.list_executions(project_id=project_id)
 
 
 @router.post("/discover")
@@ -146,15 +179,67 @@ def discover_external_agents(req: AgentDiscoverRequest):
 
 
 @router.post("/register")
-def register_external_agent_endpoint(agent: ExternalAgent):
-    """Register a new external agent manifest with Workline."""
-    registered = agent_registry.register_agent(agent)
-    return {"status": "REGISTERED", "agent": registered.model_dump()}
+async def register_external_agent_endpoint(agent_data: dict, project_id: Optional[str] = None):
+    """Register a new agent manifest with Workline and persist into SurrealDB."""
+    registered = await agent_repository.register_agent(agent_data, project_id=project_id)
+    try:
+        caps = []
+        for c in registered.get("capabilities", []):
+            if isinstance(c, dict):
+                c_dict = dict(c)
+                if "agent_id" not in c_dict:
+                    c_dict["agent_id"] = registered["agent_id"]
+                caps.append(AgentCapability(**c_dict))
+            else:
+                caps.append(c)
+        ext = ExternalAgent(
+            agent_id=registered["agent_id"],
+            name=registered.get("name", registered["agent_id"]),
+            description=registered.get("description", ""),
+            provider=registered.get("provider", "External Provider"),
+            protocol=registered.get("protocol", "BINDU_A2A"),
+            endpoint=registered.get("endpoint"),
+            version=registered.get("version", "1.0.0"),
+            status=AgentStatus.AVAILABLE,
+            capabilities=caps,
+        )
+        agent_registry.register_agent(ext)
+    except Exception as exc:
+        logger.warning(f"Error registering agent {registered.get('agent_id')} in gateway: {exc}")
+    return {"status": "REGISTERED", "agent": registered}
 
 
 @router.post("/tasks")
 async def submit_external_task_endpoint(req: AgentTaskSubmitRequest):
-    """Submit a task for external agent execution via the Interoperability Gateway."""
+    """Submit a task for external or cluster agent execution, persist in SurrealDB, and record ArmorIQ receipt."""
+    # Ensure agent is registered with interoperability gateway if in repo
+    repo_agent = await agent_repository.get_agent(req.target_agent)
+    if repo_agent and not agent_registry.get_agent(req.target_agent):
+        try:
+            caps = []
+            for c in repo_agent.get("capabilities", []):
+                if isinstance(c, dict):
+                    c_dict = dict(c)
+                    if "agent_id" not in c_dict:
+                        c_dict["agent_id"] = repo_agent["agent_id"]
+                    caps.append(AgentCapability(**c_dict))
+                else:
+                    caps.append(c)
+            ext = ExternalAgent(
+                agent_id=repo_agent["agent_id"],
+                name=repo_agent.get("name", repo_agent["agent_id"]),
+                description=repo_agent.get("description", ""),
+                provider=repo_agent.get("provider", "Workline"),
+                protocol=repo_agent.get("protocol", "BINDU_A2A"),
+                endpoint=repo_agent.get("endpoint"),
+                version=repo_agent.get("version", "1.0.0"),
+                status=AgentStatus.AVAILABLE,
+                capabilities=caps,
+            )
+            agent_registry.register_agent(ext)
+        except Exception as exc:
+            logger.warning(f"Error registering repo agent {req.target_agent} in gateway: {exc}")
+
     try:
         task: AgentTask = await interoperability_gateway.submit_task(
             project_id=req.project_id,
@@ -168,56 +253,102 @@ async def submit_external_task_endpoint(req: AgentTaskSubmitRequest):
             human_approved=req.human_approved,
             timeout=req.timeout,
         )
-        return task.model_dump()
+        task_dict = task.model_dump()
+
+        # Persist task in SurrealDB
+        await agent_repository.create_task(task_dict)
+
+        # Record Execution timeline step
+        exec_id = f"exec_{task.task_id}"
+        dur = task.provenance.execution_duration if task.provenance else 0.5
+        receipt_hash = hashlib.sha256(f"{task.task_id}_{task.status}".encode()).hexdigest()[:16]
+        await agent_repository.create_execution({
+            "execution_id": exec_id,
+            "task_id": task.task_id,
+            "project_id": req.project_id,
+            "agent_name": f"{req.target_agent} ({req.capability})",
+            "action": f"Executed {req.capability}" if task.status == TaskStatus.COMPLETED else f"Task {task.status.value}: {task.error or ''}",
+            "status": "COMPLETED" if task.status == TaskStatus.COMPLETED else ("FAILED" if task.status in (TaskStatus.FAILED, TaskStatus.REJECTED) else "PENDING"),
+            "created_at": task.completed_at or task.created_at,
+            "duration": dur,
+            "armoriq_receipt": f"receipt_armoriq_{receipt_hash}",
+        })
+
+        # Record ArmorIQ cryptographic audit event
+        await agent_repository.record_armoriq_audit({
+            "audit_id": f"audit_{task.task_id}",
+            "project_id": req.project_id,
+            "team_id": req.team_id,
+            "task_id": task.task_id,
+            "agent_id": req.target_agent,
+            "capability": req.capability,
+            "status": task.status.value,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "receipt_hash": receipt_hash,
+            "provenance": task.provenance.model_dump() if task.provenance else {},
+        })
+
+        task_dict["armoriq_receipt"] = f"receipt_armoriq_{receipt_hash}"
+        return task_dict
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Failed to execute external task: {str(exc)}")
+        raise HTTPException(status_code=500, detail=f"Failed to execute task: {str(exc)}")
 
 
 @router.get("/tasks/{task_id}")
-def get_external_task_status(task_id: str):
-    """Fetch status, provenance, and output references for an external task."""
-    task = interoperability_gateway.get_task(task_id)
+async def get_external_task_status(task_id: str):
+    """Fetch status, provenance, and output references for a task."""
+    task = await agent_repository.get_task(task_id)
     if not task:
-        raise HTTPException(status_code=404, detail=f"Task '{task_id}' not found.")
-    return task.model_dump()
+        gtask = interoperability_gateway.get_task(task_id)
+        if not gtask:
+            raise HTTPException(status_code=404, detail=f"Task '{task_id}' not found.")
+        return gtask.model_dump()
+    return task
 
 
 @router.post("/tasks/{task_id}/cancel")
 async def cancel_external_task_endpoint(task_id: str):
     """Cancel a running external agent task."""
     success = await interoperability_gateway.cancel_task(task_id)
+    await agent_repository.update_task(task_id, {"status": "CANCELLED"})
     if not success:
         raise HTTPException(status_code=400, detail=f"Unable to cancel task '{task_id}'.")
     return {"status": "CANCELLED", "task_id": task_id}
 
 
 @router.get("/{agent_id}")
-def get_external_agent_details(agent_id: str):
-    """Fetch details and trust score for a specific external agent."""
-    agent = agent_registry.get_agent(agent_id)
+async def get_external_agent_details(agent_id: str):
+    """Fetch details and trust score for a specific agent."""
+    agent = await agent_repository.get_agent(agent_id)
     if not agent:
-        raise HTTPException(status_code=404, detail=f"External agent '{agent_id}' not found.")
+        ext = agent_registry.get_agent(agent_id)
+        if not ext:
+            raise HTTPException(status_code=404, detail=f"Agent '{agent_id}' not found.")
+        agent = ext.model_dump()
     trust = agent_registry.get_trust_record(agent_id)
     return {
-        "agent": agent.model_dump(),
-        "trust": trust.model_dump(),
+        "agent": agent,
+        "trust": trust.model_dump() if trust else {"agent_id": agent_id, "trust_score": agent.get("trust_score", 1.0)},
     }
 
 
-@router.get("/{agent_id}/capabilities", response_model=list[AgentCapability])
-def get_external_agent_capabilities(agent_id: str):
-    """Fetch all declared capabilities and risk profiles for an external agent."""
-    agent = agent_registry.get_agent(agent_id)
+@router.get("/{agent_id}/capabilities")
+async def get_external_agent_capabilities(agent_id: str):
+    """Fetch all declared capabilities and risk profiles for an agent."""
+    agent = await agent_repository.get_agent(agent_id)
     if not agent:
-        raise HTTPException(status_code=404, detail=f"External agent '{agent_id}' not found.")
-    return agent.capabilities
+        ext = agent_registry.get_agent(agent_id)
+        if not ext:
+            raise HTTPException(status_code=404, detail=f"Agent '{agent_id}' not found.")
+        return ext.capabilities
+    return agent.get("capabilities", [])
 
 
 @router.delete("/{agent_id}")
-def unregister_external_agent_endpoint(agent_id: str):
-    """Unregister an external agent from Workline."""
-    success = agent_registry.unregister_agent(agent_id)
-    if not success:
-        raise HTTPException(status_code=404, detail=f"External agent '{agent_id}' not found.")
+async def unregister_external_agent_endpoint(agent_id: str):
+    """Unregister an agent from Workline."""
+    await agent_repository.unregister_agent(agent_id)
+    agent_registry.unregister_agent(agent_id)
     return {"status": "UNREGISTERED", "agent_id": agent_id}
+
 

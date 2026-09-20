@@ -188,16 +188,17 @@ async def calculate_project_thermal_endpoint(project_id: str, payload: Optional[
 
 
 @app.get("/", tags=["Health"])
-
 @app.get("/health", tags=["Health"])
+@app.get("/health/live", tags=["Health"])
+@app.get("/health/ready", tags=["Health"])
 @app.get("/version", tags=["Health"])
 @app.get("/service", tags=["Health"])
 async def health_check():
-    """Health check probe for Render."""
+    """Health check probe for AWS ALB and ECS Fargate."""
     return {
         "status": "healthy",
-        "service": "workline-core-gateway",
-        "version": "1.0.0-rc1",
+        "service": "workline-api-bff",
+        "version": "1.0.0-aws",
     }
 
 

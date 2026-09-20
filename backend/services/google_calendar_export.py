@@ -2,7 +2,7 @@ import os
 import json
 import urllib.parse
 from datetime import datetime, timedelta
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from backend.database import get_db_connection, execute_query
 from backend.armoriq.receipts import save_tool_receipt
 
@@ -106,38 +106,54 @@ def generate_google_calendar_url(project_id: int, project_name: str, task: dict,
     query_string = urllib.parse.urlencode(params)
     return f"https://calendar.google.com/calendar/render?{query_string}"
 
-def generate_multiple_event_links(project_id: int, task_ids: List[str], timezone: str) -> List[Dict[str, Any]]:
+def generate_multiple_event_links(
+    project_id: Any,
+    task_ids: List[str],
+    timezone: str,
+    tasks: Optional[List[Dict[str, Any]]] = None,
+    project_name: Optional[str] = None
+) -> List[Dict[str, Any]]:
     """
-    Generates Google Calendar deep links for selected tasks, logs them in Postgres, and returns them.
+    Generates Google Calendar deep links for selected tasks, logs them in Postgres/SQLite, and returns them.
     """
-    conn = get_db_connection()
-    query = "SELECT name, gantt FROM projects WHERE id = ?"
-    cursor = execute_query(conn, query, (project_id,))
-    row = cursor.fetchone()
-    conn.close()
+    gantt_tasks = []
+    resolved_project_name = project_name or f"Project {project_id}"
 
-    if not row:
-        raise ValueError(f"Project with ID {project_id} not found.")
+    if tasks and isinstance(tasks, list) and len(tasks) > 0:
+        gantt_tasks = tasks
+    else:
+        try:
+            conn = get_db_connection()
+            query = "SELECT name, gantt FROM projects WHERE id = ?"
+            cursor = execute_query(conn, query, (project_id,))
+            row = cursor.fetchone()
+            conn.close()
 
-    project_name = row["name"]
-    try:
-        gantt_tasks = json.loads(row["gantt"]) if row["gantt"] else []
-    except Exception:
-        gantt_tasks = []
+            if row:
+                resolved_project_name = row["name"] or resolved_project_name
+                try:
+                    gantt_tasks = json.loads(row["gantt"]) if row["gantt"] else []
+                except Exception:
+                    gantt_tasks = []
+        except Exception:
+            gantt_tasks = []
 
-    # Filter tasks by selected IDs
-    selected_tasks = [t for t in gantt_tasks if t.get("id") in task_ids or t.get("name") in task_ids]
-    
-    if not selected_tasks:
-        # Check if they don't have IDs but we match names
-        selected_tasks = [t for t in gantt_tasks if t.get("name") in task_ids]
+    # Filter tasks by selected IDs if task_ids provided, otherwise use all
+    if task_ids and len(task_ids) > 0:
+        selected_tasks = [t for t in gantt_tasks if str(t.get("id")) in task_ids or t.get("name") in task_ids]
+        if not selected_tasks:
+            selected_tasks = [t for t in gantt_tasks if t.get("name") in task_ids]
+        if not selected_tasks:
+            selected_tasks = gantt_tasks
+    else:
+        selected_tasks = gantt_tasks
 
     results = []
     generated_links = []
     exported_names = []
 
     for task in selected_tasks:
-        url = generate_google_calendar_url(project_id, project_name, task, timezone)
+        url = generate_google_calendar_url(project_id, resolved_project_name, task, timezone)
         results.append({
             "task_id": task.get("id", task.get("name")),
             "task_name": task.get("name"),
@@ -146,24 +162,27 @@ def generate_multiple_event_links(project_id: int, task_ids: List[str], timezone
         generated_links.append(url)
         exported_names.append(task.get("name", "Task"))
 
-    # Log to PostgreSQL
-    conn = get_db_connection()
-    log_query = """
-        INSERT INTO calendar_exports (project_id, export_time, export_type, calendar_link, tasks_exported, status)
-        VALUES (?, ?, ?, ?, ?, ?)
-    """
-    timestamp = datetime.utcnow().isoformat()
-    first_link = generated_links[0] if generated_links else ""
-    execute_query(conn, log_query, (
-        str(project_id),
-        timestamp,
-        "Google Calendar Link",
-        first_link,
-        json.dumps(exported_names),
-        "Success" if results else "Empty"
-    ))
-    conn.commit()
-    conn.close()
+    # Log to SQLite / Postgres (graceful fallback)
+    try:
+        conn = get_db_connection()
+        log_query = """
+            INSERT INTO calendar_exports (project_id, export_time, export_type, calendar_link, tasks_exported, status)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """
+        timestamp = datetime.utcnow().isoformat()
+        first_link = generated_links[0] if generated_links else ""
+        execute_query(conn, log_query, (
+            str(project_id),
+            timestamp,
+            "Google Calendar Link",
+            first_link,
+            json.dumps(exported_names),
+            "Success" if results else "Empty"
+        ))
+        conn.commit()
+        conn.close()
+    except Exception:
+        pass
 
     # Generate ArmorIQ Receipt
     save_tool_receipt(

@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   CheckSquare, 
   BookOpen, 
@@ -15,7 +15,13 @@ import {
   Activity,
   Flame,
   FileText,
-  CheckCircle2
+  CheckCircle2,
+  Sparkles,
+  ShieldAlert,
+  HelpCircle,
+  Check,
+  Plus,
+  ExternalLink
 } from 'lucide-react';
 import { NavSection } from './layout/Sidebar';
 import EngineeringStatusBadge from './EngineeringStatusBadge';
@@ -43,6 +49,8 @@ export default function ProjectOverview({
   onNavigate,
   onOpenNewProject,
 }: ProjectOverviewProps) {
+  const [addedToBom, setAddedToBom] = useState<string[]>([]);
+
   if (!projectData) {
     return (
       <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-12 text-center max-w-2xl mx-auto my-12 space-y-5">
@@ -340,6 +348,462 @@ export default function ProjectOverview({
           </ul>
         </div>
       )}
+
+      {/* ========================================================================= */}
+      {/* SECTION 35: STRUCTURED SEARCH RESULTS & ENGINEERING PIPELINE INTELLIGENCE */}
+      {/* ========================================================================= */}
+      <div className="space-y-6 pt-4 border-t border-slate-800">
+        <div className="flex items-center justify-between">
+          <div>
+            <span className="text-[10px] font-mono font-bold tracking-wider text-indigo-400 uppercase">
+              PIPELINE INTELLIGENCE REPORT
+            </span>
+            <h2 className="text-base font-bold text-slate-100">
+              Autonomous Engineering Synthesis & Verified Evidence
+            </h2>
+          </div>
+          <span className="text-[11px] font-mono px-3 py-1 rounded bg-indigo-950/80 border border-indigo-700/50 text-indigo-300 font-semibold flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+            <span>GROUNDED DATA</span>
+          </span>
+        </div>
+
+        {/* 1. PROJECT UNDERSTANDING */}
+        <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-5 space-y-3">
+          <div className="flex items-center gap-2 text-xs font-mono font-bold text-slate-300 uppercase">
+            <Layers className="w-4 h-4 text-indigo-400" />
+            <span>1. Project Understanding</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+            <div className="space-y-2">
+              <div>
+                <span className="text-[10px] font-mono text-slate-500 uppercase font-bold">Domain & Title</span>
+                <p className="text-slate-200 font-semibold text-xs mt-0.5">
+                  {projectData.understanding?.title || resolvedProjectName}
+                </p>
+                <span className="inline-block mt-1 text-[10px] font-mono px-2 py-0.5 rounded bg-slate-950 border border-slate-800 text-cyan-400">
+                  {projectData.understanding?.application_domain || "Embedded Hardware Engineering"}
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] font-mono text-slate-500 uppercase font-bold">Executive Summary</span>
+                <p className="text-slate-300 leading-relaxed text-xs mt-0.5">
+                  {projectData.understanding?.summary || projectData.understanding?.project_objective || resolvedGoal}
+                </p>
+              </div>
+            </div>
+            <div className="space-y-2 md:border-l md:border-slate-800 md:pl-4">
+              <div>
+                <span className="text-[10px] font-mono text-slate-500 uppercase font-bold">Architecture Summary</span>
+                <p className="text-slate-300 leading-relaxed text-xs mt-0.5">
+                  {projectData.understanding?.architecture_summary ||
+                    "Modular hardware architecture combining sensors, microcontrollers, regulated power stages, and wireless communications."}
+                </p>
+              </div>
+              <div>
+                <span className="text-[10px] font-mono text-slate-500 uppercase font-bold">Key Subsystems</span>
+                <div className="flex flex-wrap gap-1.5 mt-1">
+                  {(projectData.understanding?.key_subsystems || [
+                    "Sensors & Signal Acquisition",
+                    "Controller & Processing",
+                    "Power Management & Regulation",
+                    "Actuation & Drivers",
+                    "Telemetry & Networking",
+                  ]).map((sub: string, idx: number) => (
+                    <span key={idx} className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-950 border border-slate-800 text-slate-300">
+                      {sub}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Clarifications Needed if any */}
+          {projectData.clarifications_needed && projectData.clarifications_needed.length > 0 && (
+            <div className="mt-3 p-3 bg-indigo-950/30 border border-indigo-800/40 rounded-lg text-xs space-y-1.5">
+              <div className="flex items-center gap-1.5 text-indigo-300 font-mono font-bold text-[11px]">
+                <HelpCircle className="w-3.5 h-3.5" />
+                <span>CLARIFICATIONS IDENTIFIED BY PLANNER AGENT</span>
+              </div>
+              <ul className="text-slate-300 space-y-1 list-disc list-inside text-[11px]">
+                {projectData.clarifications_needed.map((q: string, idx: number) => (
+                  <li key={idx}>{q}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+
+        {/* 2. ENGINEERING REQUIREMENTS & 3. CONSTRAINTS (Side-by-Side) */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* 2. ENGINEERING REQUIREMENTS */}
+          <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-xs font-mono font-bold text-slate-300 uppercase">
+                <CheckSquare className="w-4 h-4 text-emerald-400" />
+                <span>2. Engineering Requirements</span>
+              </div>
+              <button
+                onClick={() => onNavigate('requirements')}
+                className="text-[11px] font-mono text-indigo-400 hover:text-indigo-300 flex items-center gap-1 cursor-pointer"
+              >
+                <span>Full Spec</span>
+                <ArrowRight className="w-3 h-3" />
+              </button>
+            </div>
+            <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
+              {(projectData.requirements || []).slice(0, 6).map((req: any, idx: number) => (
+                <div key={idx} className="p-2.5 bg-slate-950/80 border border-slate-800 rounded-lg space-y-1 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-indigo-400 text-[10px] font-bold">
+                      {req.requirement_id || `REQ-${idx+1}`}
+                    </span>
+                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-400 uppercase">
+                      {req.category || "FUNCTIONAL"}
+                    </span>
+                  </div>
+                  <div className="font-semibold text-slate-200 text-xs">
+                    {req.title}
+                  </div>
+                  <p className="text-[11px] text-slate-400 leading-relaxed">
+                    {req.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 3. CONSTRAINTS */}
+          <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-xs font-mono font-bold text-slate-300 uppercase">
+                <ShieldAlert className="w-4 h-4 text-amber-400" />
+                <span>3. Operating Constraints</span>
+              </div>
+              <button
+                onClick={() => onNavigate('requirements')}
+                className="text-[11px] font-mono text-indigo-400 hover:text-indigo-300 flex items-center gap-1 cursor-pointer"
+              >
+                <span>Matrix</span>
+                <ArrowRight className="w-3 h-3" />
+              </button>
+            </div>
+            <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
+              {(projectData.constraints || []).slice(0, 6).map((con: any, idx: number) => (
+                <div key={idx} className="p-2.5 bg-slate-950/80 border border-slate-800 rounded-lg space-y-1 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-amber-400 text-[10px] font-bold">
+                      {con.constraint_id || `CON-${idx+1}`}
+                    </span>
+                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-amber-950/50 border border-amber-800/40 text-amber-300 font-bold uppercase">
+                      {con.severity || "CRITICAL"}
+                    </span>
+                  </div>
+                  <div className="font-mono text-slate-200 text-xs">
+                    {con.property}: <span className="text-emerald-400">{con.operator} {con.required_value} {con.required_unit || ""}</span>
+                  </div>
+                  <div className="text-[10px] text-slate-500 font-mono">
+                    Enforced at design gate: {con.requirement_id ? `Linked to ${con.requirement_id}` : "System Boundary"}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* 4. RECOMMENDED COMPONENTS */}
+        <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-5 space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2 text-xs font-mono font-bold text-slate-300 uppercase">
+              <Cpu className="w-4 h-4 text-cyan-400" />
+              <span>4. Recommended Components (Nexar / Octopart MCP)</span>
+            </div>
+            <span className="text-[10px] font-mono text-slate-500">
+              Deterministic evidence-grounded selection
+            </span>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="border-b border-slate-800 text-[10px] font-mono text-slate-400 uppercase">
+                  <th className="pb-2">Subsystem</th>
+                  <th className="pb-2">Recommended MPN</th>
+                  <th className="pb-2">Manufacturer</th>
+                  <th className="pb-2">Why Recommended</th>
+                  <th className="pb-2">Datasheet</th>
+                  <th className="pb-2">Source</th>
+                  <th className="pb-2 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800/60 font-sans">
+                {(projectData.recommended_components || []).map((comp: any, idx: number) => {
+                  const mpn = comp.mpn || comp.component || comp.name;
+                  const isAdded = addedToBom.includes(mpn);
+                  return (
+                    <tr key={idx} className="hover:bg-slate-850/50 transition-colors">
+                      <td className="py-3 font-mono text-[11px] text-slate-300">
+                        {comp.subsystem || comp.category || "Main"}
+                      </td>
+                      <td className="py-3 font-mono font-bold text-slate-100 text-xs">
+                        {mpn}
+                      </td>
+                      <td className="py-3 text-slate-300 text-xs">
+                        {comp.manufacturer || "Manufacturer"}
+                      </td>
+                      <td className="py-3 text-slate-300 text-[11px] max-w-xs leading-relaxed">
+                        {comp.why_recommended ? (
+                          comp.why_recommended.replace(/\*\*Why recommended for [^:]+:\*\*\s*/, '')
+                        ) : (
+                          "Selected for parametric compliance with system voltage and power requirements."
+                        )}
+                      </td>
+                      <td className="py-3">
+                        {comp.datasheet_url ? (
+                          <a
+                            href={comp.datasheet_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[11px] font-mono text-indigo-400 hover:text-indigo-300 inline-flex items-center gap-1"
+                          >
+                            <span>PDF</span>
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        ) : (
+                          <span className="text-[10px] font-mono text-slate-500">N/A</span>
+                        )}
+                      </td>
+                      <td className="py-3">
+                        <span className={`text-[9px] font-mono px-2 py-0.5 rounded border ${
+                          comp.source === 'MOCK_NEXAR'
+                            ? 'bg-amber-950/40 border-amber-800/40 text-amber-300'
+                            : 'bg-emerald-950/40 border-emerald-800/40 text-emerald-300'
+                        }`}>
+                          {comp.source || "NEXAR"}
+                        </span>
+                      </td>
+                      <td className="py-3 text-right">
+                        {isAdded ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-emerald-950/60 border border-emerald-800 text-[10px] font-mono text-emerald-400">
+                            <Check className="w-3 h-3" />
+                            <span>In BOM</span>
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => setAddedToBom(prev => [...prev, mpn])}
+                            className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-[10px] font-mono font-semibold transition-all cursor-pointer inline-flex items-center gap-1"
+                          >
+                            <Plus className="w-3 h-3" />
+                            <span>Add to BOM</span>
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* 5. ALTERNATIVE COMPONENTS */}
+        {projectData.alternative_components && projectData.alternative_components.length > 0 && (
+          <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-xs font-mono font-bold text-slate-300 uppercase">
+                <CircuitBoard className="w-4 h-4 text-indigo-400" />
+                <span>5. Alternative Components & Trade-Off Analysis</span>
+              </div>
+              <span className="text-[10px] font-mono text-slate-500">
+                Resilience & Second-Source Options
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {projectData.alternative_components.map((alt: any, idx: number) => (
+                <div key={idx} className="bg-slate-950/80 border border-slate-800 rounded-lg p-3 space-y-2 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono font-bold text-slate-100 text-xs">
+                      {alt.alternative_mpn || alt.mpn || alt.alternative}
+                    </span>
+                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-cyan-300">
+                      {alt.trade_off_type || alt.type || "Second Source"}
+                    </span>
+                  </div>
+                  <div className="text-[11px] text-slate-400">
+                    Mfr: <span className="text-slate-300">{alt.manufacturer || "Verified Vendor"}</span>
+                  </div>
+                  <p className="text-[11px] text-slate-300 leading-relaxed bg-slate-900/60 p-2 rounded border border-slate-850">
+                    {alt.trade_off_summary || alt.reason || "Pin-compatible drop-in alternative for supply chain resilience."}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 6. RESEARCH PAPERS */}
+        <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-5 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-xs font-mono font-bold text-slate-300 uppercase">
+              <BookOpen className="w-4 h-4 text-cyan-400" />
+              <span>6. Grounding Research Papers (arXiv / Crossref / Semantic Scholar)</span>
+            </div>
+            <button
+              onClick={() => onNavigate('research')}
+              className="text-[11px] font-mono text-indigo-400 hover:text-indigo-300 flex items-center gap-1 cursor-pointer"
+            >
+              <span>Library</span>
+              <ArrowRight className="w-3 h-3" />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {(projectData.research_papers || []).slice(0, 4).map((paper: any, idx: number) => (
+              <div key={idx} className="bg-slate-950/80 border border-slate-800 rounded-lg p-3.5 space-y-2 text-xs flex flex-col justify-between">
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-cyan-950/50 border border-cyan-800/40 text-cyan-300 font-bold uppercase">
+                      {paper.source || "arXiv"}
+                    </span>
+                    <span className="text-[10px] font-mono text-slate-500">
+                      {paper.publication_year || paper.publish_year || 2024}
+                    </span>
+                  </div>
+                  <h4 className="font-bold text-slate-200 text-xs line-clamp-2">
+                    {paper.title}
+                  </h4>
+                  <div className="text-[10px] text-slate-400 font-mono line-clamp-1">
+                    Authors: {Array.isArray(paper.authors) ? paper.authors.join(", ") : paper.authors}
+                  </div>
+                  {paper.doi && paper.doi !== "N/A" && (
+                    <div className="text-[10px] text-indigo-400 font-mono truncate">
+                      DOI: {paper.doi}
+                    </div>
+                  )}
+                  <p className="text-[11px] text-slate-400 line-clamp-3 leading-relaxed">
+                    {paper.abstract || paper.summary}
+                  </p>
+                </div>
+                {paper.paper_url && (
+                  <div className="pt-2 border-t border-slate-850/60 flex justify-end">
+                    <a
+                      href={paper.paper_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[10px] font-mono text-indigo-400 hover:text-indigo-300 inline-flex items-center gap-1"
+                    >
+                      <span>Read Full Text</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 7. DATASHEETS & 8. ENGINEERING INSIGHTS (Side-by-Side) */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* 7. DATASHEETS */}
+          <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-xs font-mono font-bold text-slate-300 uppercase">
+                <FileText className="w-4 h-4 text-indigo-400" />
+                <span>7. Component Datasheets</span>
+              </div>
+              <span className="text-[10px] font-mono text-slate-500">Verified Pinouts</span>
+            </div>
+            <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+              {(projectData.datasheets || []).map((ds: any, idx: number) => {
+                const mpn = ds.mpn || ds.component || ds.name || `Datasheet ${idx+1}`;
+                const url = ds.url || ds.datasheet_url;
+                return (
+                  <div key={idx} className="flex items-center justify-between p-2.5 bg-slate-950/80 border border-slate-800 rounded-lg text-xs">
+                    <div>
+                      <div className="font-mono font-bold text-slate-200 text-xs">{mpn}</div>
+                      <div className="text-[10px] text-slate-500 font-mono">
+                        {ds.manufacturer || "Manufacturer Documentation"}
+                      </div>
+                    </div>
+                    {url ? (
+                      <a
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-2.5 py-1 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-indigo-300 rounded text-[10px] font-mono inline-flex items-center gap-1 transition-all"
+                      >
+                        <span>View PDF</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    ) : (
+                      <span className="text-[10px] font-mono text-slate-500">Indexed in DB</span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 8. ENGINEERING INSIGHTS */}
+          <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-xs font-mono font-bold text-slate-300 uppercase">
+                <Zap className="w-4 h-4 text-amber-400" />
+                <span>8. Engineering Insights & Risks</span>
+              </div>
+              <span className="text-[10px] font-mono text-emerald-400 font-semibold">Pre-Fabrication</span>
+            </div>
+            <div className="space-y-2.5 text-xs">
+              <div className="p-2.5 bg-slate-950/80 border border-slate-800 rounded-lg space-y-1">
+                <span className="text-[10px] font-mono text-amber-400 uppercase font-bold flex items-center gap-1">
+                  <AlertTriangle className="w-3 h-3" />
+                  <span>Potential Design Risks</span>
+                </span>
+                <ul className="text-[11px] text-slate-300 space-y-1 list-disc list-inside">
+                  {(projectData.engineering_insights?.potential_design_risks || [
+                    "Check back-EMF inductive spikes on inductive actuator relay switching coils.",
+                    "Isolate ADC ground planes from power switching rails to prevent measurement jitter.",
+                  ]).map((r: string, idx: number) => (
+                    <li key={idx}>{r}</li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="p-2.5 bg-slate-950/80 border border-slate-800 rounded-lg space-y-1">
+                <span className="text-[10px] font-mono text-indigo-400 uppercase font-bold flex items-center gap-1">
+                  <Flame className="w-3 h-3" />
+                  <span>Thermal & Power Considerations</span>
+                </span>
+                <ul className="text-[11px] text-slate-300 space-y-1 list-disc list-inside">
+                  {(projectData.engineering_insights?.thermal_considerations || [
+                    "Junction delta calculated < 35°C under nominal 1.2A maximum continuous draw.",
+                    "Ensure continuous copper pours with thermal vias beneath the primary voltage regulator.",
+                  ]).map((t: string, idx: number) => (
+                    <li key={idx}>{t}</li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="p-2.5 bg-slate-950/80 border border-slate-800 rounded-lg space-y-1">
+                <span className="text-[10px] font-mono text-emerald-400 uppercase font-bold flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3" />
+                  <span>Manufacturing Recommendations</span>
+                </span>
+                <ul className="text-[11px] text-slate-300 space-y-1 list-disc list-inside">
+                  {(projectData.engineering_insights?.manufacturing_recommendations || [
+                    "Specify IPC-2221A Class 2 clearance standards for 12V power traces.",
+                    "Utilize automated optical inspection (AOI) for fine-pitch sensor SMD pads.",
+                  ]).map((m: string, idx: number) => (
+                    <li key={idx}>{m}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

@@ -18,10 +18,26 @@ import {
   ExternalLink,
   Info,
   X,
+  Loader2,
+  Check,
 } from "lucide-react";
 import { ConstraintEditor, ConstraintItem } from "./ConstraintEditor";
 import { ConstraintPanel } from "./ConstraintPanel";
 import { EngineeringStatusBadge } from "./EngineeringStatusBadge";
+import { useProject } from "@/lib/ProjectContext";
+
+const QUICK_SPEC_CHIPS = [
+  "+ 12V / 24V DC Rail",
+  "+ 4S LiFePO4 (12.8V)",
+  "+ 30A Continuous / 60A Peak",
+  "+ Active Cell Balancing",
+  "+ I2C / SMBus Telemetry",
+  "+ CAN 2.0B Bus",
+  "+ -40°C to +85°C Operating Temp",
+  "+ Hardware Overcurrent Protection",
+  "+ Reverse Polarity Protection",
+  "+ IP65 / IP67 Enclosure",
+];
 
 export interface RequirementRecord {
   requirement_id: string;
@@ -81,12 +97,18 @@ export const RequirementsWorkspace: React.FC<RequirementsWorkspaceProps> = ({
   onOpenNewProject,
   onSelectProject,
 }) => {
+  const projectContext = useProject();
   const [activeTab, setActiveTab] = useState<"overview" | "requirements" | "constraints" | "validation">("overview");
   const [requirements, setRequirements] = useState<RequirementRecord[]>([]);
   const [constraints, setConstraints] = useState<ConstraintItem[]>([]);
   const [validationRows, setValidationRows] = useState<ValidationMatrixRow[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [isSynthesizing, setIsSynthesizing] = useState<boolean>(false);
+  const [isCustomSpecModalOpen, setIsCustomSpecModalOpen] = useState<boolean>(false);
+  const [customSpecText, setCustomSpecText] = useState<string>("");
+  const [mergeMode, setMergeMode] = useState<"replace" | "append">("append");
+  const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
 
   // Form State for Add Requirement
   const [formTitle, setFormTitle] = useState("");
@@ -162,7 +184,173 @@ export const RequirementsWorkspace: React.FC<RequirementsWorkspaceProps> = ({
     setRequirements(initialReqs);
     setConstraints(initialCons);
     setValidationRows(initialValidation);
-  }, [projectId, projectData]);
+
+    // If requirements are empty, attempt to fetch from backend storage
+    const baseUrl = apiBase || (typeof window !== "undefined" && window.location.port === "3000" ? "http://localhost:8000" : "");
+    if (initialReqs.length === 0 && baseUrl && projectId) {
+      fetch(`${baseUrl}/api/requirements?project_id=${projectId}`)
+        .then((res) => (res.ok ? res.json() : []))
+        .then((backendReqs) => {
+          if (Array.isArray(backendReqs) && backendReqs.length > 0) {
+            const mapped: RequirementRecord[] = backendReqs.map((r: any, idx: number) => ({
+              requirement_id: r.requirement_id || `REQ-${String(idx + 1).padStart(3, "0")}`,
+              project_id: projectId,
+              title: r.title || r.parameter || `Requirement ${idx + 1}`,
+              description: r.description || r.title || "",
+              category: (r.category?.toUpperCase() || "ELECTRICAL") as any,
+              parameter: r.parameter,
+              target_value: r.target_value ? String(r.target_value) : undefined,
+              unit: r.unit,
+              priority: (r.priority?.toUpperCase() || "HIGH") as any,
+              verification_method: (r.verification_method || "Simulation") as any,
+              source: r.source || "Backend Store",
+              status: (r.status?.toUpperCase() || "ACTIVE") as any,
+            }));
+            setRequirements(mapped);
+          }
+        })
+        .catch(() => {});
+    }
+
+    if (initialCons.length === 0 && baseUrl && projectId) {
+      fetch(`${baseUrl}/api/constraints?project_id=${projectId}`)
+        .then((res) => (res.ok ? res.json() : []))
+        .then((backendCons) => {
+          if (Array.isArray(backendCons) && backendCons.length > 0) {
+            const mapped: ConstraintItem[] = backendCons.map((c: any, idx: number) => ({
+              constraintId: c.constraint_id || `CON-${String(idx + 1).padStart(3, "0")}`,
+              property: c.property || c.property_name || "limit",
+              operator: c.operator || "<=",
+              requiredValue: String(c.required_value !== undefined ? c.required_value : c.value || ""),
+              unit: c.required_unit || c.unit || "",
+              severity: (c.severity?.toUpperCase() || "CRITICAL") as any,
+              requirementId: c.requirement_id,
+            }));
+            setConstraints(mapped);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [projectId, projectData, apiBase]);
+
+  // Handle auto-synthesis of requirements from project idea and/or custom specifications
+  const handleAutoSynthesize = async (customSpecs?: string) => {
+    const activeIdea =
+      projectData?.system_specification ||
+      projectData?.intent ||
+      projectName ||
+      projectId ||
+      "Embedded Electronic Hardware System";
+
+    setIsSynthesizing(true);
+    setFeedbackMessage(null);
+    try {
+      const baseUrl = apiBase || (typeof window !== "undefined" && window.location.port === "3000" ? "http://localhost:8000" : "");
+      const res = await fetch(`${baseUrl}/api/requirements/synthesize`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          project_id: projectId,
+          idea: activeIdea,
+          custom_specifications: customSpecs || undefined,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error(`Synthesis failed with HTTP ${res.status}`);
+      }
+
+      const data = await res.json();
+      const generatedReqs: RequirementRecord[] = (data.requirements || []).map((r: any, idx: number) => ({
+        requirement_id: r.requirement_id || r.id || `REQ-${String(idx + 1).padStart(3, "0")}`,
+        project_id: projectId || "current_project",
+        title: r.title || r.parameter || r.description?.slice(0, 35) || `Requirement ${idx + 1}`,
+        description: r.description || r.title || "",
+        category: (r.category?.toUpperCase() || "ELECTRICAL") as any,
+        parameter: r.parameter || r.property,
+        target_value: r.target_value !== undefined ? String(r.target_value) : undefined,
+        unit: r.unit || undefined,
+        priority: (r.priority?.toUpperCase() || "HIGH") as any,
+        verification_method: (r.verification_method || "Simulation") as any,
+        source: r.source || (customSpecs ? "USER_CUSTOM_SPEC" : "Idea Decomposition"),
+        status: (r.status?.toUpperCase() || "ACTIVE") as any,
+      }));
+
+      const generatedCons: ConstraintItem[] = (data.constraints || []).map((c: any, idx: number) => ({
+        constraintId: c.constraint_id || c.id || `CON-${String(idx + 1).padStart(3, "0")}`,
+        property: c.property || c.parameter || "limit",
+        operator: c.operator || "<=",
+        requiredValue: String(c.required_value !== undefined ? c.required_value : c.value || ""),
+        unit: c.unit || c.required_unit || "",
+        severity: (c.severity?.toUpperCase() || "CRITICAL") as any,
+        requirementId: c.requirement_id || undefined,
+      }));
+
+      let finalReqs: RequirementRecord[];
+      let finalCons: ConstraintItem[];
+
+      if (customSpecs && mergeMode === "append") {
+        const existingTitles = new Set(requirements.map((r) => r.title.toLowerCase()));
+        const uniqueNewReqs = generatedReqs.filter((r) => !existingTitles.has(r.title.toLowerCase()));
+        finalReqs = [...uniqueNewReqs, ...requirements];
+
+        const existingConProps = new Set(constraints.map((c) => `${c.property}:${c.requiredValue}`));
+        const uniqueNewCons = generatedCons.filter((c) => !existingConProps.has(`${c.property}:${c.requiredValue}`));
+        finalCons = [...uniqueNewCons, ...constraints];
+      } else {
+        finalReqs = generatedReqs;
+        finalCons = generatedCons;
+      }
+
+      setRequirements(finalReqs);
+      setConstraints(finalCons);
+
+      // Synchronize back to ProjectContext
+      if (projectContext?.setProject) {
+        const updatedProjectData = {
+          ...(projectData || {}),
+          requirements: finalReqs,
+          constraints: finalCons,
+          structured_requirements: data.requirements,
+          structured_constraints: data.constraints,
+          understanding: data.understanding || projectData?.understanding,
+          system_specification: data.specification_text || projectData?.system_specification,
+        };
+        projectContext.setProject(
+          updatedProjectData,
+          projectName || projectContext.projectName,
+          projectContext.targetDays,
+          {
+            projectId: projectId || projectContext.projectId,
+            systemSpecification: data.specification_text || projectData?.system_specification || projectContext.systemSpecification,
+          }
+        );
+      }
+
+      // Batch persist to backend
+      if (baseUrl) {
+        fetch(`${baseUrl}/api/requirements/batch`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            project_id: projectId,
+            requirements: finalReqs,
+            constraints: finalCons,
+          }),
+        }).catch(() => {});
+      }
+
+      setFeedbackMessage(`Generated ${finalReqs.length} requirements and ${finalCons.length} design constraints.`);
+      setIsCustomSpecModalOpen(false);
+      setCustomSpecText("");
+    } catch (err: any) {
+      console.error("Auto-synthesize failed:", err);
+      setFeedbackMessage("Failed to synthesize requirements. Please try again.");
+    } finally {
+      setIsSynthesizing(false);
+      setTimeout(() => setFeedbackMessage(null), 5000);
+    }
+  };
 
   // Derived Overview Metrics (100% computed from actual data, zero mock)
   const reqCount = requirements.length;
@@ -303,14 +491,47 @@ export const RequirementsWorkspace: React.FC<RequirementsWorkspaceProps> = ({
 
         <div className="flex items-center gap-2 flex-wrap">
           <button
+            onClick={() => handleAutoSynthesize()}
+            disabled={isSynthesizing}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 disabled:opacity-50 text-white rounded-lg text-xs font-semibold transition shadow cursor-pointer"
+            title="Auto-extract engineering requirements and constraints from project idea"
+          >
+            {isSynthesizing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+            <span>Auto-Generate (AI)</span>
+          </button>
+          <button
+            onClick={() => setIsCustomSpecModalOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-semibold transition cursor-pointer"
+            title="Enter and synthesize user custom specifications and operating thresholds"
+          >
+            <Sliders className="w-3.5 h-3.5 text-indigo-400" />
+            <span>Custom Specifications</span>
+          </button>
+          <button
             onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold transition shadow cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-semibold transition shadow cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Add Requirement</span>
           </button>
         </div>
       </div>
+
+      {/* Feedback Banner */}
+      {feedbackMessage && (
+        <div className="flex items-center justify-between p-3 bg-indigo-950/70 border border-indigo-700/60 rounded-xl text-xs text-indigo-200 animate-in fade-in duration-200">
+          <div className="flex items-center gap-2">
+            <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span>{feedbackMessage}</span>
+          </div>
+          <button
+            onClick={() => setFeedbackMessage(null)}
+            className="text-slate-400 hover:text-slate-200 p-1"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
 
       {/* Tabs Navigation */}
       <div className="flex items-center gap-2 border-b border-slate-800 pb-2">
@@ -414,15 +635,37 @@ export const RequirementsWorkspace: React.FC<RequirementsWorkspaceProps> = ({
             </div>
 
             {reqCount === 0 && conCount === 0 ? (
-              <div className="py-8 text-center space-y-2">
-                <p className="text-xs text-slate-400">No requirements or design constraints defined for this project.</p>
-                <button
-                  onClick={() => setIsModalOpen(true)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-xs font-semibold transition cursor-pointer"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Define First Requirement</span>
-                </button>
+              <div className="py-8 px-4 text-center space-y-4 bg-slate-950/60 border border-dashed border-slate-800 rounded-xl my-2">
+                <div className="space-y-1">
+                  <p className="text-sm font-semibold text-slate-200">No requirements or design constraints defined yet.</p>
+                  <p className="text-xs text-slate-400 max-w-lg mx-auto">
+                    Generate structured engineering requirements automatically from the project concept, or provide your custom operating voltages, currents, and communication limits.
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center justify-center gap-2.5 pt-1">
+                  <button
+                    onClick={() => handleAutoSynthesize()}
+                    disabled={isSynthesizing}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 disabled:opacity-50 text-white rounded-lg text-xs font-semibold transition shadow-lg shadow-indigo-600/20 cursor-pointer"
+                  >
+                    {isSynthesizing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                    <span>Auto-Generate Requirements from Idea</span>
+                  </button>
+                  <button
+                    onClick={() => setIsCustomSpecModalOpen(true)}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-semibold transition cursor-pointer"
+                  >
+                    <Sliders className="w-4 h-4 text-indigo-400" />
+                    <span>Enter Custom Specifications</span>
+                  </button>
+                  <button
+                    onClick={() => setIsModalOpen(true)}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded-lg text-xs font-semibold transition cursor-pointer"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>+ Manual Entry</span>
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="space-y-2 pt-2">
@@ -466,21 +709,38 @@ export const RequirementsWorkspace: React.FC<RequirementsWorkspaceProps> = ({
           </div>
 
           {requirements.length === 0 ? (
-            <div className="bg-slate-900/40 border border-slate-800 rounded-xl p-12 text-center space-y-3">
+            <div className="bg-slate-900/40 border border-slate-800 rounded-xl p-10 text-center space-y-4">
               <CheckSquare className="w-8 h-8 text-slate-600 mx-auto" />
               <div className="space-y-1">
                 <h4 className="text-sm font-bold text-slate-200">No requirements defined.</h4>
-                <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                  Add your first engineering requirement to begin specification and constraint verification.
+                <p className="text-xs text-slate-400 max-w-md mx-auto">
+                  Automatically synthesize verified engineering requirements and constraints from your project idea, or supply your own custom operational specifications.
                 </p>
               </div>
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold transition cursor-pointer"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Add Requirement</span>
-              </button>
+              <div className="flex flex-wrap items-center justify-center gap-2.5 pt-1">
+                <button
+                  onClick={() => handleAutoSynthesize()}
+                  disabled={isSynthesizing}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 disabled:opacity-50 text-white rounded-lg text-xs font-semibold transition shadow cursor-pointer"
+                >
+                  {isSynthesizing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                  <span>Auto-Generate from Idea</span>
+                </button>
+                <button
+                  onClick={() => setIsCustomSpecModalOpen(true)}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-semibold transition cursor-pointer"
+                >
+                  <Sliders className="w-4 h-4 text-indigo-400" />
+                  <span>Enter Custom Specifications</span>
+                </button>
+                <button
+                  onClick={() => setIsModalOpen(true)}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded-lg text-xs font-semibold transition cursor-pointer"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>+ Manual Entry</span>
+                </button>
+              </div>
             </div>
           ) : (
             <div className="bg-slate-900/60 border border-slate-800 rounded-xl overflow-hidden shadow-xl">
@@ -806,6 +1066,130 @@ export const RequirementsWorkspace: React.FC<RequirementsWorkspaceProps> = ({
               >
                 Save Requirement
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Custom Specifications Modal */}
+      {isCustomSpecModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-xl max-w-2xl w-full p-6 space-y-4 shadow-2xl text-xs max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <Sliders className="w-4 h-4 text-indigo-400" />
+                  <h3 className="text-sm font-bold text-slate-100 font-mono uppercase">
+                    Custom Engineering Specifications
+                  </h3>
+                </div>
+                <p className="text-slate-400 text-[11px]">
+                  Provide your own technical specifications, operating limits, communication buses, or safety cutoffs. The engine will extract structured requirements & design constraints.
+                </p>
+              </div>
+              <button
+                onClick={() => setIsCustomSpecModalOpen(false)}
+                className="text-slate-400 hover:text-slate-200 p-1 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Quick Chips */}
+            <div className="space-y-1.5">
+              <label className="text-slate-400 font-medium">Quick Preset Parameters (click to append):</label>
+              <div className="flex flex-wrap gap-1.5">
+                {QUICK_SPEC_CHIPS.map((chip) => (
+                  <button
+                    key={chip}
+                    type="button"
+                    onClick={() => {
+                      setCustomSpecText((prev) =>
+                        prev ? `${prev.trim()}, ${chip.replace(/^\+\s*/, "")}` : chip.replace(/^\+\s*/, "")
+                      );
+                    }}
+                    className="px-2.5 py-1 bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-indigo-600/50 rounded-md text-[11px] text-slate-300 font-mono transition cursor-pointer"
+                  >
+                    {chip}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Custom Specs Textarea */}
+            <div className="space-y-1.5">
+              <label className="text-slate-300 font-medium">
+                Specifications, Interfaces & Parameters:
+              </label>
+              <textarea
+                rows={5}
+                value={customSpecText}
+                onChange={(e) => setCustomSpecText(e.target.value)}
+                placeholder="e.g. 4S LiFePO4 battery pack, 12.8V nominal, 14.6V charge cutoff, continuous discharge current 30A, peak 60A for 10s, CAN bus 250kbps telemetry, cell overvoltage 3.65V, undervoltage 2.50V, operating temp -20°C to 60°C..."
+                className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-slate-200 font-mono text-xs focus:border-indigo-500 focus:outline-none"
+              />
+            </div>
+
+            {/* Synthesis Mode */}
+            <div className="flex items-center justify-between p-3 bg-slate-950/60 border border-slate-800 rounded-lg">
+              <span className="text-slate-400">Merge with existing requirements:</span>
+              <div className="flex items-center gap-3">
+                <label className="flex items-center gap-1.5 text-slate-300 cursor-pointer text-xs">
+                  <input
+                    type="radio"
+                    name="mergeMode"
+                    value="append"
+                    checked={mergeMode === "append"}
+                    onChange={() => setMergeMode("append")}
+                    className="text-indigo-600"
+                  />
+                  <span>Append & Update</span>
+                </label>
+                <label className="flex items-center gap-1.5 text-slate-300 cursor-pointer text-xs">
+                  <input
+                    type="radio"
+                    name="mergeMode"
+                    value="replace"
+                    checked={mergeMode === "replace"}
+                    onChange={() => setMergeMode("replace")}
+                    className="text-indigo-600"
+                  />
+                  <span>Replace All</span>
+                </label>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center justify-between pt-3 border-t border-slate-800">
+              <button
+                type="button"
+                onClick={() => setCustomSpecText("")}
+                disabled={!customSpecText}
+                className="text-xs text-slate-500 hover:text-slate-400 disabled:opacity-30 cursor-pointer"
+              >
+                Clear Text
+              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsCustomSpecModalOpen(false)}
+                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    await handleAutoSynthesize(customSpecText);
+                    setIsCustomSpecModalOpen(false);
+                  }}
+                  disabled={isSynthesizing}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 disabled:opacity-50 text-white rounded-lg text-xs font-semibold transition shadow cursor-pointer"
+                >
+                  {isSynthesizing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+                  <span>Synthesize Requirements</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>

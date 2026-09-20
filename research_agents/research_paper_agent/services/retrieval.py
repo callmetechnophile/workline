@@ -61,6 +61,8 @@ class PaperNormalizer:
         pdf_link = cls.derive_pdf_url(raw.paper_url, raw.pdf_url)
         pdf_available = cls.is_valid_pdf_url(pdf_link)
 
+        source = raw.raw_metadata.get("source") if raw.raw_metadata and raw.raw_metadata.get("source") else "arxiv"
+
         return NormalizedPaper(
             paper_id=paper_id,
             title=raw.title.strip(),
@@ -69,7 +71,7 @@ class PaperNormalizer:
             publication_date=raw.publication_date,
             doi=raw.doi,
             venue=raw.venue,
-            source="freephdlabor",
+            source=source,
             paper_url=raw.paper_url,
             pdf_url=pdf_link,
             pdf_available=pdf_available,

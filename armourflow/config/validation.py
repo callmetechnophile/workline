@@ -4,6 +4,7 @@ from enum import Enum
 from typing import Dict, List, Optional
 from pydantic import BaseModel
 
+# pyrefly: ignore [missing-import]
 from armourflow.config.settings import PlatformSettings, get_settings
 
 
@@ -120,15 +121,14 @@ class ConfigurationValidator:
             )
         )
 
-        # 8. Bindu External Agent Adapter
-        bindu_key = self.settings.bindu_api_key
+        # 8. Bindu External Agent Adapter (A2A Protocol Gateway)
         results.append(
             DiagnosticResult(
                 name="Bindu External Agent Adapter",
                 status=DiagnosticStatus.CONFIGURED if self.settings.bindu_enabled else DiagnosticStatus.DISABLED,
-                details=f"Endpoint: {self.settings.bindu_endpoint}, Key: {'[SET]' if bindu_key else '[DEFAULT]'}",
+                details=f"Endpoint: {self.settings.bindu_endpoint}, Mode: [A2A PROTOCOL - NO KEY REQUIRED]",
                 required=False,
-                secret=True,
+                secret=False,
             )
         )
 
@@ -144,7 +144,18 @@ class ConfigurationValidator:
             )
         )
 
-        # 10. FreePHDLabor
+        # 10. arXiv Literature Search (Open-Access)
+        results.append(
+            DiagnosticResult(
+                name="arXiv Literature Search",
+                status=DiagnosticStatus.CONFIGURED if self.settings.arxiv_enabled else DiagnosticStatus.DISABLED,
+                details=f"Endpoint: {self.settings.arxiv_endpoint}, Auth: [OPEN ACCESS - NO KEY REQUIRED]",
+                required=False,
+                secret=False,
+            )
+        )
+
+        # 10b. FreePHDLabor (Legacy / Alternate)
         f_key = self.settings.freephdlabor_api_key
         results.append(
             DiagnosticResult(

@@ -1,0 +1,1 @@
+"""AWS Platform integration tests."""

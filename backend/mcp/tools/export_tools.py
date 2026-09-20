@@ -5,15 +5,21 @@ import json
 from datetime import datetime
 from typing import Dict, Any, List
 
-from reportlab.lib.pagesizes import A4
-from reportlab.lib.enums import TA_JUSTIFY, TA_CENTER, TA_LEFT
-from reportlab.lib.units import mm
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib import colors
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.pdfgen.canvas import Canvas
+try:
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib.enums import TA_JUSTIFY, TA_CENTER, TA_LEFT
+    from reportlab.lib.units import mm
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib import colors
+    from reportlab.pdfbase import pdfmetrics
+    from reportlab.pdfbase.ttfonts import TTFont
+    from reportlab.pdfgen.canvas import Canvas
+    HAS_REPORTLAB = True
+except ImportError:
+    HAS_REPORTLAB = False
+    A4 = None
+    Canvas = object
 
 # ---------------------------------------------------------------------------
 # Font Registration

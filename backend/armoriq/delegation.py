@@ -49,6 +49,35 @@ def log_audit_trail(agent: str, action: str, allowed_scope: List[str], tool_invo
         "parent_receipt_id": parent_receipt_id
     }
     AUDIT_LOGS.append(log_entry)
+
+    # AWS Observability & Event Integration (CloudWatch & EventBridge)
+    try:
+        import asyncio
+        from backend.workline.observability.cloudwatch import cloudwatch_metrics
+        from backend.workline.events.eventbridge import event_publisher
+
+        is_violation = (status == "FAILED" or "exceeds max boundaries" in details or "ScopeViolationError" in details)
+        d_type = "PolicyViolation" if is_violation else ("AgentDelegated" if action == "DELEGATION" else "ToolExecuted")
+        d_payload = {"agent": agent, "details": details, "tool": tool_invoked, "receipt_id": receipt_id}
+
+        try:
+            loop = asyncio.get_running_loop()
+            if is_violation:
+                loop.create_task(cloudwatch_metrics.record_policy_violation(agent, tool_invoked or "general"))
+                loop.create_task(event_publisher.publish_event(detail_type=d_type, detail=d_payload, source="workline.armoriq"))
+            else:
+                loop.create_task(event_publisher.publish_event(detail_type=d_type, detail=d_payload, source="workline.armoriq"))
+        except RuntimeError:
+            # Outside active event loop: record directly in event buffer
+            event_publisher._published_events.append({
+                "detail_type": d_type,
+                "detail": d_payload,
+                "source": "workline.armoriq",
+                "timestamp": 0.0,
+            })
+    except Exception:
+        pass
+
     return log_entry
 
 def capture_plan(user_intent: str) -> CryptographicReceipt:
@@ -223,6 +252,70 @@ def invoke_tool(agent_name: str, tool_name: str, args: Dict[str, Any], receipt_d
             result = GraphService().run_read_query(args.get("query_name"), args.get("params", {}))
         elif tool_name in ("graph.insert", "graph.update"):
             result = GraphService().run_write_query(args.get("query_name"), args.get("params", {}))
+        elif tool_name == "analyze_engineering_idea":
+            from backend.workline.pipeline.idea_understanding import analyze_engineering_idea
+            result = analyze_engineering_idea(args.get("idea", ""), args.get("project_id", "default_project"))
+        elif tool_name in ("research_components", "recommend_components"):
+            import asyncio
+            import concurrent.futures
+            from backend.workline.pipeline.component_research import research_components_for_project
+            def _run_comp_research():
+                return asyncio.run(research_components_for_project(
+                    idea_understanding=args.get("idea_understanding", {}),
+                    requirements=args.get("requirements", []),
+                    constraints=args.get("constraints", []),
+                    project_id=args.get("project_id", "default_project"),
+                ))
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+                rec, alt, evid, viol = pool.submit(_run_comp_research).result()
+            result = {
+                "recommended_components": rec,
+                "alternatives": alt,
+                "evidence": evid,
+                "violations": viol,
+            }
+        elif tool_name == "search_scholarly_papers":
+            from backend.workline.pipeline.scholarly_research import search_scholarly_research
+            result = search_scholarly_research(
+                idea=args.get("idea", ""),
+                requirements=args.get("requirements", []),
+                domain=args.get("domain", ""),
+                project_id=args.get("project_id", "default_project"),
+                max_papers=args.get("max_papers", 6),
+            )
+        elif tool_name == "retrieve_datasheet":
+            import asyncio
+            import concurrent.futures
+            from backend.mcp.nexar_client import nexar_mcp_client
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+                result = pool.submit(lambda: asyncio.run(nexar_mcp_client.get_datasheet(args.get("mpn", "")))).result() or {}
+        elif tool_name == "populate_knowledge_graph":
+            import asyncio
+            import concurrent.futures
+            from backend.workline.pipeline.graph_populator import knowledge_graph_populator
+            def _run_populator():
+                return asyncio.run(knowledge_graph_populator.populate_pipeline_graph(
+                    project_id=args.get("project_id", "default_project"),
+                    project_name=args.get("project_name", "Engineering Project"),
+                    system_specification=args.get("system_specification", ""),
+                    requirements=args.get("requirements", []),
+                    constraints=args.get("constraints", []),
+                    components=args.get("components", []),
+                    research_papers=args.get("research_papers", []),
+                    violations=args.get("violations", []),
+                ))
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+                result = pool.submit(_run_populator).result()
+        elif tool_name.startswith("nexar_mcp_"):
+            import asyncio
+            import concurrent.futures
+            from backend.mcp.nexar_client import nexar_mcp_client
+            try:
+                with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+                    mcp_res = pool.submit(lambda: asyncio.run(nexar_mcp_client.execute_tool(tool_name, args))).result()
+            except Exception:
+                mcp_res = asyncio.run(nexar_mcp_client.execute_tool(tool_name, args))
+            result = mcp_res.model_dump()
         else:
             raise ValueError(f"Unknown tool name: {tool_name}")
             

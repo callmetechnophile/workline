@@ -5,9 +5,12 @@ import os
 import socket
 from typing import Any, Dict, List, Optional
 from urllib.parse import urlparse
+from dotenv import load_dotenv
 import httpx
 from qdrant_client import QdrantClient
 from qdrant_client.http import models
+
+load_dotenv()
 
 from backend.workline.retrieval.embeddings import EmbeddingProvider, get_embedding_provider
 
@@ -18,7 +21,7 @@ COLLECTION_PROJECTS = "workline_projects"
 COLLECTION_RESEARCH = "workline_research"
 
 
-def is_port_open(url: str, timeout: float = 0.5) -> bool:
+def is_port_open(url: str, timeout: float = 2.5) -> bool:
     """Fast non-blocking TCP socket check to determine if Qdrant port is open."""
     try:
         parsed = urlparse(url)
@@ -124,7 +127,7 @@ class QdrantManager:
         """Index a document with vector and metadata."""
         vec = vector or self.embedder.embed_text(text)
 
-        # Store in memory cache
+        # Always update memory cache
         if collection not in self._memory_points:
             self._memory_points[collection] = {}
         self._memory_points[collection][doc_id] = {
@@ -144,7 +147,7 @@ class QdrantManager:
                         models.PointStruct(
                             id=point_id,
                             vector=vec,
-                            payload={"doc_id": doc_id, **payload},
+                            payload={"doc_id": doc_id, "text": text, **payload},
                         )
                     ],
                 )
@@ -162,11 +165,54 @@ class QdrantManager:
     ) -> List[Dict[str, Any]]:
         """
         Search for semantically similar documents.
-        Returns sorted list of matching document payloads and cosine similarity scores.
+        Queries live Qdrant HNSW index if online, else evaluates in-memory cache.
         """
         query_vec = self.embedder.embed_text(query)
 
-        # In-memory cosine similarity search
+        # 1. Query live Qdrant if available
+        if self.client and self.is_connected():
+            try:
+                q_filter = None
+                if metadata_filter:
+                    conditions = [
+                        models.FieldCondition(key=k, match=models.MatchValue(value=v))
+                        for k, v in metadata_filter.items()
+                    ]
+                    q_filter = models.Filter(must=conditions)
+
+                if hasattr(self.client, "query_points"):
+                    res = self.client.query_points(
+                        collection_name=collection,
+                        query=query_vec,
+                        limit=limit,
+                        query_filter=q_filter,
+                    )
+                    points = res.points
+                else:
+                    points = self.client.search(
+                        collection_name=collection,
+                        query_vector=query_vec,
+                        limit=limit,
+                        query_filter=q_filter,
+                    )
+
+                results = []
+                for p in points:
+                    payload = getattr(p, "payload", {}) or {}
+                    text_val = payload.get("text", "")
+                    doc_id = payload.get("doc_id", str(p.id))
+                    results.append({
+                        "id": doc_id,
+                        "score": round(float(p.score), 4),
+                        "payload": payload,
+                        "text": text_val,
+                    })
+                if results:
+                    return results
+            except Exception:
+                pass
+
+        # 2. In-memory cosine similarity search fallback
         points = self._memory_points.get(collection, {}).values()
         results = []
 
@@ -200,8 +246,17 @@ class QdrantManager:
         """Remove a point from vector store."""
         if collection in self._memory_points and doc_id in self._memory_points[collection]:
             del self._memory_points[collection][doc_id]
-            return True
-        return False
+
+        if self.client and self.is_connected():
+            try:
+                point_id = abs(hash(doc_id)) % (2**63 - 1)
+                self.client.delete(
+                    collection_name=collection,
+                    points_selector=models.PointIdsList(points=[point_id]),
+                )
+            except Exception:
+                pass
+        return True
 
 
 # Singleton instance
