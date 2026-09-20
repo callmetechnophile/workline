@@ -90,6 +90,7 @@ import ImageGenerationPanel from '@/components/ImageGenerationPanel';
 
 // Contextual Copilot
 import ConnectionChatbot from '@/components/ConnectionChatbot';
+import EngineeringBackground from '@/components/EngineeringBackground';
 
 /* ================================================================
    PUBLIC LANDING PAGE — Shown to unauthenticated visitors.
@@ -97,9 +98,12 @@ import ConnectionChatbot from '@/components/ConnectionChatbot';
    ================================================================ */
 function PublicLandingPage() {
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col relative overflow-hidden">
+      {/* High-Tech Engineering Background Layer (Robotics, Electronics, Code, AI) */}
+      <EngineeringBackground variant="hero" showPills={true} />
+
       {/* Header */}
-      <header className="border-b border-slate-800 bg-slate-950/80 backdrop-blur-md">
+      <header className="relative z-10 border-b border-slate-800/80 bg-slate-950/70 backdrop-blur-md">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img src="/icon.png" alt="Workline Logo" className="w-7 h-7 object-contain" />
@@ -109,12 +113,12 @@ function PublicLandingPage() {
           </div>
           <div className="flex items-center gap-3">
             <SignInButton mode="modal">
-              <button className="text-xs font-mono font-semibold px-4 py-2 rounded border border-slate-700 bg-slate-900 hover:bg-slate-800 text-slate-200 transition-all cursor-pointer">
+              <button className="text-xs font-mono font-semibold px-4 py-2 rounded border border-slate-700/80 bg-slate-900/80 hover:bg-slate-800 text-slate-200 transition-all cursor-pointer backdrop-blur-sm">
                 Sign In
               </button>
             </SignInButton>
             <SignUpButton mode="modal">
-              <button className="text-xs font-mono font-semibold px-4 py-2 rounded bg-indigo-600 hover:bg-indigo-500 text-white transition-all cursor-pointer">
+              <button className="text-xs font-mono font-semibold px-4 py-2 rounded bg-indigo-600 hover:bg-indigo-500 text-white transition-all cursor-pointer shadow-lg shadow-indigo-600/30">
                 Get Started
               </button>
             </SignUpButton>
@@ -123,19 +127,21 @@ function PublicLandingPage() {
       </header>
 
       {/* Hero Section */}
-      <main className="flex-1 flex flex-col items-center justify-center px-6 py-20">
-        <div className="max-w-2xl text-center space-y-6">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-950/60 border border-indigo-700/40 text-indigo-300 text-xs font-mono">
-            <Shield className="w-3.5 h-3.5" />
+      <main className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 py-20">
+        <div className="max-w-3xl text-center space-y-6">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-950/70 border border-indigo-500/40 text-indigo-300 text-xs font-mono backdrop-blur-md shadow-lg shadow-indigo-950/50">
+            <Shield className="w-3.5 h-3.5 text-indigo-400" />
             <span>Hardware Engineering Intelligence Platform</span>
           </div>
 
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white leading-tight">
+          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-white leading-tight">
             From Idea to<br />
-            <span className="text-indigo-400">Production-Ready Hardware</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-400 to-purple-400">
+              Production-Ready Hardware
+            </span>
           </h1>
 
-          <p className="text-sm text-slate-400 max-w-lg mx-auto leading-relaxed">
+          <p className="text-sm md:text-base text-slate-300/90 max-w-xl mx-auto leading-relaxed font-sans">
             Workline AI guides engineers through the complete hardware lifecycle —
             requirements, research, BOM optimization, PCB validation,
             multi-physics simulation, and autonomous procurement —
@@ -144,33 +150,39 @@ function PublicLandingPage() {
 
           <div className="flex items-center justify-center gap-4 pt-4">
             <SignUpButton mode="modal">
-              <button className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-semibold shadow-lg transition-all cursor-pointer flex items-center gap-2">
+              <button className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-semibold shadow-lg shadow-indigo-600/30 transition-all cursor-pointer flex items-center gap-2 hover:translate-y-[-1px]">
                 <span>Start Engineering</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </SignUpButton>
             <SignInButton mode="modal">
-              <button className="px-6 py-2.5 border border-slate-700 bg-slate-900 hover:bg-slate-800 text-slate-200 rounded-lg text-sm font-medium transition-all cursor-pointer">
+              <button className="px-6 py-2.5 border border-slate-700/80 bg-slate-900/80 hover:bg-slate-800 text-slate-200 rounded-lg text-sm font-medium transition-all cursor-pointer backdrop-blur-sm">
                 Sign In
               </button>
             </SignInButton>
           </div>
 
           {/* Feature Highlights */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-12 max-w-xl mx-auto">
-            <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-4 text-center space-y-2">
-              <Cpu className="w-5 h-5 text-indigo-400 mx-auto" />
-              <h3 className="text-xs font-bold text-slate-200">Component Intelligence</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-12 max-w-2xl mx-auto">
+            <div className="bg-slate-900/75 border border-slate-800/90 hover:border-cyan-500/50 rounded-xl p-4 text-center space-y-2 backdrop-blur-md shadow-xl shadow-black/40 transition-all hover:scale-[1.02] group">
+              <div className="p-2 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 w-fit mx-auto group-hover:scale-110 transition-transform">
+                <Cpu className="w-5 h-5" />
+              </div>
+              <h3 className="text-xs font-bold text-slate-100 tracking-wide">Component Intelligence</h3>
               <p className="text-[11px] text-slate-400">Autonomous BOM sourcing & datasheet extraction</p>
             </div>
-            <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-4 text-center space-y-2">
-              <Zap className="w-5 h-5 text-amber-400 mx-auto" />
-              <h3 className="text-xs font-bold text-slate-200">Multi-Physics PINN</h3>
+            <div className="bg-slate-900/75 border border-slate-800/90 hover:border-amber-500/50 rounded-xl p-4 text-center space-y-2 backdrop-blur-md shadow-xl shadow-black/40 transition-all hover:scale-[1.02] group">
+              <div className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 w-fit mx-auto group-hover:scale-110 transition-transform">
+                <Zap className="w-5 h-5" />
+              </div>
+              <h3 className="text-xs font-bold text-slate-100 tracking-wide">Multi-Physics PINN</h3>
               <p className="text-[11px] text-slate-400">Neural thermal solvers & power tree verification</p>
             </div>
-            <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-4 text-center space-y-2">
-              <Layers className="w-5 h-5 text-emerald-400 mx-auto" />
-              <h3 className="text-xs font-bold text-slate-200">x402 Procurement</h3>
+            <div className="bg-slate-900/75 border border-slate-800/90 hover:border-emerald-500/50 rounded-xl p-4 text-center space-y-2 backdrop-blur-md shadow-xl shadow-black/40 transition-all hover:scale-[1.02] group">
+              <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 w-fit mx-auto group-hover:scale-110 transition-transform">
+                <Layers className="w-5 h-5" />
+              </div>
+              <h3 className="text-xs font-bold text-slate-100 tracking-wide">x402 Procurement</h3>
               <p className="text-[11px] text-slate-400">Non-custodial cryptographic order settlement</p>
             </div>
           </div>
@@ -178,13 +190,13 @@ function PublicLandingPage() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-800 py-6">
+      <footer className="relative z-10 border-t border-slate-800/80 bg-slate-950/70 backdrop-blur-md py-6">
         <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
-          <span className="text-[11px] text-slate-500 font-mono">
+          <span className="text-[11px] text-slate-400 font-mono">
             © 2026 Workline AI — Engineering Intelligence Platform
           </span>
-          <div className="flex items-center gap-4 text-xs text-slate-500 font-mono">
-            <a href="https://github.com/callmetechnophile/workline" target="_blank" rel="noopener noreferrer" className="hover:text-slate-300 transition-colors flex items-center gap-1">
+          <div className="flex items-center gap-4 text-xs text-slate-400 font-mono">
+            <a href="https://github.com/callmetechnophile/workline" target="_blank" rel="noopener noreferrer" className="hover:text-cyan-400 transition-colors flex items-center gap-1">
               <span>GitHub</span>
               <ExternalLink className="w-3 h-3" />
             </a>
@@ -827,7 +839,8 @@ function AuthenticatedWorkbench() {
   };
 
   return (
-    <div className={`min-h-screen flex bg-slate-950 text-slate-100 ${isLightMode ? 'light' : 'dark'}`}>
+    <div className={`min-h-screen flex bg-slate-950 text-slate-100 relative overflow-hidden ${isLightMode ? 'light' : 'dark'}`}>
+      {!isLightMode && <EngineeringBackground variant="subtle" />}
       {/* Persistent Industrial Left Sidebar */}
       <Sidebar
         activeSection={activeSection}
