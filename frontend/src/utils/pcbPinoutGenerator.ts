@@ -13,7 +13,7 @@ export type MCUPlatform = 'esp32' | 'raspberry_pi' | 'arduino' | 'stm32';
 export interface PinDefinition {
   pinNumber: string;
   pinName: string;
-  signalType: 'I2C' | 'CAN' | 'SPI' | 'UART' | 'POWER' | 'GROUND' | 'GPIO' | 'ANALOG' | 'GATE';
+  signalType: 'I2C' | 'CAN' | 'SPI' | 'UART' | 'POWER' | 'GROUND' | 'GPIO' | 'ANALOG' | 'GATE' | 'PASSIVE' | 'CLOCK' | 'RESET';
   direction: 'INPUT' | 'OUTPUT' | 'BIDIRECTIONAL' | 'POWER' | 'GROUND';
   netName: string;
   connectedTo: string;
