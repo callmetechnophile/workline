@@ -92,7 +92,10 @@ export default function WalletPage() {
   // Resolve API Base
   const apiBase =
     typeof window !== 'undefined'
-      ? process.env.NEXT_PUBLIC_API_URL || (window.location.port === '3000' ? 'http://localhost:8000' : '')
+      ? process.env.NEXT_PUBLIC_API_URL ||
+        (window.location.port === '3000'
+          ? 'http://localhost:8000'
+          : 'https://n70vojh6j7.execute-api.us-east-1.amazonaws.com/dev')
       : '';
 
   // Network info

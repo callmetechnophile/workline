@@ -97,7 +97,11 @@ export default function ThermalRiskPanel({
 
       setLoading(true);
       try {
-        const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+        const apiBase =
+          process.env.NEXT_PUBLIC_API_URL ||
+          (typeof window !== 'undefined' && window.location.port === '3000'
+            ? 'http://127.0.0.1:8000'
+            : 'https://n70vojh6j7.execute-api.us-east-1.amazonaws.com/dev');
         const res = await fetch(`${apiBase}/api/projects/${encodeURIComponent(currentProjId)}/thermal`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

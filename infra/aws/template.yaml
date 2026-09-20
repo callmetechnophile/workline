@@ -89,11 +89,9 @@ Resources:
           - PUT
           - DELETE
           - OPTIONS
+          - PATCH
         AllowHeaders:
-          - Authorization
-          - Content-Type
-          - X-Correlation-ID
-          - X-Amz-Date
+          - '*'
         MaxAge: 600
       Auth:
         DefaultAuthorizer: CognitoAuthorizer
@@ -152,6 +150,14 @@ Resources:
             ApiId: !Ref WorklineHttpApi
             Path: /openapi.json
             Method: GET
+            Auth:
+              Authorizer: NONE
+        ApiOptions:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref WorklineHttpApi
+            Path: /{proxy+}
+            Method: OPTIONS
             Auth:
               Authorizer: NONE
         ApiProxy:

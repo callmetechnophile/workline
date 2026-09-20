@@ -124,12 +124,12 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
   // Resolve API base URL
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      if (process.env.NEXT_PUBLIC_API_URL) {
-        setApiBase(process.env.NEXT_PUBLIC_API_URL);
-      } else if (window.location.port === '3000') {
+      const rawUrl = process.env.NEXT_PUBLIC_API_URL || 'https://n70vojh6j7.execute-api.us-east-1.amazonaws.com/dev';
+      const cleanUrl = rawUrl.replace(/\/+$/, '');
+      if (window.location.port === '3000' && !process.env.NEXT_PUBLIC_API_URL) {
         setApiBase('http://localhost:8000');
       } else {
-        setApiBase('https://workline-core-gateway.onrender.com');
+        setApiBase(cleanUrl);
       }
 
       // Load cached project (supplemental only)
