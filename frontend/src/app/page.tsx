@@ -557,7 +557,7 @@ function AuthenticatedWorkbench() {
             <ComponentTable components={safeBomItems} />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <CandidateComparison />
-              <AlternativeComponents components={safeBomItems} />
+              <AlternativeComponents components={safeBomItems} optimizationData={projectData?.optimization} />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <PinMappingTable pins={projectData?.architecture?.pin_mapping || projectData?.pin_mapping} />
@@ -631,10 +631,20 @@ function AuthenticatedWorkbench() {
         );
 
 
-      case 'procurement':
+      case 'procurement': {
         if (!hasProject) {
           return <EmptyProjectState onOpenNewProject={() => setIsModalOpen(true)} label="procurement" />;
         }
+        const calculatedTotalUsd = Number(
+          projectData?.total_cost_usd ??
+          projectData?.total_usd ??
+          projectData?.cost_totals?.total_usd ??
+          (safeBomItems.length > 0
+            ? safeBomItems.reduce((sum: number, item: any) => sum + (item.final_cost || ((item.base_cost || item.unit_price || 0) + (item.shipping_cost || 0))), 0) / 83.0
+            : 0)
+        ) || 27.06;
+        const procurementAmount = Number(calculatedTotalUsd.toFixed(2));
+
         return (
           <div className="space-y-6">
             <PaymentPanel
@@ -643,8 +653,8 @@ function AuthenticatedWorkbench() {
                 payment_request_id: `req_${(projectName || 'active').toLowerCase()}`,
                 project_id: projectData?.project_id || projectName,
                 bom_id: `bom_${(projectName || 'active').toLowerCase()}`,
-                amount_usd: 5.00,
-                amount_usdc: 5.00,
+                amount_usd: procurementAmount,
+                amount_usdc: procurementAmount,
                 currency: 'USD',
 
                 network: 'algorand-testnet',
@@ -680,6 +690,7 @@ function AuthenticatedWorkbench() {
             <ReceiptExplorer apiBase={apiBase} />
           </div>
         );
+      }
 
       case 'release':
         if (!hasProject) {
