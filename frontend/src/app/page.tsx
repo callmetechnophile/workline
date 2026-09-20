@@ -135,9 +135,9 @@ function PublicLandingPage() {
           </div>
 
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-white leading-[1.15]">
-            From Idea to<br />
+            Ideation to Implementation<br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-400 to-purple-400">
-              Production-Ready Hardware
+              Production Ready Ideas
             </span>
           </h1>
 
