@@ -228,24 +228,8 @@ export default function Sidebar({
       </div>
 
       {/* User Account Section */}
-      <div className="p-3 border-t border-slate-800 bg-slate-950/90 flex items-center justify-between">
-        {isSignedIn ? (
-          <div className="flex items-center gap-2.5 w-full">
-            <CognitoUserButton />
-            <div className="flex flex-col text-left overflow-hidden min-w-0">
-              <span className="text-xs font-semibold text-slate-200 truncate">
-                {cognitoAuth.userEmail || 'Engineer Profile'}
-              </span>
-              <span className="text-[10px] text-emerald-400 font-mono flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> AWS Cognito
-              </span>
-            </div>
-          </div>
-        ) : (
-          <div className="w-full">
-            <CognitoUserButton />
-          </div>
-        )}
+      <div className="p-3 border-t border-slate-800 bg-slate-950/90">
+        <CognitoUserButton direction="up" className="w-full" />
       </div>
     </aside>
   );
