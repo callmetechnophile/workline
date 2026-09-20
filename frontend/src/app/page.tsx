@@ -98,27 +98,27 @@ import EngineeringBackground from '@/components/EngineeringBackground';
    ================================================================ */
 function PublicLandingPage() {
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col relative overflow-hidden">
-      {/* High-Tech Engineering Background Layer (Robotics, Electronics, Code, AI) */}
-      <EngineeringBackground variant="hero" showPills={true} />
+    <div className="h-screen max-h-screen overflow-hidden bg-slate-950 text-slate-100 flex flex-col justify-between relative select-none">
+      {/* 30% Blurry Engineering Background Layer (Robotics, Electronics, Code, AI) */}
+      <EngineeringBackground variant="hero" />
 
       {/* Header */}
-      <header className="relative z-10 border-b border-slate-800/80 bg-slate-950/70 backdrop-blur-md">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <img src="/icon.png" alt="Workline Logo" className="w-7 h-7 object-contain" />
-            <span className="font-mono text-sm font-black tracking-widest text-slate-100 uppercase">
+      <header className="relative z-10 border-b border-slate-800/80 bg-slate-950/60 backdrop-blur-md flex-shrink-0">
+        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <img src="/icon.png" alt="Workline Logo" className="w-6 h-6 object-contain" />
+            <span className="font-mono text-xs md:text-sm font-black tracking-widest text-slate-100 uppercase">
               WORKLINE AI
             </span>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
             <SignInButton mode="modal">
-              <button className="text-xs font-mono font-semibold px-4 py-2 rounded border border-slate-700/80 bg-slate-900/80 hover:bg-slate-800 text-slate-200 transition-all cursor-pointer backdrop-blur-sm">
+              <button className="text-xs font-mono font-semibold px-3.5 py-1.5 rounded border border-slate-700/80 bg-slate-900/80 hover:bg-slate-800 text-slate-200 transition-all cursor-pointer backdrop-blur-sm">
                 Sign In
               </button>
             </SignInButton>
             <SignUpButton mode="modal">
-              <button className="text-xs font-mono font-semibold px-4 py-2 rounded bg-indigo-600 hover:bg-indigo-500 text-white transition-all cursor-pointer shadow-lg shadow-indigo-600/30">
+              <button className="text-xs font-mono font-semibold px-3.5 py-1.5 rounded bg-indigo-600 hover:bg-indigo-500 text-white transition-all cursor-pointer shadow-md shadow-indigo-600/30">
                 Get Started
               </button>
             </SignUpButton>
@@ -126,73 +126,73 @@ function PublicLandingPage() {
         </div>
       </header>
 
-      {/* Hero Section */}
-      <main className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 py-20">
-        <div className="max-w-3xl text-center space-y-6">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-950/70 border border-indigo-500/40 text-indigo-300 text-xs font-mono backdrop-blur-md shadow-lg shadow-indigo-950/50">
-            <Shield className="w-3.5 h-3.5 text-indigo-400" />
+      {/* Hero Section — Perfectly Centered in 100vh Viewport */}
+      <main className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 py-2 md:py-4 min-h-0">
+        <div className="max-w-2xl text-center space-y-3 md:space-y-4 my-auto">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-950/70 border border-indigo-500/40 text-indigo-300 text-[11px] font-mono backdrop-blur-md shadow-lg shadow-indigo-950/50">
+            <Shield className="w-3 h-3 text-indigo-400" />
             <span>Hardware Engineering Intelligence Platform</span>
           </div>
 
-          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-white leading-tight">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-white leading-[1.15]">
             From Idea to<br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-400 to-purple-400">
               Production-Ready Hardware
             </span>
           </h1>
 
-          <p className="text-sm md:text-base text-slate-300/90 max-w-xl mx-auto leading-relaxed font-sans">
+          <p className="text-xs sm:text-sm text-slate-300/85 max-w-lg mx-auto leading-relaxed font-sans">
             Workline AI guides engineers through the complete hardware lifecycle —
             requirements, research, BOM optimization, PCB validation,
             multi-physics simulation, and autonomous procurement —
             with deterministic verification at every gate.
           </p>
 
-          <div className="flex items-center justify-center gap-4 pt-4">
+          <div className="flex items-center justify-center gap-3 pt-1 md:pt-2">
             <SignUpButton mode="modal">
-              <button className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-semibold shadow-lg shadow-indigo-600/30 transition-all cursor-pointer flex items-center gap-2 hover:translate-y-[-1px]">
+              <button className="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs sm:text-sm font-semibold shadow-lg shadow-indigo-600/30 transition-all cursor-pointer flex items-center gap-1.5 hover:translate-y-[-1px]">
                 <span>Start Engineering</span>
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </SignUpButton>
             <SignInButton mode="modal">
-              <button className="px-6 py-2.5 border border-slate-700/80 bg-slate-900/80 hover:bg-slate-800 text-slate-200 rounded-lg text-sm font-medium transition-all cursor-pointer backdrop-blur-sm">
+              <button className="px-5 py-2 border border-slate-700/80 bg-slate-900/80 hover:bg-slate-800 text-slate-200 rounded-lg text-xs sm:text-sm font-medium transition-all cursor-pointer backdrop-blur-sm">
                 Sign In
               </button>
             </SignInButton>
           </div>
 
           {/* Feature Highlights */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-12 max-w-2xl mx-auto">
-            <div className="bg-slate-900/75 border border-slate-800/90 hover:border-cyan-500/50 rounded-xl p-4 text-center space-y-2 backdrop-blur-md shadow-xl shadow-black/40 transition-all hover:scale-[1.02] group">
-              <div className="p-2 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 w-fit mx-auto group-hover:scale-110 transition-transform">
-                <Cpu className="w-5 h-5" />
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3 md:pt-4 max-w-xl mx-auto">
+            <div className="bg-slate-900/80 border border-slate-800/90 hover:border-cyan-500/50 rounded-xl p-3 text-center space-y-1 backdrop-blur-md shadow-xl shadow-black/40 transition-all hover:scale-[1.02] group">
+              <div className="p-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 w-fit mx-auto group-hover:scale-110 transition-transform">
+                <Cpu className="w-4 h-4" />
               </div>
               <h3 className="text-xs font-bold text-slate-100 tracking-wide">Component Intelligence</h3>
-              <p className="text-[11px] text-slate-400">Autonomous BOM sourcing & datasheet extraction</p>
+              <p className="text-[10px] text-slate-400 leading-tight">Autonomous BOM sourcing & datasheet extraction</p>
             </div>
-            <div className="bg-slate-900/75 border border-slate-800/90 hover:border-amber-500/50 rounded-xl p-4 text-center space-y-2 backdrop-blur-md shadow-xl shadow-black/40 transition-all hover:scale-[1.02] group">
-              <div className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 w-fit mx-auto group-hover:scale-110 transition-transform">
-                <Zap className="w-5 h-5" />
+            <div className="bg-slate-900/80 border border-slate-800/90 hover:border-amber-500/50 rounded-xl p-3 text-center space-y-1 backdrop-blur-md shadow-xl shadow-black/40 transition-all hover:scale-[1.02] group">
+              <div className="p-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 w-fit mx-auto group-hover:scale-110 transition-transform">
+                <Zap className="w-4 h-4" />
               </div>
               <h3 className="text-xs font-bold text-slate-100 tracking-wide">Multi-Physics PINN</h3>
-              <p className="text-[11px] text-slate-400">Neural thermal solvers & power tree verification</p>
+              <p className="text-[10px] text-slate-400 leading-tight">Neural thermal solvers & power tree verification</p>
             </div>
-            <div className="bg-slate-900/75 border border-slate-800/90 hover:border-emerald-500/50 rounded-xl p-4 text-center space-y-2 backdrop-blur-md shadow-xl shadow-black/40 transition-all hover:scale-[1.02] group">
-              <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 w-fit mx-auto group-hover:scale-110 transition-transform">
-                <Layers className="w-5 h-5" />
+            <div className="bg-slate-900/80 border border-slate-800/90 hover:border-emerald-500/50 rounded-xl p-3 text-center space-y-1 backdrop-blur-md shadow-xl shadow-black/40 transition-all hover:scale-[1.02] group">
+              <div className="p-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 w-fit mx-auto group-hover:scale-110 transition-transform">
+                <Layers className="w-4 h-4" />
               </div>
               <h3 className="text-xs font-bold text-slate-100 tracking-wide">x402 Procurement</h3>
-              <p className="text-[11px] text-slate-400">Non-custodial cryptographic order settlement</p>
+              <p className="text-[10px] text-slate-400 leading-tight">Non-custodial cryptographic order settlement</p>
             </div>
           </div>
         </div>
       </main>
 
       {/* Footer */}
-      <footer className="relative z-10 border-t border-slate-800/80 bg-slate-950/70 backdrop-blur-md py-6">
-        <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
-          <span className="text-[11px] text-slate-400 font-mono">
+      <footer className="relative z-10 border-t border-slate-800/80 bg-slate-950/60 backdrop-blur-md py-2.5 px-6 flex-shrink-0">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
+          <span className="text-[10px] md:text-[11px] text-slate-400 font-mono">
             © 2026 Workline AI — Engineering Intelligence Platform
           </span>
           <div className="flex items-center gap-4 text-xs text-slate-400 font-mono">
