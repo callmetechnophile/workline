@@ -126,11 +126,7 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
     if (typeof window !== 'undefined') {
       const rawUrl = process.env.NEXT_PUBLIC_API_URL || 'https://n70vojh6j7.execute-api.us-east-1.amazonaws.com/dev';
       const cleanUrl = rawUrl.replace(/\/+$/, '');
-      if (window.location.port === '3000' && !process.env.NEXT_PUBLIC_API_URL) {
-        setApiBase('http://localhost:8000');
-      } else {
-        setApiBase(cleanUrl);
-      }
+      setApiBase(cleanUrl);
 
       // Load cached project (supplemental only)
       const cached = localStorage.getItem('workline_active_project');

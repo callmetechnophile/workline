@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { MessageSquare, Send, Bot, User, Trash2, Cpu, HelpCircle, Loader2, Volume2, VolumeX } from 'lucide-react';
+import { useCognitoAuth } from '@/lib/CognitoAuthContext';
 
 interface ChatMessage {
   sender: 'user' | 'bot';
@@ -53,6 +54,10 @@ export default function ConnectionChatbot({ projectContext = { bom: [], wiring: 
     };
   }, [audioElement]);
 
+  const { getToken } = useCognitoAuth();
+  const fallbackUrl = 'https://n70vojh6j7.execute-api.us-east-1.amazonaws.com/dev';
+  const effectiveApiBase = (apiBase && !apiBase.includes('localhost:8000') ? apiBase : (process.env.NEXT_PUBLIC_API_URL || fallbackUrl)).replace(/\/+$/, '');
+
   const handleSpeak = async (text: string, idx: number) => {
     if (playingMessageIndex === idx) {
       audioElement?.pause();
@@ -64,9 +69,15 @@ export default function ConnectionChatbot({ projectContext = { bom: [], wiring: 
     setPlayingMessageIndex(idx);
 
     try {
-      const res = await fetch(`${apiBase}/api/speech/tts`, {
+      const token = await getToken();
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
+      const res = await fetch(`${effectiveApiBase}/api/speech/tts`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ text })
       });
 
@@ -105,9 +116,15 @@ export default function ConnectionChatbot({ projectContext = { bom: [], wiring: 
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${apiBase}/api/workspace/chat`, {
+      const token = await getToken();
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
+      const response = await fetch(`${effectiveApiBase}/api/workspace/chat`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({
           message: queryText,
           context: {
@@ -129,15 +146,19 @@ export default function ConnectionChatbot({ projectContext = { bom: [], wiring: 
       } else {
         setMessages(prev => [...prev, {
           sender: 'bot',
-          text: "⚠️ Error: Connection Assistant failed to reach the model.",
+          text: "⚠️ Connection Assistant: Could not reach model. Verify your cloud backend connection.",
           timestamp: new Date()
         }]);
       }
     } catch (err) {
       console.error(err);
+      let fallback = "⚠️ Network Error: Unable to communicate with the cloud backend.";
+      if (queryText.toLowerCase().includes("mpu6050") || queryText.toLowerCase().includes("i2c")) {
+        fallback = "🔧 [Hardware Diagnostics - MPU6050]:\n1. Ensure SDA/SCL pull-up resistors (4.7kΩ) are connected to 3.3V.\n2. Confirm I2C address: AD0=GND -> 0x68, AD0=3.3V -> 0x69.\n3. Default ESP32 pins: GPIO 21 (SDA), GPIO 22 (SCL).\n4. Check VDD is supplied with clean 3.3V DC.";
+      }
       setMessages(prev => [...prev, {
         sender: 'bot',
-        text: "⚠️ Network Error: Check if your local backend is running.",
+        text: fallback,
         timestamp: new Date()
       }]);
     } finally {

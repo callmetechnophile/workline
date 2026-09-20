@@ -3,11 +3,11 @@
  * Seamlessly interfaces with Amazon API Gateway, CloudFront, or local development backend.
  */
 
+import { getValidCognitoIdToken } from "./cognito";
+
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ||
-  (typeof window !== "undefined" && window.location.hostname === "localhost"
-    ? "http://localhost:8000"
-    : "https://n70vojh6j7.execute-api.us-east-1.amazonaws.com/dev");
+  "https://n70vojh6j7.execute-api.us-east-1.amazonaws.com/dev";
 
 export async function fetchApi<T = any>(
   path: string,
@@ -15,8 +15,17 @@ export async function fetchApi<T = any>(
 ): Promise<{ data: T | null; error: string | null; status: number }> {
   const url = `${API_BASE_URL.replace(/\/$/, "")}/${path.replace(/^\//, "")}`;
 
+  let authHeader: Record<string, string> = {};
+  try {
+    const token = await getValidCognitoIdToken();
+    if (token) {
+      authHeader["Authorization"] = `Bearer ${token}`;
+    }
+  } catch {}
+
   const headers = {
     "Content-Type": "application/json",
+    ...authHeader,
     ...options.headers,
   };
 

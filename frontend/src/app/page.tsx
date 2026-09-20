@@ -274,7 +274,10 @@ function AuthenticatedWorkbench() {
   const fetchProjectDatasheets = async () => {
     const pId = projectId || projectData?.project_id || 'default-project';
     try {
-      const res = await fetch(`${apiBase}/api/documents/datasheets?project_id=${pId}`);
+      const token = await getToken();
+      const res = await fetch(`${apiBase}/api/documents/datasheets?project_id=${pId}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data) && data.length > 0) {
@@ -290,9 +293,13 @@ function AuthenticatedWorkbench() {
     const pId = projectId || projectData?.project_id || 'default-project';
     setIsGeneratingDatasheets(true);
     try {
+      const token = await getToken();
       const res = await fetch(`${apiBase}/api/documents/nexar/generate-knowledge-base`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({
           project_id: pId,
           idea: systemSpecification || projectName,
