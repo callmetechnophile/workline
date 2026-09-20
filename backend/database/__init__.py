@@ -11,7 +11,11 @@ DATABASE_URL = os.environ.get("DATABASE_URL")
 
 
 def get_db_connection():
-    DB_PATH = os.path.join(os.path.dirname(__file__), "..", "user_storage.db")
+    if DATABASE_URL:
+        import psycopg2
+        return psycopg2.connect(DATABASE_URL)
+    default_db = "/tmp/user_storage.db" if ("AWS_LAMBDA_FUNCTION_NAME" in os.environ or "LAMBDA_TASK_ROOT" in os.environ) else os.path.join(os.path.dirname(__file__), "..", "user_storage.db")
+    DB_PATH = os.environ.get("SQLITE_DB_PATH", default_db)
     conn = sqlite3.connect(DB_PATH, timeout=30.0)
     conn.row_factory = sqlite3.Row
     return conn

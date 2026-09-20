@@ -10,6 +10,8 @@ def get_config_dir() -> Path:
     env_cfg = os.environ.get("WORKLINE_CONFIG_DIR")
     if env_cfg:
         return Path(env_cfg).resolve()
+    if os.environ.get("AWS_LAMBDA_FUNCTION_NAME") or os.environ.get("LAMBDA_TASK_ROOT"):
+        return Path("/tmp/.workline")
     return Path.home() / ".workline"
 
 
@@ -25,6 +27,8 @@ def get_active_project_file() -> Path:
 
 def get_default_workspace_dir() -> Path:
     """Return default workspace root directory (~/Workline)."""
+    if os.environ.get("AWS_LAMBDA_FUNCTION_NAME") or os.environ.get("LAMBDA_TASK_ROOT"):
+        return Path("/tmp/Workline")
     return Path.home() / "Workline"
 
 

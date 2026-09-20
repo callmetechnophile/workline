@@ -17,7 +17,10 @@ class ProcurementCache:
         self.namespace = namespace
         self.ttl_seconds = ttl_seconds
         self.cache_dir = get_config_dir() / "cache" / namespace
-        self.cache_dir.mkdir(parents=True, exist_ok=True)
+        try:
+            self.cache_dir.mkdir(parents=True, exist_ok=True)
+        except OSError:
+            pass
         self._memory: Dict[str, Tuple[float, Any]] = {}
 
     def _make_key(self, primary: str, params: Optional[Dict[str, Any]] = None) -> str:

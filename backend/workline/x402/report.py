@@ -42,11 +42,24 @@ from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
 from backend.workline.procurement.bom_payment import AuthoritativeBom, PaymentQuote, quantize_money
 from backend.workline.x402.coingecko import CoinGeckoRate
 
-_EXPORTS_DIR = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
-    "exports",
-)
-os.makedirs(_EXPORTS_DIR, exist_ok=True)
+import tempfile
+
+if os.environ.get("AWS_LAMBDA_FUNCTION_NAME") or os.environ.get("LAMBDA_TASK_ROOT"):
+    _EXPORTS_DIR = os.path.join(tempfile.gettempdir(), "exports")
+else:
+    _EXPORTS_DIR = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+        "exports",
+    )
+
+try:
+    os.makedirs(_EXPORTS_DIR, exist_ok=True)
+except Exception:
+    _EXPORTS_DIR = os.path.join(tempfile.gettempdir(), "exports")
+    try:
+        os.makedirs(_EXPORTS_DIR, exist_ok=True)
+    except Exception:
+        pass
 
 
 def get_explorer_url(network: str, tx_id: Optional[str]) -> str:

@@ -111,7 +111,7 @@ Resources:
   WorklineApiFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ../../
+      CodeUri: ../../workline_backend.zip
       Handler: backend.lambda_handler.handler
       Description: Workline FastAPI backend running via Mangum on Lambda
       Policies:

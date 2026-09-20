@@ -68,3 +68,5 @@ scratch_*.py
 *audit_results*.json
 run_complete_audit.py
 write_part3.py
+dist_lambda/
+*.zip

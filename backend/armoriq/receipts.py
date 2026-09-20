@@ -69,8 +69,21 @@ def verify_receipt(receipt: Dict[str, Any]) -> bool:
         return False
 
 # Receipt Explorer Storage Config
-RECEIPTS_DIR = os.path.join(os.path.dirname(__file__), "receipts")
-os.makedirs(RECEIPTS_DIR, exist_ok=True)
+import tempfile
+
+if os.environ.get("AWS_LAMBDA_FUNCTION_NAME") or os.environ.get("LAMBDA_TASK_ROOT"):
+    RECEIPTS_DIR = os.path.join(tempfile.gettempdir(), "receipts")
+else:
+    RECEIPTS_DIR = os.path.join(os.path.dirname(__file__), "receipts")
+
+try:
+    os.makedirs(RECEIPTS_DIR, exist_ok=True)
+except Exception:
+    RECEIPTS_DIR = os.path.join(tempfile.gettempdir(), "receipts")
+    try:
+        os.makedirs(RECEIPTS_DIR, exist_ok=True)
+    except Exception:
+        pass
 
 def save_tool_receipt(agent: str, parent: str, tool: str, scope: List[str], status: str, execution_result: Any) -> Dict[str, Any]:
     """
@@ -104,9 +117,13 @@ def save_tool_receipt(agent: str, parent: str, tool: str, scope: List[str], stat
         "authority_chain": " -> ".join(authority_chain)
     }
     
-    filepath = os.path.join(RECEIPTS_DIR, f"{receipt_hash}.json")
-    with open(filepath, "w", encoding="utf-8") as f:
-        json.dump(receipt_data, f, indent=2)
+    try:
+        filepath = os.path.join(RECEIPTS_DIR, f"{receipt_hash}.json")
+        with open(filepath, "w", encoding="utf-8") as f:
+            json.dump(receipt_data, f, indent=2)
+    except Exception:
+        pass
         
     return receipt_data
+
 

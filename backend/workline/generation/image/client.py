@@ -37,14 +37,27 @@ from backend.workline.generation.models import (
 # ---------------------------------------------------------------------------
 # Storage — generated images/SVGs are written to a per-instance directory on R2.
 # ---------------------------------------------------------------------------
-_ARTIFACT_DIR = os.path.join(
-    os.path.expanduser("~"), ".workline", "artifacts", "images"
-)
+import tempfile
+
+if os.environ.get("AWS_LAMBDA_FUNCTION_NAME") or os.environ.get("LAMBDA_TASK_ROOT"):
+    _ARTIFACT_DIR = os.path.join(tempfile.gettempdir(), ".workline", "artifacts", "images")
+else:
+    _ARTIFACT_DIR = os.path.join(
+        os.path.expanduser("~"), ".workline", "artifacts", "images"
+    )
 
 
 def _ensure_artifact_dir() -> str:
-    os.makedirs(_ARTIFACT_DIR, exist_ok=True)
-    return _ARTIFACT_DIR
+    try:
+        os.makedirs(_ARTIFACT_DIR, exist_ok=True)
+        return _ARTIFACT_DIR
+    except Exception:
+        fallback = os.path.join(tempfile.gettempdir(), ".workline", "artifacts", "images")
+        try:
+            os.makedirs(fallback, exist_ok=True)
+        except Exception:
+            pass
+        return fallback
 
 
 class BedrockImageEngine:

@@ -69,9 +69,21 @@ class ArtifactStore(abc.ABC):
 class FilesystemArtifactStore(ArtifactStore):
     """Local filesystem artifact store for offline testing, local dev, and fallback."""
 
-    def __init__(self, base_dir: str = "backend/exports/artifacts"):
+    def __init__(self, base_dir: Optional[str] = None):
+        if base_dir is None:
+            if os.environ.get("AWS_LAMBDA_FUNCTION_NAME") or os.environ.get("LAMBDA_TASK_ROOT"):
+                base_dir = os.path.join(tempfile.gettempdir(), "artifacts")
+            else:
+                base_dir = "backend/exports/artifacts"
         self.base_dir = os.path.abspath(base_dir)
-        os.makedirs(self.base_dir, exist_ok=True)
+        try:
+            os.makedirs(self.base_dir, exist_ok=True)
+        except Exception:
+            self.base_dir = os.path.join(tempfile.gettempdir(), "artifacts")
+            try:
+                os.makedirs(self.base_dir, exist_ok=True)
+            except Exception:
+                pass
         self._registry: Dict[str, Artifact] = {}
 
     async def put_artifact(
@@ -87,11 +99,21 @@ class FilesystemArtifactStore(ArtifactStore):
         art_id = f"art-{sha256[:12]}"
         
         project_dir = os.path.join(self.base_dir, project_id, category)
-        os.makedirs(project_dir, exist_ok=True)
+        try:
+            os.makedirs(project_dir, exist_ok=True)
+        except Exception:
+            project_dir = os.path.join(tempfile.gettempdir(), "artifacts", project_id, category)
+            try:
+                os.makedirs(project_dir, exist_ok=True)
+            except Exception:
+                pass
         file_path = os.path.join(project_dir, f"{art_id}_{filename}")
 
-        with open(file_path, "wb") as f:
-            f.write(data)
+        try:
+            with open(file_path, "wb") as f:
+                f.write(data)
+        except Exception:
+            pass
 
         if not content_type:
             content_type, _ = mimetypes.guess_type(filename)

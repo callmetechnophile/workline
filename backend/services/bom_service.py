@@ -4,8 +4,21 @@ import json
 import uuid
 from typing import List, Dict, Any
 
-EXPORT_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "exports")
-os.makedirs(EXPORT_DIR, exist_ok=True)
+import tempfile
+
+if os.environ.get("AWS_LAMBDA_FUNCTION_NAME") or os.environ.get("LAMBDA_TASK_ROOT"):
+    EXPORT_DIR = os.path.join(tempfile.gettempdir(), "exports")
+else:
+    EXPORT_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "exports")
+
+try:
+    os.makedirs(EXPORT_DIR, exist_ok=True)
+except Exception:
+    EXPORT_DIR = os.path.join(tempfile.gettempdir(), "exports")
+    try:
+        os.makedirs(EXPORT_DIR, exist_ok=True)
+    except Exception:
+        pass
 
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
 VENDOR_MATRIX_FILE = os.path.join(DATA_DIR, "bom_vendor_matrix.json")
