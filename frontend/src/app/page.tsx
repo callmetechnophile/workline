@@ -839,8 +839,7 @@ function AuthenticatedWorkbench() {
   };
 
   return (
-    <div className={`min-h-screen flex bg-slate-950 text-slate-100 relative overflow-hidden ${isLightMode ? 'light' : 'dark'}`}>
-      {!isLightMode && <EngineeringBackground variant="subtle" />}
+    <div className={`min-h-screen flex bg-slate-950 text-slate-100 ${isLightMode ? 'light' : 'dark'}`}>
       {/* Persistent Industrial Left Sidebar */}
       <Sidebar
         activeSection={activeSection}
