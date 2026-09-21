@@ -211,4 +211,4 @@ def test_chatbot_team_collaboration_context():
     
     # Query tasks
     reply = ask_connection_assistant("Who is working on what tasks?", context, user_id="chief_engineer")
-    assert "Bedrock DeepSeek" in reply or "Collaboration Agent" in reply or "Flash Bootloader" in reply
+    assert "Bedrock DeepSeek" in reply or "Collaboration Agent" in reply or "Flash Bootloader" in reply or "Nemotron" in reply

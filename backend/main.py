@@ -19,6 +19,7 @@ from backend.routes.versioning import router as versioning_router
 from backend.routes.graph_explorer import router as graph_explorer_router
 from backend.routes.calendar import router as calendar_router
 from backend.routes.speech import router as speech_router
+from backend.routes.project_data import router as project_data_router
 from backend.workline.api.agents import router as workline_agents_router
 from backend.workline.api.bom import router as bom_router
 from backend.workline.api.components import router as components_router
@@ -138,6 +139,7 @@ app.include_router(comments_router)
 app.include_router(approvals_router)
 app.include_router(notifications_router)
 app.include_router(activity_router)
+app.include_router(project_data_router)
 app.include_router(jobs_router)
 app.include_router(observability_router)
 

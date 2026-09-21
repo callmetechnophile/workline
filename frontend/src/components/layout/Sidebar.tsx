@@ -20,7 +20,8 @@ import {
   CreditCard,
   Server,
   Users,
-  ChevronRight
+  ChevronRight,
+  FolderArchive
 } from 'lucide-react';
 import { useAuth } from '@clerk/nextjs';
 import { useCognitoAuth } from '@/lib/CognitoAuthContext';
@@ -45,7 +46,8 @@ export type NavSection =
   | 'services'
   | 'payments'
   | 'health'
-  | 'integrations';
+  | 'integrations'
+  | 'project-data';
 
 interface SidebarProps {
   activeSection: NavSection;
@@ -88,6 +90,7 @@ export default function Sidebar({
     { id: 'payments' as NavSection, label: 'x402 Payments', icon: CreditCard },
     { id: 'health' as NavSection, label: 'Service Health', icon: Activity },
     { id: 'integrations' as NavSection, label: 'Integrations', icon: Blocks },
+    { id: 'project-data' as NavSection, label: 'Project Data', icon: FolderArchive },
   ];
 
   return (

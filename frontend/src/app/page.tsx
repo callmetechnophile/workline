@@ -92,6 +92,9 @@ import ImageGenerationPanel from '@/components/ImageGenerationPanel';
 import ConnectionChatbot from '@/components/ConnectionChatbot';
 import EngineeringBackground from '@/components/EngineeringBackground';
 
+// Project Portability & Backup
+import ProjectDataWorkspace from '@/components/project-data/ProjectDataWorkspace';
+
 /* ================================================================
    PUBLIC LANDING PAGE — Shown to unauthenticated visitors.
    No engineering data. No sidebar. No project context.
@@ -798,6 +801,9 @@ function AuthenticatedWorkbench() {
 
       case 'integrations':
         return <SystemIntegrationsPanel />;
+
+      case 'project-data':
+        return <ProjectDataWorkspace />;
 
 
 

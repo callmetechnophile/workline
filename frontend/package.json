@@ -14,6 +14,7 @@
     "@perawallet/connect": "^1.6.0",
     "algosdk": "^3.7.0",
     "framer-motion": "^12.42.0",
+    "jszip": "^3.10.2",
     "lucide-react": "^1.21.0",
     "next": "16.2.9",
     "react": "19.2.4",
@@ -22,6 +23,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/jszip": "^3.4.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
