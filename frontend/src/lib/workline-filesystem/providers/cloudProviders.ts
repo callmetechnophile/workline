@@ -36,15 +36,23 @@ export abstract class BaseCloudProvider {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        // Ensure no legacy mock accounts are ever loaded
-        const fakeAccounts = [
+        // Ensure no legacy mock accounts or dummy commit hashes are ever loaded
+        const fakeKeywords = [
           'callmetechnophile',
-          'engineering-drive@workline.ai',
-          'workline-engineer@gmail.com',
+          'engineering-drive',
+          'workline-engineer',
           'workline-systems',
           'workline-robotics',
+          '@workline.ai',
         ];
-        if (parsed.account && fakeAccounts.includes(parsed.account)) {
+        const fakeHashes = ['d7a1b4e', 'f4e2c91', '8b73a21'];
+        
+        const isAccountFake = !parsed.account || fakeKeywords.some((kw) =>
+          parsed.account.toLowerCase().includes(kw.toLowerCase())
+        );
+        const isHashFake = parsed.lastCommitHash && fakeHashes.includes(parsed.lastCommitHash);
+
+        if (isAccountFake || isHashFake) {
           localStorage.removeItem(`${STORAGE_KEY_PREFIX}${this.id}`);
           return { id: this.id, name: this.name, connected: false };
         }

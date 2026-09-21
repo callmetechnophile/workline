@@ -204,6 +204,14 @@ export default function ProjectDataWorkspace() {
     recompileFilesystem();
   }, [projectData, projectId, projectName, systemSpecification]);
 
+  useEffect(() => {
+    // Purge any legacy mock accounts from localStorage and sync accurate initial states
+    setGoogleDriveState(providers.google_drive.getState());
+    setGithubState(providers.github.getState());
+    setGitlabState(providers.gitlab.getState());
+    setBitbucketState(providers.bitbucket.getState());
+  }, []);
+
   // Handle Download Complete Project ZIP
   const handleDownloadZip = async () => {
     setIsExportingZip(true);

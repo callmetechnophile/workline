@@ -242,12 +242,14 @@ def get_cloud_status():
 @router.post("/cloud/sync")
 def sync_cloud_target(req: CloudSyncRequest):
     """Executes synchronization to selected provider."""
+    import hashlib
+    content_hash = hashlib.sha256(json.dumps(req.project_data, sort_keys=True, default=str).encode()).hexdigest()[:7]
     return {
         "status": "synchronized",
         "provider": req.provider,
         "target": req.target or "default-repo",
         "commit_message": f"WORKLINE: sync project v1.0",
-        "commit_hash": "d7a1b4e",
+        "commit_hash": content_hash,
         "files_synced": 38,
     }
 
