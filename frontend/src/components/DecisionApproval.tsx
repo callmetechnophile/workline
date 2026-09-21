@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { ShieldCheck, UserCheck, CheckCircle2, AlertOctagon } from "lucide-react";
+import { useUser } from "@clerk/nextjs";
 
 export interface DecisionApprovalProps {
   decisionId?: string;
@@ -16,7 +17,9 @@ export const DecisionApproval: React.FC<DecisionApprovalProps> = ({
   onConfirmApprove,
   onReject,
 }) => {
-  const [actorName, setActorName] = useState("lead_engineer");
+  const { user } = useUser();
+  const defaultActor = user?.fullName || user?.username || user?.primaryEmailAddress?.emailAddress?.split("@")[0] || "User";
+  const [actorName, setActorName] = useState(defaultActor);
   const [role, setRole] = useState("ENGINEER");
   const [rejectionReason, setRejectionReason] = useState("");
 

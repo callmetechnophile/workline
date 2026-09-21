@@ -28,6 +28,8 @@ import {
   Filter,
   Check,
 } from "lucide-react";
+import { useUser } from "@clerk/nextjs";
+import { useProject } from "@/lib/ProjectContext";
 import { TeamInvitationPanel } from "./TeamInvitationPanel";
 import { InvitationList } from "./InvitationList";
 import { InvitationModal } from "./InvitationModal";
@@ -36,6 +38,23 @@ import { DecisionsLog } from "./collaboration/DecisionsLog";
 import { ApprovalsQueue } from "./collaboration/ApprovalsQueue";
 import { JoinTeamModal } from "./collaboration/JoinTeamModal";
 import { OwnershipTransferModal } from "./collaboration/OwnershipTransferModal";
+
+function generateSecureJoinCode(): string {
+  const chars = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
+  let suffix = "";
+  if (typeof window !== "undefined" && window.crypto && window.crypto.getRandomValues) {
+    const arr = new Uint8Array(6);
+    window.crypto.getRandomValues(arr);
+    for (let i = 0; i < 6; i++) {
+      suffix += chars[arr[i] % chars.length];
+    }
+  } else {
+    for (let i = 0; i < 6; i++) {
+      suffix += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+  }
+  return `WL-${suffix}`;
+}
 
 export type TabKey =
   | "overview"
@@ -100,27 +119,79 @@ interface TeamWorkspaceProps {
 
 export default function TeamWorkspace({
   teamData,
-  projectId = "BionicHand_System",
+  projectId,
   apiBase,
   currentUserRole = "OWNER",
 }: TeamWorkspaceProps) {
+  const { user: clerkUser } = useUser();
+  const projectContext = useProject();
+
+  const currentUserId =
+    clerkUser?.primaryEmailAddress?.emailAddress ||
+    clerkUser?.username ||
+    clerkUser?.id ||
+    "engineer@workline.ai";
+
+  const currentUserName =
+    clerkUser?.fullName ||
+    clerkUser?.username ||
+    clerkUser?.primaryEmailAddress?.emailAddress?.split("@")[0] ||
+    "Workspace Owner";
+
+  const resolvedProjectId =
+    projectId && projectId !== "BionicHand_System" && projectId !== "PROJ-DEFAULT"
+      ? projectId
+      : (projectContext?.projectId && projectContext.projectId !== "PROJ-DEFAULT"
+          ? projectContext.projectId
+          : (projectContext?.projectData?.project_id || "workspace_main"));
+
+  const resolvedProjectName =
+    projectContext?.projectName ||
+    projectContext?.projectData?.name ||
+    (resolvedProjectId !== "workspace_main" ? resolvedProjectId : "");
+
+  const initialTeamName =
+    teamData?.team_name ||
+    (resolvedProjectName ? `${resolvedProjectName} Team` : `${currentUserName}'s Team`);
+
+  const initialTeamDesc =
+    teamData ? "" : (projectContext?.systemSpecification || projectContext?.projectData?.description || "Collaborative engineering workspace, agent operations, and gate approvals.");
+
+  const initialTeamId =
+    teamData?.team_id
+      ? String(teamData.team_id)
+      : `team_${resolvedProjectId.replace(/[^a-zA-Z0-9]/g, "_").toLowerCase()}`;
+
+  const initialOwnerMember: Member = {
+    id: 1,
+    user_id: currentUserId,
+    name: currentUserName,
+    email: clerkUser?.primaryEmailAddress?.emailAddress,
+    role: "OWNER",
+    joined_at: new Date().toISOString().split("T")[0],
+  };
+
   const [activeTab, setActiveTab] = useState<TabKey>("overview");
-  const [teamName, setTeamName] = useState<string>(teamData?.team_name || "Robotics & Hardware Core");
-  const [teamDescription, setTeamDescription] = useState<string>("Autonomous mechatronics and sensor fusion platform.");
-  const [teamId, setTeamId] = useState<string>(String(teamData?.team_id || "team_robotics_core"));
+  const [teamName, setTeamName] = useState<string>(initialTeamName);
+  const [teamDescription, setTeamDescription] = useState<string>(initialTeamDesc);
+  const [teamId, setTeamId] = useState<string>(initialTeamId);
   const [members, setMembers] = useState<Member[]>(
-    teamData?.members || [
-      { id: 1, user_id: "lead_engineer", name: "Engineering Lead", role: "OWNER", joined_at: "2026-08-01" },
-      { id: 2, user_id: "hw_specialist", name: "Hardware Engineer", role: "ADMIN", joined_at: "2026-08-10" },
-      { id: 3, user_id: "sim_analyst", name: "Simulation Specialist", role: "RESEARCHER", joined_at: "2026-08-15" },
-      { id: 4, user_id: "qa_auditor", name: "Compliance Auditor", role: "VIEWER", joined_at: "2026-08-20" },
-    ]
+    teamData?.members && teamData.members.length > 0 ? teamData.members : [initialOwnerMember]
   );
   const [activities, setActivities] = useState<ActivityLog[]>(teamData?.activities || []);
   const [membershipRequests, setMembershipRequests] = useState<MembershipRequest[]>([]);
 
   // Join Code & Settings State
-  const [joinCode, setJoinCode] = useState<string | null>("WL-7K4M2P");
+  const [joinCode, setJoinCode] = useState<string | null>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem(`workline_join_code_${initialTeamId}`);
+      if (saved && saved.startsWith("WL-")) return saved;
+      const fresh = generateSecureJoinCode();
+      localStorage.setItem(`workline_join_code_${initialTeamId}`, fresh);
+      return fresh;
+    }
+    return generateSecureJoinCode();
+  });
   const [codeStatus, setCodeStatus] = useState<"ACTIVE" | "EXPIRED" | "REVOKED">("ACTIVE");
   const [copiedCode, setCopiedCode] = useState(false);
   const [requireJoinApproval, setRequireJoinApproval] = useState(false);
@@ -135,14 +206,56 @@ export default function TeamWorkspace({
   const isOwnerOrAdmin = currentUserRole === "OWNER" || currentUserRole === "ADMIN";
   const isOwner = currentUserRole === "OWNER";
 
+  // Synchronize when project or clerk user loads
+  useEffect(() => {
+    if (!teamData) {
+      if (resolvedProjectName) {
+        setTeamName(`${resolvedProjectName} Team`);
+      } else if (clerkUser) {
+        setTeamName(`${currentUserName}'s Team`);
+      }
+      if (projectContext?.systemSpecification || projectContext?.projectData?.description) {
+        setTeamDescription(projectContext.systemSpecification || projectContext.projectData?.description || "");
+      }
+      const newTeamId = `team_${resolvedProjectId.replace(/[^a-zA-Z0-9]/g, "_").toLowerCase()}`;
+      setTeamId(newTeamId);
+
+      setMembers((prev) => {
+        if (
+          prev.length === 0 ||
+          (prev.length === 1 &&
+            (prev[0].user_id === "engineer@workline.ai" ||
+              prev[0].user_id === "lead_engineer" ||
+              prev[0].user_id !== currentUserId))
+        ) {
+          return [initialOwnerMember];
+        }
+        return prev;
+      });
+
+      if (typeof window !== "undefined") {
+        const saved = localStorage.getItem(`workline_join_code_${newTeamId}`);
+        if (saved && saved.startsWith("WL-")) {
+          setJoinCode(saved);
+        } else {
+          const fresh = generateSecureJoinCode();
+          localStorage.setItem(`workline_join_code_${newTeamId}`, fresh);
+          setJoinCode(fresh);
+        }
+      }
+    }
+  }, [clerkUser, projectContext?.projectId, projectContext?.projectName]);
+
   // Initial Fetch & Refresh
   const fetchTeamDetails = async () => {
     try {
-      const res = await fetch(`${apiBase}/api/teams/${teamId}`);
+      const res = await fetch(`${apiBase}/api/teams/${teamId}`, {
+        headers: { "X-User-Id": currentUserId },
+      });
       if (res.ok) {
         const data = await res.json();
-        setTeamName(data.name);
-        setTeamDescription(data.description || "");
+        if (data.name) setTeamName(data.name);
+        if (data.description) setTeamDescription(data.description || "");
         setRequireJoinApproval(data.require_join_approval || false);
         setDefaultJoinRole(data.default_join_role || "ENGINEER");
       }
@@ -153,23 +266,31 @@ export default function TeamWorkspace({
 
   const fetchMembers = async () => {
     try {
-      const res = await fetch(`${apiBase}/api/teams/${teamId}/members`);
+      const res = await fetch(`${apiBase}/api/teams/${teamId}/members`, {
+        headers: { "X-User-Id": currentUserId },
+      });
       if (res.ok) {
         const list = await res.json();
-        setMembers(list);
+        if (Array.isArray(list) && list.length > 0) {
+          setMembers(list);
+          return;
+        }
       }
     } catch (err) {
       console.error("Failed to fetch members:", err);
     }
+    setMembers([initialOwnerMember]);
   };
 
   const fetchMembershipRequests = async () => {
     if (!isOwnerOrAdmin) return;
     try {
-      const res = await fetch(`${apiBase}/api/teams/${teamId}/membership-requests`);
+      const res = await fetch(`${apiBase}/api/teams/${teamId}/membership-requests`, {
+        headers: { "X-User-Id": currentUserId },
+      });
       if (res.ok) {
         const reqs = await res.json();
-        setMembershipRequests(reqs);
+        setMembershipRequests(Array.isArray(reqs) ? reqs : []);
       }
     } catch (err) {
       console.error("Failed to fetch membership requests:", err);
@@ -178,53 +299,30 @@ export default function TeamWorkspace({
 
   const fetchActivities = async () => {
     try {
-      const res = await fetch(`${apiBase}/api/teams/${teamId}/activity`);
+      const res = await fetch(`${apiBase}/api/teams/${teamId}/activity`, {
+        headers: { "X-User-Id": currentUserId },
+      });
       if (res.ok) {
         const logs = await res.json();
-        setActivities(
-          logs.map((l: any) => ({
-            id: l.event_id,
-            user_id: l.actor_user_id,
-            action: l.event_type,
-            details: JSON.stringify(l.metadata || {}),
-            timestamp: l.timestamp,
-            actor_type: l.metadata?.actor_type || (l.actor_user_id.includes("agent") ? "AGENT" : "HUMAN"),
-            receipt_id: l.metadata?.receipt_id,
-          }))
-        );
-      } else {
-        // Fallback realistic activity
-        setActivities([
-          {
-            id: "act_001",
-            user_id: "hw_specialist",
-            action: "TASK_CREATED",
-            details: 'Linked to BOM Part: MP1584 Buck Regulator',
-            timestamp: new Date(Date.now() - 3600000).toISOString(),
-            actor_type: "HUMAN",
-          },
-          {
-            id: "act_002",
-            user_id: "agent_thermal_pinn",
-            action: "AGENT_EXECUTION_COMPLETED",
-            details: 'Boundary condition solved for 12V LiFePO4 regulator pack',
-            timestamp: new Date(Date.now() - 7200000).toISOString(),
-            actor_type: "AGENT",
-            receipt_id: "AIQ-RCPT-8941",
-          },
-          {
-            id: "act_003",
-            user_id: "lead_engineer",
-            action: "DECISION_APPROVED",
-            details: 'Approved MP1584EN buck regulator architecture',
-            timestamp: new Date(Date.now() - 14400000).toISOString(),
-            actor_type: "HUMAN",
-          },
-        ]);
+        if (Array.isArray(logs)) {
+          setActivities(
+            logs.map((l: any) => ({
+              id: l.event_id || l.id || `evt_${Math.random()}`,
+              user_id: l.actor_user_id || l.user_id || "System",
+              action: l.event_type || l.action || "ACTIVITY",
+              details: typeof l.metadata === "object" ? JSON.stringify(l.metadata) : (l.details || ""),
+              timestamp: l.timestamp || new Date().toISOString(),
+              actor_type: l.metadata?.actor_type || (String(l.actor_user_id || "").includes("agent") ? "AGENT" : "HUMAN"),
+              receipt_id: l.metadata?.receipt_id,
+            }))
+          );
+          return;
+        }
       }
     } catch (err) {
       console.error("Failed to fetch activity:", err);
     }
+    setActivities([]);
   };
 
   useEffect(() => {
@@ -239,29 +337,69 @@ export default function TeamWorkspace({
   // Code Management
   const handleRotateCode = async () => {
     try {
-      const res = await fetch(`${apiBase}/api/teams/${teamId}/join-code/rotate`, { method: "POST" });
+      const res = await fetch(`${apiBase}/api/teams/${teamId}/join-code/rotate`, {
+        method: "POST",
+        headers: { "X-User-Id": currentUserId },
+      });
       if (res.ok) {
         const data = await res.json();
-        setJoinCode(data.join_code);
-        setCodeStatus("ACTIVE");
-        fetchActivities();
+        if (data.join_code) {
+          setJoinCode(data.join_code);
+          if (typeof window !== "undefined") {
+            localStorage.setItem(`workline_join_code_${teamId}`, data.join_code);
+          }
+          setCodeStatus("ACTIVE");
+          fetchActivities();
+          return;
+        }
       }
     } catch (err) {
       console.error("Rotate join code error:", err);
     }
+    const fresh = generateSecureJoinCode();
+    setJoinCode(fresh);
+    if (typeof window !== "undefined") {
+      localStorage.setItem(`workline_join_code_${teamId}`, fresh);
+    }
+    setCodeStatus("ACTIVE");
+    setActivities((prev) => [
+      {
+        id: `act_${Date.now()}`,
+        user_id: currentUserId,
+        action: "JOIN_CODE_ROTATED",
+        details: `Rotated team join code to ${fresh}`,
+        timestamp: new Date().toISOString(),
+        actor_type: "HUMAN",
+      },
+      ...prev,
+    ]);
   };
 
   const handleRevokeCode = async () => {
     try {
-      const res = await fetch(`${apiBase}/api/teams/${teamId}/join-code/revoke`, { method: "POST" });
-      if (res.ok) {
-        setJoinCode(null);
-        setCodeStatus("REVOKED");
-        fetchActivities();
-      }
+      await fetch(`${apiBase}/api/teams/${teamId}/join-code/revoke`, {
+        method: "POST",
+        headers: { "X-User-Id": currentUserId },
+      });
     } catch (err) {
       console.error("Revoke join code error:", err);
     }
+    setJoinCode(null);
+    setCodeStatus("REVOKED");
+    if (typeof window !== "undefined") {
+      localStorage.removeItem(`workline_join_code_${teamId}`);
+    }
+    setActivities((prev) => [
+      {
+        id: `act_${Date.now()}`,
+        user_id: currentUserId,
+        action: "JOIN_CODE_REVOKED",
+        details: `Revoked team joining code`,
+        timestamp: new Date().toISOString(),
+        actor_type: "HUMAN",
+      },
+      ...prev,
+    ]);
   };
 
   const handleCopyCode = () => {
@@ -547,29 +685,36 @@ export default function TeamWorkspace({
               </div>
 
               <div className="divide-y divide-zinc-800/60">
-                {activities.slice(0, 4).map((act) => (
-                  <div key={act.id} className="py-2.5 flex items-center justify-between text-xs">
-                    <div className="flex items-center space-x-2.5">
-                      {act.actor_type === "AGENT" ? (
-                        <span className="p-1 rounded bg-indigo-950/60 border border-indigo-800/50 text-indigo-400">
-                          <Bot className="w-3.5 h-3.5" />
-                        </span>
-                      ) : (
-                        <span className="p-1 rounded bg-zinc-800 text-zinc-300">
-                          <Users className="w-3.5 h-3.5" />
-                        </span>
-                      )}
-                      <div>
-                        <span className="font-semibold text-zinc-200">{act.user_id}</span>{" "}
-                        <span className="text-zinc-400 font-mono">[{act.action}]</span>
-                        <div className="text-[11px] text-zinc-400 truncate max-w-md">{act.details}</div>
+                {activities.length > 0 ? (
+                  activities.slice(0, 4).map((act) => (
+                    <div key={act.id} className="py-2.5 flex items-center justify-between text-xs">
+                      <div className="flex items-center space-x-2.5">
+                        {act.actor_type === "AGENT" ? (
+                          <span className="p-1 rounded bg-indigo-950/60 border border-indigo-800/50 text-indigo-400">
+                            <Bot className="w-3.5 h-3.5" />
+                          </span>
+                        ) : (
+                          <span className="p-1 rounded bg-zinc-800 text-zinc-300">
+                            <Users className="w-3.5 h-3.5" />
+                          </span>
+                        )}
+                        <div>
+                          <span className="font-semibold text-zinc-200">{act.user_id}</span>{" "}
+                          <span className="text-zinc-400 font-mono">[{act.action}]</span>
+                          <div className="text-[11px] text-zinc-400 truncate max-w-md">{act.details}</div>
+                        </div>
                       </div>
+                      <span className="text-[10px] text-zinc-500 font-mono whitespace-nowrap">
+                        {new Date(act.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      </span>
                     </div>
-                    <span className="text-[10px] text-zinc-500 font-mono whitespace-nowrap">
-                      {new Date(act.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                    </span>
+                  ))
+                ) : (
+                  <div className="py-6 text-center text-xs text-zinc-500">
+                    <p className="text-zinc-400 font-medium">No recent collaboration activity</p>
+                    <p className="text-[11px] text-zinc-500 mt-0.5">Invite team members or execute agent operations to log audit events.</p>
                   </div>
-                ))}
+                )}
               </div>
             </div>
           </div>
@@ -694,45 +839,53 @@ export default function TeamWorkspace({
               </div>
             </div>
 
-            <div className="space-y-2.5">
-              {filteredActivities.map((act) => (
-                <div
-                  key={act.id}
-                  className="p-3.5 bg-zinc-900/60 border border-zinc-800 rounded-xl flex items-start justify-between gap-3 text-xs"
-                >
-                  <div className="flex items-start space-x-3">
-                    {act.actor_type === "AGENT" ? (
-                      <div className="p-1.5 bg-indigo-950/60 border border-indigo-800/50 rounded-lg text-indigo-400 shrink-0 mt-0.5">
-                        <Bot className="w-4 h-4" />
-                      </div>
-                    ) : (
-                      <div className="p-1.5 bg-zinc-800 rounded-lg text-zinc-300 shrink-0 mt-0.5">
-                        <Users className="w-4 h-4" />
-                      </div>
-                    )}
+            {filteredActivities.length > 0 ? (
+              <div className="space-y-2.5">
+                {filteredActivities.map((act) => (
+                  <div
+                    key={act.id}
+                    className="p-3.5 bg-zinc-900/60 border border-zinc-800 rounded-xl flex items-start justify-between gap-3 text-xs"
+                  >
+                    <div className="flex items-start space-x-3">
+                      {act.actor_type === "AGENT" ? (
+                        <div className="p-1.5 bg-indigo-950/60 border border-indigo-800/50 rounded-lg text-indigo-400 shrink-0 mt-0.5">
+                          <Bot className="w-4 h-4" />
+                        </div>
+                      ) : (
+                        <div className="p-1.5 bg-zinc-800 rounded-lg text-zinc-300 shrink-0 mt-0.5">
+                          <Users className="w-4 h-4" />
+                        </div>
+                      )}
 
-                    <div className="space-y-1">
-                      <div className="flex items-center space-x-2">
-                        <span className="font-semibold text-zinc-100">{act.user_id}</span>
-                        <span className="px-1.5 py-0.2 rounded font-mono text-[10px] bg-zinc-800 text-zinc-400">
-                          {act.action}
-                        </span>
-                        {act.receipt_id && (
-                          <span className="px-1.5 py-0.2 rounded font-mono text-[10px] bg-indigo-950 text-indigo-300 border border-indigo-800/40">
-                            Receipt: {act.receipt_id}
+                      <div className="space-y-1">
+                        <div className="flex items-center space-x-2">
+                          <span className="font-semibold text-zinc-100">{act.user_id}</span>
+                          <span className="px-1.5 py-0.2 rounded font-mono text-[10px] bg-zinc-800 text-zinc-400">
+                            {act.action}
                           </span>
-                        )}
+                          {act.receipt_id && (
+                            <span className="px-1.5 py-0.2 rounded font-mono text-[10px] bg-indigo-950 text-indigo-300 border border-indigo-800/40">
+                              Receipt: {act.receipt_id}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-zinc-300 text-[11px] leading-relaxed">{act.details}</p>
                       </div>
-                      <p className="text-zinc-300 text-[11px] leading-relaxed">{act.details}</p>
                     </div>
-                  </div>
 
-                  <span className="text-[10px] font-mono text-zinc-500 whitespace-nowrap">
-                    {new Date(act.timestamp).toLocaleDateString()} {new Date(act.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                  </span>
-                </div>
-              ))}
-            </div>
+                    <span className="text-[10px] font-mono text-zinc-500 whitespace-nowrap">
+                      {new Date(act.timestamp).toLocaleDateString()} {new Date(act.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="py-12 text-center text-zinc-500 text-xs border border-dashed border-zinc-800 rounded-xl">
+                <Activity className="w-8 h-8 mx-auto mb-2 text-zinc-600 stroke-1" />
+                <p className="font-semibold text-zinc-400">No collaboration activity recorded yet</p>
+                <p className="text-[11px] text-zinc-500 mt-1">Immutable audit trail of human actions, AI agent solver runs, and system gate evaluations will appear here.</p>
+              </div>
+            )}
           </div>
         )}
 

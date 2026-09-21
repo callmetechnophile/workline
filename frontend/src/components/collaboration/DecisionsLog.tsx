@@ -81,47 +81,9 @@ export const DecisionsLog: React.FC<DecisionsLogProps> = ({
       const res = await fetch(`${apiBase}/api/decisions?project_id=${encodeURIComponent(projectId)}`);
       if (res.ok) {
         const data = await res.json();
-        setDecisions(data);
+        setDecisions(Array.isArray(data) ? data : []);
       } else {
-        // Fallback default sample decisions if none exists
-        setDecisions([
-          {
-            decision_id: "DEC-PWR-001",
-            project_id: projectId,
-            team_id: teamId,
-            title: "Switching Buck Converter vs Linear LDO",
-            description: "High input voltage (12V) down to 3.3V sensor rail requires thermal dissipation assessment.",
-            status: "RECOMMENDED",
-            decision_type: "POWER_REGULATION",
-            selected_candidate: "MP1584EN 3A Buck Regulator",
-            alternatives: ["AMS1117-3.3", "LM7805 + LDO", "TPS62840"],
-            recommendation: "Deploy MP1584EN buck regulator. Maintains 91% conversion efficiency with minimal heat dissipation.",
-            rationale: "Selected MP1584EN based on superior thermal envelope and 91% efficiency at 1.5A peak load.",
-            confidence: 0.94,
-            stability: 0.92,
-            created_by: "system_agent",
-            created_at: Date.now() / 1000 - 86400,
-            updated_at: Date.now() / 1000 - 3600,
-          },
-          {
-            decision_id: "DEC-COM-002",
-            project_id: projectId,
-            team_id: teamId,
-            title: "Primary 6-DoF Motion Sensor Selection",
-            description: "Evaluate I2C vs SPI bus bandwidth and gyroscope zero-rate drift stability for robotics arm.",
-            status: "APPROVED",
-            decision_type: "COMPONENT_SELECTION",
-            selected_candidate: "MPU6050 Accelerometer/Gyroscope",
-            alternatives: ["LSM6DSOX", "BMI270", "BNO055"],
-            recommendation: "MPU6050 selected due to low cost, high inventory availability, and proven DMP firmware support.",
-            rationale: "Approved by Engineering Lead for Prototype Run Phase 1.",
-            confidence: 0.88,
-            stability: 0.85,
-            created_by: "lead_engineer",
-            created_at: Date.now() / 1000 - 172800,
-            updated_at: Date.now() / 1000 - 72000,
-          },
-        ]);
+        setDecisions([]);
       }
     } catch (err) {
       console.error("Failed to fetch decisions:", err);

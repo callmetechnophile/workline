@@ -92,10 +92,13 @@ export const TaskBoard: React.FC<TaskBoardProps> = ({
       const res = await fetch(`${apiBase}/api/tasks?team_id=${encodeURIComponent(teamId)}`);
       if (res.ok) {
         const data = await res.json();
-        setTasks(data);
+        setTasks(Array.isArray(data) ? data : []);
+      } else {
+        setTasks([]);
       }
     } catch (err) {
       console.error("Failed to fetch tasks:", err);
+      setTasks([]);
     } finally {
       setLoading(false);
     }

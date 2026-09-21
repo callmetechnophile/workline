@@ -72,43 +72,9 @@ export const ApprovalsQueue: React.FC<ApprovalsQueueProps> = ({
       const res = await fetch(`${apiBase}/api/approvals?project_id=${encodeURIComponent(projectId)}`);
       if (res.ok) {
         const data = await res.json();
-        setApprovals(data);
+        setApprovals(Array.isArray(data) ? data : []);
       } else {
-        // Fallback default sample approvals
-        setApprovals([
-          {
-            id: "APPR-BOM-8921",
-            project_id: projectId,
-            team_id: teamId,
-            requester_id: "hw_engineer_02",
-            requester_name: "Hardware Engineer",
-            artifact_type: "COMPONENT_SUBSTITUTION",
-            artifact_id: "comp_lm7805",
-            action: "Substitute LM7805 Linear Regulator with MP1584 Buck Converter",
-            reason: "Thermal analysis shows 7805 reaches 95°C at 1.5A load; buck converter reduces thermal envelope to 42°C.",
-            diff_summary: "Removed: LM7805 (TO-220) | Added: MP1584EN (SOIC-8) + 4.7uH Inductor",
-            status: "PENDING",
-            created_at: new Date(Date.now() - 7200000).toISOString(),
-          },
-          {
-            id: "APPR-GATE-4412",
-            project_id: projectId,
-            team_id: teamId,
-            requester_id: "firmware_lead",
-            requester_name: "Firmware Lead",
-            artifact_type: "RELEASE_GATE",
-            artifact_id: "fw_rev_2_1",
-            action: "Production Gerbers & Pick-and-Place File Release",
-            reason: "All DRC checks passed with 0 violations. Pin clearance >= 0.2mm verified.",
-            diff_summary: "Layout revision 2.1 tagged for fabrication batch.",
-            status: "APPROVED",
-            approver_id: "chief_engineer",
-            approver_name: "Chief Engineer",
-            resolution_notes: "DRC and thermal clearances verified. Approved for fabrication.",
-            created_at: new Date(Date.now() - 86400000).toISOString(),
-            resolved_at: new Date(Date.now() - 82800000).toISOString(),
-          },
-        ]);
+        setApprovals([]);
       }
     } catch (err) {
       console.error("Failed to fetch approvals:", err);

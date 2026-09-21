@@ -42,29 +42,9 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
       const res = await fetch(`${apiBase}/api/notifications?user_id=${encodeURIComponent(userId)}`);
       if (res.ok) {
         const data = await res.json();
-        setNotifications(data);
+        setNotifications(Array.isArray(data) ? data : []);
       } else {
-        // Fallback sample notifications
-        setNotifications([
-          {
-            id: "notif_001",
-            user_id: userId,
-            notification_type: "MENTION",
-            title: "Lead Engineer mentioned you",
-            message: "Hey, check the decoupling capacitors on the 3.3V rail.",
-            read: false,
-            created_at: new Date(Date.now() - 1800000).toISOString(),
-          },
-          {
-            id: "notif_002",
-            user_id: userId,
-            notification_type: "APPROVAL_REQUEST",
-            title: "New Gate Approval Requested",
-            message: "Substitute LM7805 with MP1584 Buck Converter requires your review.",
-            read: false,
-            created_at: new Date(Date.now() - 7200000).toISOString(),
-          },
-        ]);
+        setNotifications([]);
       }
     } catch (err) {
       console.error("Failed to fetch notifications:", err);
