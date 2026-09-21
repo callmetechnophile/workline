@@ -5,18 +5,20 @@ interface InvitationModalProps {
   isOpen: boolean;
   onClose: () => void;
   teamId: string;
-  teamName: string;
+  teamName?: string;
   memberCount?: number;
   apiBase?: string;
+  onSuccess?: () => void;
 }
 
 export const InvitationModal: React.FC<InvitationModalProps> = ({
   isOpen,
   onClose,
   teamId,
-  teamName,
+  teamName = 'Engineering Team',
   memberCount = 1,
   apiBase = '',
+  onSuccess,
 }) => {
   if (!isOpen) return null;
 

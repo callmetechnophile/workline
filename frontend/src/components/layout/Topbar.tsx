@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { Search, Moon, Sun, ShieldCheck, Sparkles, Terminal, Wallet } from 'lucide-react';
 import { SignInButton, SignUpButton, useAuth } from '@clerk/nextjs';
 import { peraWallet, WalletConnectionState } from '@/lib/peraWallet';
 import { NotificationDropdown } from '@/components/collaboration/NotificationDropdown';

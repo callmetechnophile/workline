@@ -2,14 +2,14 @@ import React, { useState } from 'react';
 
 interface TeamInvitationPanelProps {
   teamId: string;
-  teamName: string;
+  teamName?: string;
   memberCount?: number;
   apiBase?: string;
 }
 
 export const TeamInvitationPanel: React.FC<TeamInvitationPanelProps> = ({
   teamId,
-  teamName,
+  teamName = 'Engineering Team',
   memberCount = 1,
   apiBase = '',
 }) => {
