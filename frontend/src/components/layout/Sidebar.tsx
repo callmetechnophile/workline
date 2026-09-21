@@ -17,7 +17,6 @@ import {
   Bot, 
   Activity, 
   Blocks, 
-  Settings,
   CreditCard,
   Server,
   Users,
@@ -46,8 +45,7 @@ export type NavSection =
   | 'services'
   | 'payments'
   | 'health'
-  | 'integrations'
-  | 'settings';
+  | 'integrations';
 
 interface SidebarProps {
   activeSection: NavSection;
@@ -90,7 +88,6 @@ export default function Sidebar({
     { id: 'payments' as NavSection, label: 'x402 Payments', icon: CreditCard },
     { id: 'health' as NavSection, label: 'Service Health', icon: Activity },
     { id: 'integrations' as NavSection, label: 'Integrations', icon: Blocks },
-    { id: 'settings' as NavSection, label: 'Settings', icon: Settings },
   ];
 
   return (
