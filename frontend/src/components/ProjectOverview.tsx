@@ -167,7 +167,7 @@ export default function ProjectOverview({
       id: 'procurement' as NavSection,
       title: 'Procurement & Orders',
       count: projectData.procurement ? 'Quote Ready' : '—',
-      desc: 'Non-custodial x402 payment challenge & settlement',
+      desc: 'Non-custodial order settlement & quote verification',
       icon: ShoppingCart,
       status: projectData.procurement ? ('PASS' as const) : ('PENDING' as const),
     },
@@ -220,32 +220,34 @@ export default function ProjectOverview({
             <span className="text-[10px] font-mono text-slate-500 uppercase font-bold">
               TARGET TIMELINE
             </span>
-            <div className="text-sm font-bold font-mono text-indigo-400">
+            <div className="text-base font-bold font-mono text-slate-100">
               {resolvedTargetDays} Days
             </div>
-            <div className="text-[11px] text-slate-500">Autonomous execution window</div>
+            <div className="text-[10px] text-slate-400">
+              Autonomous execution window
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Sequential Pipeline Orchestration Status */}
+      {/* Sequential Pipeline Orchestration */}
       <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-4 space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center justify-between border-b border-slate-800 pb-2">
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-mono font-bold tracking-wider text-slate-500 uppercase">
+            <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 font-bold">
               SEQUENTIAL PIPELINE ORCHESTRATION (R1 → R2 → R3 → R4 → R5)
             </span>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-950/80 text-indigo-300 border border-indigo-800/40">
+            <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-indigo-950/60 border border-indigo-800 text-indigo-300 uppercase font-semibold">
               R1 AUTHORITATIVE
             </span>
           </div>
-          <span className="text-[11px] font-mono text-emerald-400 font-bold flex items-center gap-1">
+          <div className="flex items-center gap-1.5 text-[10px] font-mono text-emerald-400">
             <CheckCircle2 className="w-3.5 h-3.5" />
             <span>LINEAGE VERIFIED</span>
-          </span>
+          </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
           <div className="bg-slate-950/80 border border-slate-800 rounded-lg p-2.5 space-y-1">
             <div className="flex items-center justify-between text-[10px] font-mono">
               <span className="text-slate-400 font-bold">R2: REQUIREMENTS</span>
@@ -282,13 +284,12 @@ export default function ProjectOverview({
             <div className="text-[9px] text-slate-500 font-mono">Based on: R2+R3+R4</div>
           </div>
 
-          <div className="bg-slate-950/80 border border-indigo-800/40 rounded-lg p-2.5 space-y-1">
+          <div className="bg-slate-950/80 border border-emerald-800/40 rounded-lg p-2.5 space-y-1">
             <div className="flex items-center justify-between text-[10px] font-mono">
-              <span className="text-indigo-300 font-bold">PROCUREMENT / x402</span>
-              <span className="text-indigo-400 font-bold">● READY</span>
+              <span className="text-emerald-300 font-bold">FINAL COST</span>
+              <span className="text-emerald-400 font-bold">● READY</span>
             </div>
-            <div className="text-[11px] font-semibold text-indigo-200 truncate">${procurementUsd.toFixed(2)} USD</div>
-            <div className="text-[9px] text-indigo-400 font-mono">Algorand Settlement</div>
+            <div className="text-[11px] font-semibold text-emerald-200 truncate">₹{Math.round(calculatedTotalInr).toLocaleString('en-IN')}</div>
           </div>
         </div>
       </div>
