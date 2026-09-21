@@ -2,10 +2,12 @@
 Workline AI — Teams & Collaboration API Router.
 
 Exposes REST endpoints for:
-1. Team creation & member management.
-2. Secure 6-character CSPRNG join code lifecycle (Join, Rotate, Revoke).
-3. RSA-OAEP asymmetric encryption & RSA-PSS cryptographic signing of invitations.
-4. Rate-limited join attempts and enumeration-protected generic error handling.
+1. Team creation & member management with 5-tier roles.
+2. Secure 'WL-XXXXXX' join code lifecycle (Preview, Join, Rotate, Revoke).
+3. Membership request approval flow (require_join_approval).
+4. Protected ownership transfer protocol.
+5. RSA-OAEP asymmetric encryption & RSA-PSS cryptographic signing of invitations.
+6. Rate-limited join attempts and enumeration-protected generic error handling.
 """
 
 from typing import Any, Dict, List, Optional
@@ -18,11 +20,16 @@ from backend.workline.collaboration.teams.models import (
     CreateTeamResponse,
     JoinTeamRequest,
     JoinTeamResponse,
+    MembershipRequest,
+    ReviewMembershipRequest,
     RevokeJoinCodeResponse,
     RotateJoinCodeResponse,
     Team,
+    TeamPreviewResponse,
     TeamRole,
+    TransferOwnershipRequest,
     UpdateMemberRoleRequest,
+    UpdateTeamSettingsRequest,
 )
 from backend.workline.collaboration.teams.service import (
     InvalidJoinCodeError,
@@ -53,7 +60,7 @@ def create_team(
     request: Request,
     x_user_id: Optional[str] = Header(None, alias="X-User-Id"),
 ):
-    """Creates a new team, designates creator as OWNER, and returns 6-char join code once."""
+    """Creates a new team, designates creator as OWNER, and returns WL-XXXXXX join code once."""
     user_id = get_current_user_id(x_user_id)
     if not user_id:
         raise HTTPException(status_code=401, detail="Authentication required.")
@@ -63,6 +70,9 @@ def create_team(
             name=payload.name,
             creator_user_id=user_id,
             description=payload.description or "",
+            project_id=payload.project_id,
+            require_join_approval=payload.require_join_approval or False,
+            default_join_role=payload.default_join_role or TeamRole.ENGINEER,
             request_id=request.headers.get("X-Request-Id"),
         )
     except ValueError as e:
@@ -92,6 +102,20 @@ def get_team(team_id: str, x_user_id: Optional[str] = Header(None, alias="X-User
         raise HTTPException(status_code=403, detail="Access denied: You are not a member of this team.")
 
 
+@router.get("/preview-code/{code}", response_model=TeamPreviewResponse)
+def preview_join_code(code: str, request: Request):
+    """Safe metadata preview for a WL-XXXXXX join code without joining."""
+    client_ip = request.client.host if request.client else "unknown"
+    try:
+        return team_service.preview_join_code(raw_code=code, client_ip=client_ip)
+    except RateLimitExceededError as e:
+        raise HTTPException(status_code=429, detail=str(e))
+    except InvalidJoinCodeError:
+        raise HTTPException(status_code=404, detail="Invalid or expired team code.")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.post("/join", response_model=JoinTeamResponse)
 def join_team(
     payload: JoinTeamRequest,
@@ -99,8 +123,9 @@ def join_team(
     x_user_id: Optional[str] = Header(None, alias="X-User-Id"),
 ):
     """
-    Joins an existing team via 6-character alphanumeric join code.
+    Joins an existing team via WL-XXXXXX code.
     Protected by HMAC verification, expiration checks, and brute-force rate limiting.
+    Creates a MembershipRequest if require_join_approval is enabled.
     """
     user_id = get_current_user_id(x_user_id)
     if not user_id:
@@ -112,6 +137,9 @@ def join_team(
         return team_service.join_team(
             raw_code=payload.code,
             user_id=user_id,
+            requested_role=payload.requested_role,
+            user_name=payload.user_name,
+            user_email=payload.user_email,
             client_ip=client_ip,
             request_id=request.headers.get("X-Request-Id"),
         )
@@ -123,7 +151,50 @@ def join_team(
     except PermissionDeniedError as e:
         raise HTTPException(status_code=401, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail="An error occurred while joining the team.")
+        raise HTTPException(status_code=500, detail=f"An error occurred while joining the team: {str(e)}")
+
+
+# ---------------------------------------------------------------------------
+# Membership Requests
+# ---------------------------------------------------------------------------
+
+@router.get("/{team_id}/membership-requests", response_model=List[MembershipRequest])
+def list_membership_requests(team_id: str, x_user_id: Optional[str] = Header(None, alias="X-User-Id")):
+    """Lists pending membership requests (Owner/Admin only)."""
+    user_id = get_current_user_id(x_user_id)
+    try:
+        return team_service.list_membership_requests(team_id, user_id)
+    except PermissionDeniedError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/{team_id}/membership-requests/{request_id}/review")
+def review_membership_request(
+    team_id: str,
+    request_id: str,
+    payload: ReviewMembershipRequest,
+    request: Request,
+    x_user_id: Optional[str] = Header(None, alias="X-User-Id"),
+):
+    """Approves or rejects a membership request (Owner/Admin only)."""
+    user_id = get_current_user_id(x_user_id)
+    try:
+        return team_service.review_membership_request(
+            request_id=request_id,
+            action=payload.action,
+            actor_user_id=user_id,
+            assigned_role=payload.assigned_role,
+            reason=payload.reason,
+            request_id_header=request.headers.get("X-Request-Id"),
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except PermissionDeniedError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # ---------------------------------------------------------------------------
@@ -171,12 +242,12 @@ def revoke_join_code(
 
 
 # ---------------------------------------------------------------------------
-# Member Management
+# Member & Role Management
 # ---------------------------------------------------------------------------
 
 @router.get("/{team_id}/members", response_model=List[Dict[str, Any]])
-def list_team_members(team_id: str, x_user_id: Optional[str] = Header(None, alias="X-User-Id")):
-    """Lists members for a team."""
+def list_members(team_id: str, x_user_id: Optional[str] = Header(None, alias="X-User-Id")):
+    """Lists all active members of a team."""
     user_id = get_current_user_id(x_user_id)
     try:
         return team_service.list_members(team_id, user_id)
@@ -194,7 +265,7 @@ def update_member_role(
     request: Request,
     x_user_id: Optional[str] = Header(None, alias="X-User-Id"),
 ):
-    """Updates a team member's role (Owner/Admin only with owner protections)."""
+    """Updates role for a member with strict owner protection."""
     user_id = get_current_user_id(x_user_id)
     try:
         return team_service.update_member_role(
@@ -204,8 +275,8 @@ def update_member_role(
             actor_user_id=user_id,
             request_id=request.headers.get("X-Request-Id"),
         )
-    except (TeamNotFoundError, ValueError) as e:
-        raise HTTPException(status_code=404, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     except PermissionDeniedError as e:
         raise HTTPException(status_code=403, detail=str(e))
 
@@ -217,7 +288,7 @@ def remove_member(
     request: Request,
     x_user_id: Optional[str] = Header(None, alias="X-User-Id"),
 ):
-    """Removes a member from the team (Owner/Admin only, cannot remove owner)."""
+    """Removes a member from the team. Prevents removing the sole OWNER."""
     user_id = get_current_user_id(x_user_id)
     try:
         return team_service.remove_member(
@@ -226,15 +297,71 @@ def remove_member(
             actor_user_id=user_id,
             request_id=request.headers.get("X-Request-Id"),
         )
-    except (TeamNotFoundError, ValueError) as e:
-        raise HTTPException(status_code=404, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     except PermissionDeniedError as e:
         raise HTTPException(status_code=403, detail=str(e))
 
 
+# ---------------------------------------------------------------------------
+# Ownership Transfer & Settings
+# ---------------------------------------------------------------------------
+
+@router.post("/{team_id}/transfer-ownership")
+def transfer_ownership(
+    team_id: str,
+    payload: TransferOwnershipRequest,
+    request: Request,
+    x_user_id: Optional[str] = Header(None, alias="X-User-Id"),
+):
+    """Securely transfers team ownership with confirmation phrase (Owner only)."""
+    user_id = get_current_user_id(x_user_id)
+    try:
+        return team_service.transfer_ownership(
+            team_id=team_id,
+            target_user_id=payload.target_user_id,
+            actor_user_id=user_id,
+            confirmation_phrase=payload.confirmation_phrase,
+            request_id=request.headers.get("X-Request-Id"),
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except PermissionDeniedError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+
+
+@router.patch("/{team_id}/settings", response_model=Team)
+def update_team_settings(
+    team_id: str,
+    payload: UpdateTeamSettingsRequest,
+    request: Request,
+    x_user_id: Optional[str] = Header(None, alias="X-User-Id"),
+):
+    """Updates team settings (Owner/Admin only)."""
+    user_id = get_current_user_id(x_user_id)
+    try:
+        return team_service.update_team_settings(
+            team_id=team_id,
+            actor_user_id=user_id,
+            name=payload.name,
+            description=payload.description,
+            require_join_approval=payload.require_join_approval,
+            default_join_role=payload.default_join_role,
+            request_id=request.headers.get("X-Request-Id"),
+        )
+    except PermissionDeniedError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ---------------------------------------------------------------------------
+# Audit Logs
+# ---------------------------------------------------------------------------
+
 @router.get("/{team_id}/activity", response_model=List[Dict[str, Any]])
 def get_team_activity(team_id: str, x_user_id: Optional[str] = Header(None, alias="X-User-Id")):
-    """Retrieves immutable audit trail for team operations."""
+    """Retrieves immutable audit trail for a team."""
     user_id = get_current_user_id(x_user_id)
     try:
         return team_service.get_audit_logs(team_id, user_id)
@@ -242,79 +369,3 @@ def get_team_activity(team_id: str, x_user_id: Optional[str] = Header(None, alia
         raise HTTPException(status_code=404, detail="Team not found.")
     except PermissionDeniedError as e:
         raise HTTPException(status_code=403, detail=str(e))
-
-
-# ---------------------------------------------------------------------------
-# RSA Asymmetric Cryptography Payloads (RSA-OAEP & RSA-PSS)
-# ---------------------------------------------------------------------------
-
-class RsaEncryptRequest(BaseModel):
-    payload: Dict[str, Any]
-    recipient_public_key_pem: Optional[str] = None
-
-
-class RsaDecryptRequest(BaseModel):
-    ciphertext: str
-
-
-class RsaSignRequest(BaseModel):
-    payload: Dict[str, Any]
-
-
-class RsaVerifyRequest(BaseModel):
-    payload: Dict[str, Any]
-    signature: str
-    signer_public_key_pem: Optional[str] = None
-
-
-@router.post("/crypto/rsa/public-key")
-def get_rsa_public_key():
-    """Returns the server's public RSA key in PEM format."""
-    return {"public_key": rsa_engine.get_public_key_pem()}
-
-
-@router.post("/{team_id}/invitations/encrypted")
-def create_rsa_encrypted_invitation(
-    team_id: str,
-    payload: RsaEncryptRequest,
-    x_user_id: Optional[str] = Header(None, alias="X-User-Id"),
-):
-    """Encrypts invitation payload using RSA-OAEP + SHA-256."""
-    user_id = get_current_user_id(x_user_id)
-    team_service.get_team(team_id, user_id)
-    ciphertext = rsa_engine.encrypt_payload(payload.payload, payload.recipient_public_key_pem)
-    return {"ciphertext": ciphertext, "algorithm": "RSA-OAEP-SHA256"}
-
-
-@router.post("/{team_id}/invitations/signed")
-def create_rsa_signed_invitation(
-    team_id: str,
-    payload: RsaSignRequest,
-    x_user_id: Optional[str] = Header(None, alias="X-User-Id"),
-):
-    """Signs invitation metadata using RSA-PSS + SHA-256."""
-    user_id = get_current_user_id(x_user_id)
-    team_service.get_team(team_id, user_id)
-    signature = rsa_engine.sign_payload(payload.payload)
-    return {"signature": signature, "algorithm": "RSA-PSS-SHA256"}
-
-
-@router.post("/invitations/verify-signed")
-def verify_rsa_signed_invitation(payload: RsaVerifyRequest):
-    """Verifies RSA-PSS + SHA-256 signature."""
-    valid = rsa_engine.verify_signature(
-        data=payload.payload,
-        b64_signature=payload.signature,
-        public_key_pem=payload.signer_public_key_pem,
-    )
-    return {"valid": valid}
-
-
-@router.post("/invitations/decrypt")
-def decrypt_rsa_invitation(payload: RsaDecryptRequest):
-    """Decrypts RSA-OAEP + SHA-256 payload with server private key."""
-    try:
-        data = rsa_engine.decrypt_payload(payload.ciphertext)
-        return {"payload": data}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Decryption failed: {str(e)}")

@@ -6,6 +6,7 @@ import { Search, Moon, Sun, ShieldCheck, Sparkles, Terminal, Wallet } from 'luci
 import { SignInButton, SignUpButton, UserButton, useAuth } from '@clerk/nextjs';
 import CognitoUserButton from '@/components/auth/CognitoUserButton';
 import { peraWallet, WalletConnectionState } from '@/lib/peraWallet';
+import { NotificationDropdown } from '@/components/collaboration/NotificationDropdown';
 
 interface TopbarProps {
   isLightMode: boolean;
@@ -108,6 +109,9 @@ export default function Topbar({
           <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
           <span className="hidden sm:inline">AI Copilot</span>
         </button>
+
+        {/* Real-time Collaboration Notification Center */}
+        <NotificationDropdown apiBase={process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'} />
 
         {/* Theme Toggle */}
         <button

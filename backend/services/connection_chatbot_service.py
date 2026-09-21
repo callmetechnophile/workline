@@ -1,15 +1,79 @@
 import os
 import json
 import httpx
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
 
-def ask_connection_assistant(message: str, context: Dict[str, Any]) -> str:
+def ask_connection_assistant(message: str, context: Dict[str, Any], user_id: Optional[str] = None) -> str:
     """
-    Acts as an engineering connection advisor. Evaluates electrical connections,
-    pins, voltage, and protocol compatibilities using Amazon Bedrock DeepSeek R1.
+    Acts as an engineering connection and team collaboration advisor.
+    Evaluates electrical connections, pin compatibility, and team collaboration state
+    (tasks, decisions, approvals, activity) using Amazon Bedrock DeepSeek R1.
     """
     msg_lower = message.lower()
+    effective_user = user_id or context.get("user_id") or "anonymous"
+    team_id = context.get("team_id")
+    project_id = context.get("project_id")
+
+    # Team collaboration context collection with strict permission filtering
+    team_context_str = ""
+    team_members_list = []
+    active_tasks_list = []
+    pending_approvals_list = []
+    decisions_list = []
+
+    try:
+        from backend.workline.collaboration.permissions import permission_service, ArtifactType, ActionType
+        from backend.workline.collaboration.teams.service import team_service
+        from backend.workline.collaboration.tasks.service import task_service
+        from backend.workline.collaboration.approvals.service import approval_service, ApprovalStatus
+        from backend.workline.decision.service import decision_service
+
+        if not team_id and effective_user != "anonymous":
+            user_teams = team_service.list_user_teams(effective_user)
+            if user_teams:
+                team_id = user_teams[0].id
+
+        if team_id:
+            team = team_service.get_team(team_id)
+            if team:
+                team_members_list = [f"{m.user_id} ({m.role.value})" for m in team.members]
+
+            # Tasks with READ permission
+            if permission_service.can_perform(effective_user, team_id, ArtifactType.TASK, ActionType.READ):
+                tasks = task_service.list_tasks(team_id=team_id)
+                for t in tasks:
+                    assignee = t.assignee_id or "Unassigned"
+                    art_ref = f" -> {t.related_artifact.artifact_type.value}:{t.related_artifact.artifact_name}" if t.related_artifact else ""
+                    active_tasks_list.append(f"- [{t.status.value}] {t.title} (Assignee: {assignee}, Priority: {t.priority.value}{art_ref})")
+
+            # Approvals with READ permission
+            if permission_service.can_perform(effective_user, team_id, ArtifactType.TEAM_MANAGEMENT, ActionType.READ):
+                reqs = approval_service.list_requests(team_id=team_id, status=ApprovalStatus.PENDING)
+                for r in reqs:
+                    pending_approvals_list.append(f"- [{r.request_type.value}] {r.title} (Requested by: {r.requester_id}, Approver: {r.required_role.value})")
+
+            # Decisions with READ permission
+            if permission_service.can_perform(effective_user, team_id, ArtifactType.DECISION, ActionType.READ):
+                decs = decision_service.list_decisions(project_id=project_id)
+                for d in decs:
+                    choice = d.selected_candidate or "Pending"
+                    decisions_list.append(f"- Decision '{d.title}': Selected candidate '{choice}'. Rationale: {d.rationale or d.description}")
+
+        parts = []
+        if team_members_list:
+            parts.append(f"Team Members: {', '.join(team_members_list)}")
+        if active_tasks_list:
+            parts.append("Team Tasks:\n" + "\n".join(active_tasks_list[:10]))
+        if pending_approvals_list:
+            parts.append("Pending Approvals:\n" + "\n".join(pending_approvals_list[:5]))
+        if decisions_list:
+            parts.append("Engineering Decisions:\n" + "\n".join(decisions_list[:5]))
+
+        if parts:
+            team_context_str = "\n\nActive Team Collaboration Context:\n" + "\n".join(parts)
+    except Exception:
+        pass
     
     # 1. Check if user is asking for component selection / sourcing via Nexar MCP
     if any(k in msg_lower for k in ("find", "recommend", "regulator", "mcu", "resistor", "sensor", "converter", "ldo", "transistor", "component")):
@@ -24,7 +88,6 @@ def ask_connection_assistant(message: str, context: Dict[str, Any]) -> str:
 
             candidates_data = []
             if loop and loop.is_running():
-                # Scheduled in active loop
                 import concurrent.futures
                 with concurrent.futures.ThreadPoolExecutor() as pool:
                     mcp_res = pool.submit(asyncio.run, nexar_mcp_client.execute_tool(nexar_mcp_client.TOOL_SEARCH_COMPONENTS, {"query": message, "limit": 3})).result()
@@ -66,24 +129,23 @@ def ask_connection_assistant(message: str, context: Dict[str, Any]) -> str:
         wiring_summary = json.dumps(context.get("wiring", []), indent=2)
         power_summary = json.dumps(context.get("power", {}).get("summary", {}), indent=2)
 
-        system_prompt = f"""You are an engineering connection assistant powered by DeepSeek R1.
-Focus ONLY on:
-- electrical connections
-- protocol issues (I2C, SPI, UART, PWM, CAN, GPIO)
-- pin compatibility and thresholds
-- datasheet interpretation
-- power issues and power budget analysis
-- connection debugging
+        system_prompt = f"""You are WORKLINE AI's Engineering & Team Collaboration Copilot powered by DeepSeek R1.
+Focus on:
+- electrical connections, pinout compatibilities, and protocol constraints (I2C, SPI, UART, PWM, CAN, GPIO)
+- datasheet interpretation and power budget analysis
+- engineering team collaboration: work assignments, tasks, decisions, pending approvals, and ownership
 
 You have access to the active project context:
 - BOM: {bom_summary}
 - Wiring Connections: {wiring_summary}
 - Power Budget Summary: {power_summary}
+{team_context_str}
 
 Rules:
-1. Do NOT answer unrelated questions.
+1. Do NOT answer unrelated generic questions.
 2. Keep replies concise, technical, and blueprint-focused.
-3. Reference pin maps and voltage domains from the context.
+3. When answering team questions (who is working on what, pending approvals, engineering decisions), reference the collaboration context.
+4. Only disclose collaboration data present in the context.
 """
         ai_res = model_router.research(prompt=message, system_instruction=system_prompt)
         if ai_res and ai_res.text:
@@ -92,6 +154,27 @@ Rules:
         pass
             
     # --- Local Fallback Rules for Offline Sandbox Stability ---
+    # Collaboration Fallbacks
+    if any(k in msg_lower for k in ("who is working", "assigned to", "task", "tasks", "work items")):
+        if active_tasks_list:
+            return "📋 **[Collaboration Agent - Active Work Items]**\n" + "\n".join(active_tasks_list)
+        return "📋 **[Collaboration Agent]**: There are currently no active tasks assigned in this team workspace."
+
+    if any(k in msg_lower for k in ("pending approval", "approvals", "pending reviews")):
+        if pending_approvals_list:
+            return "🛡️ **[Collaboration Agent - Pending Approvals]**\n" + "\n".join(pending_approvals_list)
+        return "🛡️ **[Collaboration Agent]**: All sensitive engineering changes are currently approved. No pending gate reviews."
+
+    if any(k in msg_lower for k in ("decision", "why did we choose", "tradeoff", "trade-off")):
+        if decisions_list:
+            return "⚖️ **[Collaboration Agent - Engineering Decisions]**\n" + "\n".join(decisions_list)
+        return "⚖️ **[Collaboration Agent]**: No formal architecture or component trade-off decisions recorded yet for this project."
+
+    if any(k in msg_lower for k in ("who is on the team", "team members", "who is in", "teammates")):
+        if team_members_list:
+            return f"👥 **[Team Roster]**: {', '.join(team_members_list)}"
+        return "👥 **[Team Roster]**: No team members recorded for this workspace."
+
     components = context.get("bom", [])
     comp_names = [c.get("component") or c.get("name", "").lower() for c in components]
     

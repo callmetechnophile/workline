@@ -94,7 +94,7 @@ async def get_name_versions(name: str, user_id: str = Depends(get_current_user))
 @router.post("/chat")
 async def chat_with_assistant(payload: ChatMessageSchema, user_id: str = Depends(get_current_user)):
     try:
-        reply = ask_connection_assistant(payload.message, payload.context)
+        reply = ask_connection_assistant(payload.message, payload.context, user_id=user_id)
         return {"reply": reply}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

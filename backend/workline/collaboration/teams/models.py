@@ -1,5 +1,5 @@
 """
-Workline AI — Team Collaboration Data Models and Enums.
+Workline AI — Team Collaboration Data Models, Roles, and Schemas.
 
 Strict Security Invariant:
 Plaintext join codes are NEVER stored in Team database models.
@@ -13,9 +13,20 @@ from pydantic import BaseModel, Field
 
 
 class TeamRole(str, Enum):
-    """Team membership roles."""
+    """
+    5-tier team membership roles with explicit capabilities:
+    - OWNER: Full authority, member management, sole owner protection, ownership transfer.
+    - ADMIN: Member management, joining code controls, artifact management.
+    - ENGINEER: Modify artifacts (BOM, schematics, analysis), tasks, comments.
+    - RESEARCHER: Read/write research, knowledge base, datasheets, research tasks.
+    - VIEWER: Read-only access, comments where permitted.
+    - MEMBER: Backward-compatibility alias for baseline member.
+    """
     OWNER = "OWNER"
     ADMIN = "ADMIN"
+    ENGINEER = "ENGINEER"
+    RESEARCHER = "RESEARCHER"
+    VIEWER = "VIEWER"
     MEMBER = "MEMBER"
 
 
@@ -33,6 +44,14 @@ class TeamMemberStatus(str, Enum):
     REMOVED = "REMOVED"
 
 
+class MembershipRequestStatus(str, Enum):
+    """Lifecycle states of a join request requiring approval."""
+    PENDING = "PENDING"
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
+    CANCELLED = "CANCELLED"
+
+
 class TeamAuditEventType(str, Enum):
     """Auditable team events."""
     TEAM_CREATED = "TEAM_CREATED"
@@ -44,6 +63,11 @@ class TeamAuditEventType(str, Enum):
     JOIN_CODE_REVOKED = "JOIN_CODE_REVOKED"
     JOIN_ATTEMPT_FAILED = "JOIN_ATTEMPT_FAILED"
     JOIN_ATTEMPT_RATE_LIMITED = "JOIN_ATTEMPT_RATE_LIMITED"
+    MEMBERSHIP_REQUEST_CREATED = "MEMBERSHIP_REQUEST_CREATED"
+    MEMBERSHIP_REQUEST_APPROVED = "MEMBERSHIP_REQUEST_APPROVED"
+    MEMBERSHIP_REQUEST_REJECTED = "MEMBERSHIP_REQUEST_REJECTED"
+    OWNERSHIP_TRANSFERRED = "OWNERSHIP_TRANSFERRED"
+    TEAM_SETTINGS_UPDATED = "TEAM_SETTINGS_UPDATED"
 
 
 class Team(BaseModel):
@@ -51,11 +75,14 @@ class Team(BaseModel):
     id: str
     name: str
     description: Optional[str] = ""
+    project_id: Optional[str] = None
     owner_id: str
     join_code_digest: Optional[str] = None
     join_code_created_at: Optional[str] = None
     join_code_expires_at: Optional[str] = None
     join_code_enabled: bool = True
+    require_join_approval: bool = False
+    default_join_role: TeamRole = TeamRole.MEMBER
     status: TeamStatus = TeamStatus.ACTIVE
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
@@ -67,10 +94,28 @@ class TeamMember(BaseModel):
     id: str
     team_id: str
     user_id: str
-    role: TeamRole = TeamRole.MEMBER
+    email: Optional[str] = None
+    name: Optional[str] = None
+    role: TeamRole = TeamRole.ENGINEER
     status: TeamMemberStatus = TeamMemberStatus.ACTIVE
     joined_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+
+class MembershipRequest(BaseModel):
+    """Join request requiring administrative approval."""
+    id: str
+    team_id: str
+    project_id: Optional[str] = None
+    user_id: str
+    user_email: Optional[str] = None
+    user_name: Optional[str] = None
+    requested_role: TeamRole = TeamRole.ENGINEER
+    status: MembershipRequestStatus = MembershipRequestStatus.PENDING
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    reviewed_by: Optional[str] = None
+    reviewed_at: Optional[str] = None
+    rejection_reason: Optional[str] = None
 
 
 class TeamAuditEvent(BaseModel):
@@ -91,6 +136,9 @@ class CreateTeamRequest(BaseModel):
     """Payload to create a new team."""
     name: str
     description: Optional[str] = ""
+    project_id: Optional[str] = None
+    require_join_approval: Optional[bool] = False
+    default_join_role: Optional[TeamRole] = TeamRole.ENGINEER
 
 
 class CreateTeamResponse(BaseModel):
@@ -98,24 +146,42 @@ class CreateTeamResponse(BaseModel):
     team_id: str
     name: str
     description: Optional[str] = ""
+    project_id: Optional[str] = None
     owner_id: str
     role: TeamRole = TeamRole.OWNER
     join_code: str
     join_code_expires_at: str
-    message: str = "Team created successfully. Share this 6-character code with trusted collaborators."
+    require_join_approval: bool = False
+    message: str = "Team created successfully. Share this WL-XXXXXX join code with trusted collaborators."
 
 
 class JoinTeamRequest(BaseModel):
     """Payload to join an existing team via 6-character code."""
     code: str
+    requested_role: Optional[TeamRole] = None
+    user_name: Optional[str] = None
+    user_email: Optional[str] = None
+
+
+class TeamPreviewResponse(BaseModel):
+    """Safe metadata preview returned for a join code without joining."""
+    team_id: str
+    team_name: str
+    description: Optional[str] = ""
+    project_id: Optional[str] = None
+    member_count: int
+    require_join_approval: bool
+    default_join_role: TeamRole
+    allowed_roles: List[TeamRole]
 
 
 class JoinTeamResponse(BaseModel):
-    """Result of joining a team."""
-    status: str
+    """Result of joining or requesting to join a team."""
+    status: str  # JOINED, PENDING_APPROVAL, ALREADY_MEMBER
     team_id: str
     team_name: str
-    role: TeamRole
+    role: Optional[TeamRole] = None
+    request_id: Optional[str] = None
     message: str
 
 
@@ -137,3 +203,24 @@ class RevokeJoinCodeResponse(BaseModel):
 class UpdateMemberRoleRequest(BaseModel):
     """Payload to update member role."""
     role: TeamRole
+
+
+class ReviewMembershipRequest(BaseModel):
+    """Payload to approve or reject a pending membership request."""
+    action: str  # APPROVE or REJECT
+    assigned_role: Optional[TeamRole] = None
+    reason: Optional[str] = None
+
+
+class TransferOwnershipRequest(BaseModel):
+    """Payload to securely transfer team ownership."""
+    target_user_id: str
+    confirmation_phrase: str
+
+
+class UpdateTeamSettingsRequest(BaseModel):
+    """Payload to update team settings."""
+    name: Optional[str] = None
+    description: Optional[str] = None
+    require_join_approval: Optional[bool] = None
+    default_join_role: Optional[TeamRole] = None

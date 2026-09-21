@@ -84,8 +84,9 @@ def test_create_team_authenticated_succeeds(client):
     assert data["name"] == "Alpha Team"
     assert data["owner_id"] == "user_creator_123"
     assert data["role"] == "OWNER"
-    assert len(data["join_code"]) == 6
-    assert data["join_code"].isalnum()
+    assert data["join_code"].startswith("WL-")
+    assert len(data["join_code"]) == 9
+    assert data["join_code"][3:].isalnum()
     assert data["join_code"].isupper()
 
 

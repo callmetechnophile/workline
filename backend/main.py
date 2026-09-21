@@ -39,6 +39,11 @@ from backend.workline.decision.api import router as decision_engine_router
 from backend.workline.x402 import x402_router
 from backend.workline.armouriq import armouriq_router
 from backend.workline.collaboration.teams import teams_router
+from backend.workline.collaboration.tasks import tasks_router
+from backend.workline.collaboration.comments import comments_router
+from backend.workline.collaboration.approvals import approvals_router
+from backend.workline.collaboration.notifications import notifications_router
+from backend.workline.collaboration.activity import activity_router
 from backend.workline.database.surrealdb import surreal_db
 from backend.workline.retrieval.qdrant import qdrant_manager
 from backend.database import init_db
@@ -128,6 +133,11 @@ app.include_router(speech_router)
 app.include_router(x402_router)
 app.include_router(armouriq_router)
 app.include_router(teams_router)
+app.include_router(tasks_router)
+app.include_router(comments_router)
+app.include_router(approvals_router)
+app.include_router(notifications_router)
+app.include_router(activity_router)
 app.include_router(jobs_router)
 app.include_router(observability_router)
 
