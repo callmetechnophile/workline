@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { useCognitoAuth } from '@/lib/CognitoAuthContext';
+import { getGatewayBearerToken } from './cognito';
 
 /**
  * Workline AI — Authoritative Project Context
@@ -110,18 +111,24 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
   const cognitoAuth = useCognitoAuth();
 
   const getToken = useCallback(async (): Promise<string | null> => {
+    // 1. Obtain valid AWS Gateway bearer token so API Gateway authorization succeeds
     try {
-      const clerkToken = await clerkAuth.getToken().catch(() => null);
-      if (clerkToken) return clerkToken;
-    } catch {
-      // Fallback
-    }
+      const gwToken = await getGatewayBearerToken();
+      if (gwToken) return gwToken;
+    } catch {}
+
+    // 2. Fallback to Cognito token
     try {
       const cogToken = await cognitoAuth.getToken();
       if (cogToken) return cogToken;
-    } catch {
-      // Fallback
-    }
+    } catch {}
+
+    // 3. Fallback to Clerk token
+    try {
+      const clerkToken = await clerkAuth.getToken().catch(() => null);
+      if (clerkToken) return clerkToken;
+    } catch {}
+
     return null;
   }, [cognitoAuth, clerkAuth]);
 

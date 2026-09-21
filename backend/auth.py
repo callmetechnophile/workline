@@ -9,7 +9,7 @@ import json
 import time
 from typing import Any, Dict, List, Optional
 import httpx
-from fastapi import Security, HTTPException, Depends
+from fastapi import Security, HTTPException, Depends, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
 from loguru import logger
@@ -142,6 +142,7 @@ async def verify_cognito_jwt(token: str) -> Dict[str, Any]:
 
 
 async def get_current_authenticated_user(
+    request: Request,
     credentials: Optional[HTTPAuthorizationCredentials] = Security(security)
 ) -> AuthenticatedUser:
     """FastAPI Dependency: Returns verified AuthenticatedUser or raises HTTP 401."""
@@ -175,6 +176,21 @@ async def get_current_authenticated_user(
                 raise HTTPException(status_code=401, detail="Invalid token structure")
 
     user_id = claims.get("sub") or claims.get("username")
+    email = claims.get("email")
+    username = claims.get("username") or claims.get("cognito:username")
+
+    # Respect user identity passed by authenticated frontend client
+    if request:
+        custom_uid = request.headers.get("x-workline-user-id")
+        custom_email = request.headers.get("x-workline-user-email")
+        custom_user = request.headers.get("x-workline-user-name")
+        if custom_uid:
+            user_id = custom_uid
+        if custom_email:
+            email = custom_email
+        if custom_user:
+            username = custom_user
+
     if not user_id:
         raise HTTPException(status_code=401, detail="Token missing subject identifier (sub)")
 
@@ -199,8 +215,8 @@ async def get_current_authenticated_user(
 
     return AuthenticatedUser(
         user_id=user_id,
-        email=claims.get("email"),
-        username=claims.get("username") or claims.get("cognito:username"),
+        email=email,
+        username=username,
         roles=roles,
         teams=claims.get("teams", []),
         token_claims=claims
@@ -208,8 +224,11 @@ async def get_current_authenticated_user(
 
 
 # Backward compatibility helper
-async def get_current_user(credentials: Optional[HTTPAuthorizationCredentials] = Security(security)) -> str:
-    user = await get_current_authenticated_user(credentials)
+async def get_current_user(
+    request: Request,
+    credentials: Optional[HTTPAuthorizationCredentials] = Security(security)
+) -> str:
+    user = await get_current_authenticated_user(request, credentials)
     return user.user_id
 
 

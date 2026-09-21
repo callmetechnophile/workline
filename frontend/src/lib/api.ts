@@ -3,7 +3,7 @@
  * Seamlessly interfaces with Amazon API Gateway, CloudFront, or local development backend.
  */
 
-import { getValidCognitoIdToken } from "./cognito";
+import { getGatewayBearerToken } from "./cognito";
 
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ||
@@ -17,7 +17,7 @@ export async function fetchApi<T = any>(
 
   let authHeader: Record<string, string> = {};
   try {
-    const token = await getValidCognitoIdToken();
+    const token = await getGatewayBearerToken();
     if (token) {
       authHeader["Authorization"] = `Bearer ${token}`;
     }

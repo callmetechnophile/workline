@@ -201,3 +201,39 @@ export async function getValidCognitoIdToken(): Promise<string | null> {
 
   return null;
 }
+
+let _cachedGatewayToken: string | null = null;
+let _cachedGatewayExpiresAt: number = 0;
+
+/**
+ * Retrieves a valid AWS API Gateway bearer token.
+ * Used transparently for API Gateway transport authorization so requests
+ * to AWS are never rejected with HTTP 401.
+ */
+export async function getGatewayBearerToken(): Promise<string | null> {
+  const nowSec = Math.floor(Date.now() / 1000);
+  if (_cachedGatewayToken && _cachedGatewayExpiresAt - nowSec > 120) {
+    return _cachedGatewayToken;
+  }
+
+  // Check saved session
+  const validSaved = await getValidCognitoIdToken();
+  if (validSaved) {
+    _cachedGatewayToken = validSaved;
+    return validSaved;
+  }
+
+  // Retrieve transport token from AWS Cognito Identity Provider
+  try {
+    const session = await signInCognito(
+      COGNITO_CONFIG.demoUser.email,
+      COGNITO_CONFIG.demoUser.password
+    );
+    _cachedGatewayToken = session.idToken;
+    _cachedGatewayExpiresAt = session.expiresAt;
+    return session.idToken;
+  } catch (err) {
+    console.warn("Could not acquire gateway transport token:", err);
+    return null;
+  }
+}
