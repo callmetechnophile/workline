@@ -286,6 +286,12 @@ function AuthenticatedWorkbench() {
   const [localError, setLocalError] = useState<string | null>(null);
   const [projectDatasheets, setProjectDatasheets] = useState<SingleDatasheet[]>([]);
   const [isGeneratingDatasheets, setIsGeneratingDatasheets] = useState(false);
+  const [researchModel, setResearchModel] = useState<string>(() => {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      return localStorage.getItem('workline_research_model') || 'NVIDIA Nemotron / Meta Llama / Google Gemma';
+    }
+    return 'NVIDIA Nemotron / Meta Llama / Google Gemma';
+  });
 
   const fetchProjectDatasheets = async () => {
     const pId = projectId || projectData?.project_id || 'default-project';
@@ -832,8 +838,28 @@ function AuthenticatedWorkbench() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
                 <div className="bg-slate-950 p-3 rounded border border-slate-800 font-mono">
-                  <div className="text-[10px] text-indigo-400 font-bold">Research & Literature Model</div>
-                  <div className="text-slate-200 mt-1 font-semibold">DeepSeek V3 / R1</div>
+                  <div className="flex items-center justify-between">
+                    <div className="text-[10px] text-indigo-400 font-bold">Research & Literature Model</div>
+                    <span className="text-[9px] bg-emerald-950 text-emerald-400 border border-emerald-800 px-1.5 py-0.5 rounded font-bold">
+                      Active
+                    </span>
+                  </div>
+                  <select
+                    value={researchModel}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setResearchModel(val);
+                      if (typeof window !== 'undefined' && window.localStorage) {
+                        localStorage.setItem('workline_research_model', val);
+                      }
+                    }}
+                    className="w-full bg-slate-900 border border-slate-700 rounded mt-1.5 px-2.5 py-1.5 text-slate-200 text-xs font-semibold focus:outline-none focus:border-cyan-500 cursor-pointer"
+                  >
+                    <option value="NVIDIA Nemotron / Meta Llama / Google Gemma">NVIDIA Nemotron / Meta Llama / Google Gemma</option>
+                    <option value="NVIDIA Nemotron (Llama-3.1-Nemotron-70B-Instruct)">NVIDIA Nemotron (Llama-3.1-Nemotron-70B-Instruct)</option>
+                    <option value="Google Gemma (Gemma 2 27B / 9B Instruct)">Google Gemma (Gemma 2 27B / 9B Instruct)</option>
+                    <option value="Meta Llama (Llama 3.3 70B / 405B Instruct)">Meta Llama (Llama 3.3 70B / 405B Instruct)</option>
+                  </select>
                 </div>
                 <div className="bg-slate-950 p-3 rounded border border-slate-800 font-mono">
                   <div className="text-[10px] text-indigo-400 font-bold">Fast Code & Tools Model</div>

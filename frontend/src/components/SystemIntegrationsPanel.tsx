@@ -9,7 +9,7 @@ export default function SystemIntegrationsPanel() {
       name: 'Amazon Bedrock AI Engine',
       category: 'Model Inference (R2)',
       status: 'Connected',
-      type: 'DeepSeek V3 / Claude Haiku / Claude Sonnet / Nova Canvas',
+      type: 'NVIDIA Nemotron / Meta Llama / Google Gemma / Claude Sonnet / Nova Canvas',
       isSecure: true,
       desc: 'Centralized model execution across research, fast code generation, multi-physics reasoning, and engineering visuals.',
     },

@@ -70,10 +70,16 @@ class DeepSeekBedrockAdapter:
         comp_tokens = usage_data.get("completion_tokens", 0)
         total_tokens = usage_data.get("total_tokens", prompt_tokens + comp_tokens)
 
+        provider_name = (
+            "NVIDIA Nemotron" if "nemotron" in model_id.lower()
+            else ("Meta Llama" if "llama" in model_id.lower()
+            else ("Google Gemma" if "gemma" in model_id.lower()
+            else "DeepSeek"))
+        )
         return AIResponse(
             text=generated_text,
             model_id=model_id,
-            provider="DeepSeek (via Amazon Bedrock)",
+            provider=f"{provider_name} (via Amazon Bedrock)",
             request_id=request_id or raw_data.get("id"),
             usage=TokenUsage(
                 prompt_tokens=prompt_tokens,

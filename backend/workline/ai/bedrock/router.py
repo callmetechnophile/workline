@@ -33,7 +33,7 @@ class BedrockModelRouter:
         # Configuration-driven model IDs with sensible defaults
         self.research_model_id = os.getenv(
             "BEDROCK_RESEARCH_MODEL_ID",
-            "deepseek.r1-v1:0"
+            "nvidia.nemotron-70b-instruct-v1:0"
         )
         self.fast_code_model_id = os.getenv(
             "BEDROCK_FAST_CODE_MODEL_ID",
@@ -75,7 +75,8 @@ class BedrockModelRouter:
         temperature: float = 0.3,
     ) -> AIResponse:
         """Dispatches to the appropriate adapter based on model ID."""
-        if "deepseek" in model_id.lower():
+        model_lower = model_id.lower()
+        if any(k in model_lower for k in ["nemotron", "llama", "gemma", "deepseek"]):
             return deepseek_adapter.generate(
                 model_id=model_id,
                 messages=messages,

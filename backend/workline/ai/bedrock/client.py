@@ -216,16 +216,22 @@ class BedrockClient:
                 "latency_ms": 50.0,
                 "request_id": f"req_sim_{random.randint(10000, 99999)}",
             }
-        # DeepSeek simulation
-        if "deepseek" in model_id.lower():
+        # NVIDIA Nemotron / Meta Llama / Google Gemma / DeepSeek simulation
+        if any(k in model_id.lower() for k in ["nemotron", "llama", "gemma", "deepseek"]):
             prompt = body.get("prompt", "") or str(body.get("messages", ""))
+            provider_tag = (
+                "NVIDIA Nemotron" if "nemotron" in model_id.lower()
+                else ("Meta Llama" if "llama" in model_id.lower()
+                else ("Google Gemma" if "gemma" in model_id.lower()
+                else "DeepSeek"))
+            )
             return {
                 "data": {
-                    "id": f"deepseek_sim_{random.randint(1000, 9999)}",
-                    "choices": [{"message": {"content": f"[Bedrock DeepSeek] Sourced reasoning: {prompt[:120]}"}, "finish_reason": "stop"}],
+                    "id": f"{provider_tag.lower().replace(' ', '_')}_sim_{random.randint(1000, 9999)}",
+                    "choices": [{"message": {"content": f"[{provider_tag}] Literature & research analysis: {prompt[:120]}"}, "finish_reason": "stop"}],
                     "usage": {"prompt_tokens": len(prompt) // 4, "completion_tokens": 90, "total_tokens": 120},
                 },
-                "latency_ms": 60.0,
+                "latency_ms": 55.0,
                 "request_id": f"req_sim_{random.randint(10000, 99999)}",
             }
         # Image model simulation (Titan / Nova Canvas)
