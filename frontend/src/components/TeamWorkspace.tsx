@@ -946,6 +946,8 @@ export default function TeamWorkspace({
         isOpen={isInviteModalOpen}
         onClose={() => setIsInviteModalOpen(false)}
         teamId={teamId}
+        teamName={teamName}
+        memberCount={members.length}
         apiBase={apiBase}
         onSuccess={() => {
           fetchActivities();

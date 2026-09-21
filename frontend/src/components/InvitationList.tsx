@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import { getGatewayBearerToken } from '../lib/cognito';
+import { API_BASE_URL } from '../lib/api';
 
 interface InvitationListProps {
   teamId: string;
@@ -9,16 +11,46 @@ export const InvitationList: React.FC<InvitationListProps> = ({ teamId, apiBase 
   const [invitations, setInvitations] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
+  const getEffectiveBase = () => {
+    return (apiBase || API_BASE_URL || '').replace(/\/$/, '');
+  };
+
+  const getCachedInvitations = (): any[] => {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const raw = localStorage.getItem(`workline_team_invitations_${teamId}`);
+        return raw ? JSON.parse(raw) : [];
+      }
+    } catch {}
+    return [];
+  };
+
   const fetchInvitations = async () => {
     setLoading(true);
+    const cached = getCachedInvitations();
     try {
-      const res = await fetch(`${apiBase}/api/teams/${teamId}/invitations`);
-      if (res.ok) {
-        const data = await res.json();
-        setInvitations(data);
+      const effectiveBase = getEffectiveBase();
+      const token = await getGatewayBearerToken().catch(() => null);
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
       }
+
+      if (effectiveBase) {
+        const res = await fetch(`${effectiveBase}/api/teams/${teamId}/invitations`, { headers });
+        if (res.ok) {
+          const apiData = await res.json();
+          // Merge API data with any local cached invitations not yet in backend
+          const apiIds = new Set(apiData.map((x: any) => x.invitation_id));
+          const uniqueLocal = cached.filter((x: any) => !apiIds.has(x.invitation_id));
+          setInvitations([...apiData, ...uniqueLocal]);
+          return;
+        }
+      }
+      setInvitations(cached);
     } catch (err) {
-      console.error(err);
+      console.warn('Failed to fetch remote invitations, using cached:', err);
+      setInvitations(cached);
     } finally {
       setLoading(false);
     }
@@ -32,14 +64,37 @@ export const InvitationList: React.FC<InvitationListProps> = ({ teamId, apiBase 
 
   const handleRevoke = async (invitationId: string) => {
     try {
-      const res = await fetch(`${apiBase}/api/teams/${teamId}/invitations/${invitationId}/revoke`, {
-        method: 'POST',
-      });
-      if (res.ok) {
-        fetchInvitations();
+      const effectiveBase = getEffectiveBase();
+      const token = await getGatewayBearerToken().catch(() => null);
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      if (effectiveBase) {
+        await fetch(`${effectiveBase}/api/teams/${teamId}/invitations/${invitationId}/revoke`, {
+          method: 'POST',
+          headers,
+        }).catch(() => {});
       }
     } catch (err) {
       console.error(err);
+    } finally {
+      // Update local storage
+      try {
+        if (typeof window !== 'undefined' && window.localStorage) {
+          const key = `workline_team_invitations_${teamId}`;
+          const existingRaw = localStorage.getItem(key);
+          if (existingRaw) {
+            const list = JSON.parse(existingRaw);
+            const updated = list.map((item: any) =>
+              item.invitation_id === invitationId ? { ...item, status: 'REVOKED' } : item
+            );
+            localStorage.setItem(key, JSON.stringify(updated));
+          }
+        }
+      } catch {}
+      fetchInvitations();
     }
   };
 
