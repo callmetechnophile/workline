@@ -4,7 +4,9 @@ from fastapi import HTTPException
 from backend.routes.project_data import (
     serialize_to_wl_filemap,
     verify_auth_endpoint,
+    sync_cloud_target,
     VerifyAuthRequest,
+    CloudSyncRequest,
 )
 
 
@@ -134,4 +136,85 @@ async def test_verify_auth_bitbucket_requires_username():
     req = VerifyAuthRequest(provider="bitbucket", token="some_app_password", username="")
     res = await verify_auth_endpoint(req)
     assert res["success"] is False
-    assert "requires both Username and App Password" in res["error"]
+    assert "Username" in res["error"] and "App Password" in res["error"]
+
+
+@pytest.mark.anyio
+async def test_verify_auth_github_id_mismatch():
+    req = VerifyAuthRequest(provider="github", token="ghp_realvalidtoken123", username="different_user")
+    
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.json.return_value = {
+        "login": "octocat",
+        "name": "The Octocat",
+        "email": "octocat@github.com",
+    }
+
+    with patch("httpx.AsyncClient.get", new_callable=AsyncMock) as mock_get:
+        mock_get.return_value = mock_resp
+        res = await verify_auth_endpoint(req)
+
+        assert res["success"] is False
+        assert "GitHub ID mismatch" in res["error"]
+        assert "belongs to @octocat" in res["error"]
+
+
+@pytest.mark.anyio
+async def test_verify_auth_google_drive_id_mismatch():
+    req = VerifyAuthRequest(provider="google_drive", token="ya29.sampletoken", username="wronguser@gmail.com")
+
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.json.return_value = {
+        "email": "actualuser@gmail.com",
+        "name": "Actual User",
+    }
+
+    with patch("httpx.AsyncClient.get", new_callable=AsyncMock) as mock_get:
+        mock_get.return_value = mock_resp
+        res = await verify_auth_endpoint(req)
+
+        assert res["success"] is False
+        assert "Gmail ID mismatch" in res["error"]
+        assert "actualuser@gmail.com" in res["error"]
+
+
+def test_sync_cloud_target_unverified_rejected():
+    # Attempting to sync with empty or unverified account should raise 401
+    req = CloudSyncRequest(
+        provider="github",
+        account="",
+        project_id="PROJ-01",
+        project_data={"title": "Test"}
+    )
+    with pytest.raises(HTTPException) as exc_info:
+        sync_cloud_target(req)
+    assert exc_info.value.status_code == 401
+    assert "Verification Required" in exc_info.value.detail
+
+    req_fake = CloudSyncRequest(
+        provider="gitlab",
+        account="fake-user",
+        project_id="PROJ-01",
+        project_data={"title": "Test"}
+    )
+    with pytest.raises(HTTPException) as exc_info2:
+        sync_cloud_target(req_fake)
+    assert exc_info2.value.status_code == 401
+
+
+def test_sync_cloud_target_verified_success():
+    req = CloudSyncRequest(
+        provider="github",
+        account="verified_octocat",
+        target="my-org/my-repo",
+        project_id="PROJ-01",
+        project_data={"title": "Test Project", "version": "1.0"}
+    )
+    res = sync_cloud_target(req)
+    assert res["status"] == "synchronized"
+    assert res["account"] == "verified_octocat"
+    assert res["target"] == "my-org/my-repo"
+    assert len(res["commit_hash"]) == 7
+

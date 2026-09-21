@@ -15,7 +15,7 @@ import { CloudProviderId, CloudProviderState, ProjectDiffSummary } from '../type
 import { WorklineFileMap } from '../types';
 import { computeProjectDiff } from '../parser';
 
-const STORAGE_KEY_PREFIX = 'workline_cloud_provider_';
+const STORAGE_KEY_PREFIX = 'workline_verified_provider_v2_';
 
 export interface ProviderConfig {
   account?: string;
@@ -32,6 +32,11 @@ export abstract class BaseCloudProvider {
     if (typeof window === 'undefined') {
       return { id: this.id, name: this.name, connected: false };
     }
+    // Always purge any unverified legacy v1 keys from localStorage
+    try {
+      localStorage.removeItem(`workline_cloud_provider_${this.id}`);
+    } catch {}
+
     const saved = localStorage.getItem(`${STORAGE_KEY_PREFIX}${this.id}`);
     if (saved) {
       try {
@@ -52,7 +57,7 @@ export abstract class BaseCloudProvider {
         );
         const isHashFake = parsed.lastCommitHash && fakeHashes.includes(parsed.lastCommitHash);
 
-        if (isAccountFake || isHashFake) {
+        if (isAccountFake || isHashFake || !parsed.connected) {
           localStorage.removeItem(`${STORAGE_KEY_PREFIX}${this.id}`);
           return { id: this.id, name: this.name, connected: false };
         }

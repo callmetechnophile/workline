@@ -242,11 +242,17 @@ def get_cloud_status():
 @router.post("/cloud/sync")
 def sync_cloud_target(req: CloudSyncRequest):
     """Executes synchronization to selected provider."""
+    if not req.account or req.account.strip() in ("", "NOT_CONNECTED") or "fake" in req.account.lower():
+        raise HTTPException(
+            status_code=401,
+            detail=f"Verification Required: You must verify your {req.provider} ID before uploading or pushing project packages."
+        )
     import hashlib
     content_hash = hashlib.sha256(json.dumps(req.project_data, sort_keys=True, default=str).encode()).hexdigest()[:7]
     return {
         "status": "synchronized",
         "provider": req.provider,
+        "account": req.account,
         "target": req.target or "default-repo",
         "commit_message": f"WORKLINE: sync project v1.0",
         "commit_hash": content_hash,
@@ -265,7 +271,7 @@ class VerifyAuthRequest(BaseModel):
 async def verify_auth_endpoint(req: VerifyAuthRequest):
     """
     Verifies actual live authentication credentials against the provider's API.
-    Returns real user account details or accurate authentication errors.
+    Enforces that entered Gmail ID, GitHub ID, GitLab ID, or Bitbucket ID matches credentials.
     """
     import httpx
 
@@ -288,15 +294,23 @@ async def verify_auth_endpoint(req: VerifyAuthRequest):
                 )
                 if res.status_code == 200:
                     data = res.json()
+                    login = data.get("login", "")
+                    if req.username:
+                        claimed = req.username.strip().lstrip("@").lower()
+                        if claimed and claimed != login.lower():
+                            return {
+                                "success": False,
+                                "error": f"GitHub ID mismatch: This token belongs to @{login}, but you specified @{req.username.strip().lstrip('@')}."
+                            }
                     return {
                         "success": True,
                         "provider": "github",
-                        "account": data.get("login"),
-                        "name": data.get("name"),
+                        "account": login,
+                        "name": data.get("name") or login,
                         "email": data.get("email"),
                         "avatar_url": data.get("avatar_url"),
                         "public_repos": data.get("public_repos"),
-                        "auth_type": "Personal Access Token (Verified)",
+                        "auth_type": "Verified GitHub Identity",
                     }
                 else:
                     err_msg = res.json().get("message", res.text) if res.content else f"HTTP {res.status_code}"
@@ -310,14 +324,22 @@ async def verify_auth_endpoint(req: VerifyAuthRequest):
                 )
                 if res.status_code == 200:
                     data = res.json()
+                    username = data.get("username", "")
+                    if req.username:
+                        claimed = req.username.strip().lstrip("@").lower()
+                        if claimed and claimed != username.lower():
+                            return {
+                                "success": False,
+                                "error": f"GitLab ID mismatch: This token belongs to @{username}, but you specified @{req.username.strip().lstrip('@')}."
+                            }
                     return {
                         "success": True,
                         "provider": "gitlab",
-                        "account": data.get("username"),
-                        "name": data.get("name"),
+                        "account": username,
+                        "name": data.get("name") or username,
                         "email": data.get("email"),
                         "avatar_url": data.get("avatar_url"),
-                        "auth_type": "GitLab Personal Access Token (Verified)",
+                        "auth_type": "Verified GitLab Identity",
                     }
                 else:
                     return {"success": False, "error": f"GitLab Authentication Failed: HTTP {res.status_code}"}
@@ -325,20 +347,21 @@ async def verify_auth_endpoint(req: VerifyAuthRequest):
             elif provider == "bitbucket":
                 username = (req.username or "").strip()
                 if not username:
-                    return {"success": False, "error": "Bitbucket requires both Username and App Password."}
+                    return {"success": False, "error": "Bitbucket requires both Username ID and App Password."}
                 res = await client.get(
                     "https://api.bitbucket.org/2.0/user",
                     auth=(username, token),
                 )
                 if res.status_code == 200:
                     data = res.json()
+                    actual_user = data.get("username") or data.get("nickname") or username
                     return {
                         "success": True,
                         "provider": "bitbucket",
-                        "account": data.get("username") or data.get("nickname"),
-                        "name": data.get("display_name"),
+                        "account": actual_user,
+                        "name": data.get("display_name") or actual_user,
                         "avatar_url": data.get("links", {}).get("avatar", {}).get("href"),
-                        "auth_type": "Bitbucket App Password (Verified)",
+                        "auth_type": "Verified Bitbucket Identity",
                     }
                 else:
                     return {"success": False, "error": f"Bitbucket Authentication Failed: HTTP {res.status_code}"}
@@ -350,13 +373,21 @@ async def verify_auth_endpoint(req: VerifyAuthRequest):
                 )
                 if res.status_code == 200:
                     data = res.json()
+                    email = data.get("email", "")
+                    if req.username and "@" in req.username:
+                        claimed_email = req.username.strip().lower()
+                        if claimed_email != email.lower():
+                            return {
+                                "success": False,
+                                "error": f"Gmail ID mismatch: Token belongs to {email}, but you entered {req.username}."
+                            }
                     return {
                         "success": True,
                         "provider": "google_drive",
-                        "account": data.get("email"),
-                        "name": data.get("name"),
+                        "account": email,
+                        "name": data.get("name") or email,
                         "avatar_url": data.get("picture"),
-                        "auth_type": "Google OAuth Token (Verified)",
+                        "auth_type": "Verified Google Drive Identity",
                     }
                 else:
                     return {"success": False, "error": f"Google Authentication Failed: HTTP {res.status_code}"}

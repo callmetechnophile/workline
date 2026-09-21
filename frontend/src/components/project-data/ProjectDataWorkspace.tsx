@@ -576,11 +576,11 @@ export default function ProjectDataWorkspace() {
                 </div>
                 {googleDriveState.connected ? (
                   <span className="px-2 py-0.5 rounded text-[9px] font-mono bg-emerald-950 text-emerald-400 border border-emerald-800">
-                    CONNECTED
+                    VERIFIED
                   </span>
                 ) : (
-                  <span className="px-2 py-0.5 rounded text-[9px] font-mono bg-slate-900 text-slate-500 border border-slate-800">
-                    NOT CONNECTED
+                  <span className="px-2 py-0.5 rounded text-[9px] font-mono bg-amber-950/60 text-amber-300 border border-amber-800/80">
+                    NOT VERIFIED
                   </span>
                 )}
               </div>
@@ -600,13 +600,13 @@ export default function ProjectDataWorkspace() {
                 </div>
               ) : (
                 <div className="space-y-1.5">
-                  <p className="text-[11px] text-slate-500 leading-relaxed">
-                    Sync engineering package directly to Google Drive folders.
+                  <p className="text-[11px] text-slate-400 leading-relaxed">
+                    Requires verified Gmail ID before uploading or syncing project packages.
                   </p>
                   {googleAccount && (
                     <div className="text-[10px] font-mono text-indigo-400 flex items-center gap-1.5 p-1.5 bg-indigo-950/40 border border-indigo-800/40 rounded">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
-                      <span className="truncate">Google identity detected ({googleAccount.emailAddress})</span>
+                      <span className="truncate">Active Gmail: {googleAccount.emailAddress}</span>
                     </div>
                   )}
                 </div>
@@ -620,7 +620,7 @@ export default function ProjectDataWorkspace() {
                     onClick={() => handleOpenDiff(googleDriveState)}
                     className="flex-1 py-1.5 px-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-xs font-medium cursor-pointer transition-colors"
                   >
-                    Sync
+                    Upload / Sync
                   </button>
                   <button
                     onClick={() => handleDisconnect('google_drive')}
@@ -632,9 +632,10 @@ export default function ProjectDataWorkspace() {
               ) : (
                 <button
                   onClick={() => handleOpenConnectModal('google_drive', 'Google Drive')}
-                  className="w-full py-1.5 px-3 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded text-xs font-semibold cursor-pointer transition-colors"
+                  className="w-full py-2 px-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-xs font-semibold cursor-pointer transition-colors flex items-center justify-center gap-1.5"
                 >
-                  Connect Drive
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-300" />
+                  <span>Connect & Verify Gmail ID</span>
                 </button>
               )}
             </div>
@@ -650,11 +651,11 @@ export default function ProjectDataWorkspace() {
                 </div>
                 {githubState.connected ? (
                   <span className="px-2 py-0.5 rounded text-[9px] font-mono bg-emerald-950 text-emerald-400 border border-emerald-800">
-                    CONNECTED
+                    VERIFIED
                   </span>
                 ) : (
-                  <span className="px-2 py-0.5 rounded text-[9px] font-mono bg-slate-900 text-slate-500 border border-slate-800">
-                    NOT CONNECTED
+                  <span className="px-2 py-0.5 rounded text-[9px] font-mono bg-amber-950/60 text-amber-300 border border-amber-800/80">
+                    NOT VERIFIED
                   </span>
                 )}
               </div>
@@ -676,19 +677,15 @@ export default function ProjectDataWorkspace() {
                 </div>
               ) : (
                 <div className="space-y-1.5">
-                  <p className="text-[11px] text-slate-500 leading-relaxed">
-                    Export structured .wl repository with automatic commit tracking.
+                  <p className="text-[11px] text-slate-400 leading-relaxed">
+                    Requires verified GitHub ID & Personal Access Token before uploading.
                   </p>
                   {githubAccount ? (
                     <div className="text-[10px] font-mono text-indigo-400 flex items-center gap-1.5 p-1.5 bg-indigo-950/40 border border-indigo-800/40 rounded">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
-                      <span className="truncate">GitHub identity linked (@{githubAccount.username})</span>
+                      <span className="truncate">Linked ID: @{githubAccount.username}</span>
                     </div>
-                  ) : (
-                    <div className="text-[10px] font-mono text-slate-500">
-                      Connect via Personal Access Token (PAT).
-                    </div>
-                  )}
+                  ) : null}
                 </div>
               )}
             </div>
@@ -700,7 +697,7 @@ export default function ProjectDataWorkspace() {
                     onClick={() => handleOpenDiff(githubState)}
                     className="flex-1 py-1.5 px-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-xs font-medium cursor-pointer transition-colors"
                   >
-                    Push
+                    Upload / Push
                   </button>
                   <button
                     onClick={() => handleDisconnect('github')}
@@ -712,9 +709,10 @@ export default function ProjectDataWorkspace() {
               ) : (
                 <button
                   onClick={() => handleOpenConnectModal('github', 'GitHub')}
-                  className="w-full py-1.5 px-3 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded text-xs font-semibold cursor-pointer transition-colors"
+                  className="w-full py-2 px-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-xs font-semibold cursor-pointer transition-colors flex items-center justify-center gap-1.5"
                 >
-                  Connect GitHub
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-300" />
+                  <span>Connect & Verify GitHub ID</span>
                 </button>
               )}
             </div>
@@ -730,11 +728,11 @@ export default function ProjectDataWorkspace() {
                 </div>
                 {gitlabState.connected ? (
                   <span className="px-2 py-0.5 rounded text-[9px] font-mono bg-emerald-950 text-emerald-400 border border-emerald-800">
-                    CONNECTED
+                    VERIFIED
                   </span>
                 ) : (
-                  <span className="px-2 py-0.5 rounded text-[9px] font-mono bg-slate-900 text-slate-500 border border-slate-800">
-                    NOT CONNECTED
+                  <span className="px-2 py-0.5 rounded text-[9px] font-mono bg-amber-950/60 text-amber-300 border border-amber-800/80">
+                    NOT VERIFIED
                   </span>
                 )}
               </div>
@@ -753,8 +751,8 @@ export default function ProjectDataWorkspace() {
                   </div>
                 </div>
               ) : (
-                <p className="text-[11px] text-slate-500 leading-relaxed">
-                  Push project package to self-hosted or cloud GitLab projects via Personal Access Token.
+                <p className="text-[11px] text-slate-400 leading-relaxed">
+                  Requires verified GitLab ID & Personal Access Token before uploading.
                 </p>
               )}
             </div>
@@ -766,7 +764,7 @@ export default function ProjectDataWorkspace() {
                     onClick={() => handleOpenDiff(gitlabState)}
                     className="flex-1 py-1.5 px-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-xs font-medium cursor-pointer transition-colors"
                   >
-                    Push
+                    Upload / Push
                   </button>
                   <button
                     onClick={() => handleDisconnect('gitlab')}
@@ -778,9 +776,10 @@ export default function ProjectDataWorkspace() {
               ) : (
                 <button
                   onClick={() => handleOpenConnectModal('gitlab', 'GitLab')}
-                  className="w-full py-1.5 px-3 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded text-xs font-semibold cursor-pointer transition-colors"
+                  className="w-full py-2 px-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-xs font-semibold cursor-pointer transition-colors flex items-center justify-center gap-1.5"
                 >
-                  Connect GitLab
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-300" />
+                  <span>Connect & Verify GitLab ID</span>
                 </button>
               )}
             </div>
@@ -796,11 +795,11 @@ export default function ProjectDataWorkspace() {
                 </div>
                 {bitbucketState.connected ? (
                   <span className="px-2 py-0.5 rounded text-[9px] font-mono bg-emerald-950 text-emerald-400 border border-emerald-800">
-                    CONNECTED
+                    VERIFIED
                   </span>
                 ) : (
-                  <span className="px-2 py-0.5 rounded text-[9px] font-mono bg-slate-900 text-slate-500 border border-slate-800">
-                    NOT CONNECTED
+                  <span className="px-2 py-0.5 rounded text-[9px] font-mono bg-amber-950/60 text-amber-300 border border-amber-800/80">
+                    NOT VERIFIED
                   </span>
                 )}
               </div>
@@ -819,8 +818,8 @@ export default function ProjectDataWorkspace() {
                   </div>
                 </div>
               ) : (
-                <p className="text-[11px] text-slate-500 leading-relaxed">
-                  Sync with Bitbucket Cloud repositories using your username and App Password.
+                <p className="text-[11px] text-slate-400 leading-relaxed">
+                  Requires verified Bitbucket ID & App Password before uploading.
                 </p>
               )}
             </div>
@@ -832,7 +831,7 @@ export default function ProjectDataWorkspace() {
                     onClick={() => handleOpenDiff(bitbucketState)}
                     className="flex-1 py-1.5 px-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-xs font-medium cursor-pointer transition-colors"
                   >
-                    Push
+                    Upload / Push
                   </button>
                   <button
                     onClick={() => handleDisconnect('bitbucket')}
@@ -844,9 +843,10 @@ export default function ProjectDataWorkspace() {
               ) : (
                 <button
                   onClick={() => handleOpenConnectModal('bitbucket', 'Bitbucket')}
-                  className="w-full py-1.5 px-3 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded text-xs font-semibold cursor-pointer transition-colors"
+                  className="w-full py-2 px-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-xs font-semibold cursor-pointer transition-colors flex items-center justify-center gap-1.5"
                 >
-                  Connect Bitbucket
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-300" />
+                  <span>Connect & Verify Bitbucket ID</span>
                 </button>
               )}
             </div>
