@@ -21,12 +21,12 @@ class WebResearchAgentConfig(BaseModel):
         default_factory=lambda: float(os.getenv("TAVILY_TIMEOUT_SECONDS", "15.0"))
     )
 
-    # Anakin Settings
+    # Anakin Settings (Self-hosted or anakin.io CLI/API)
     anakin_api_key: str = Field(
         default_factory=lambda: os.getenv("ANAKIN_API_KEY", "")
     )
     anakin_base_url: str = Field(
-        default_factory=lambda: os.getenv("ANAKIN_BASE_URL", "https://api.anakin.ai/v1")
+        default_factory=lambda: os.getenv("ANAKIN_BASE_URL", "https://api.anakin.io/v1")
     )
     anakin_timeout_seconds: float = Field(
         default_factory=lambda: float(os.getenv("ANAKIN_TIMEOUT_SECONDS", "20.0"))

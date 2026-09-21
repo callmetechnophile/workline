@@ -122,12 +122,12 @@ class PlatformSettings(BaseModel):
         default_factory=lambda: os.getenv("FREEPHDLABOR_API_KEY")
     )
 
-    # External Tools: Anakin
+    # External Tools: Anakin (Self-hosted or anakin.io scraper)
     anakin_enabled: bool = Field(
         default_factory=lambda: os.getenv("ANAKIN_ENABLED", "false").lower() in ("true", "1", "yes")
     )
     anakin_endpoint: str = Field(
-        default_factory=lambda: os.getenv("ANAKIN_BASE_URL") or os.getenv("ANAKIN_ENDPOINT") or "https://api.anakin.ai/v1"
+        default_factory=lambda: os.getenv("ANAKIN_BASE_URL") or os.getenv("ANAKIN_ENDPOINT") or "https://api.anakin.io/v1"
     )
     anakin_api_key: Optional[str] = Field(
         default_factory=lambda: os.getenv("ANAKIN_API_KEY")

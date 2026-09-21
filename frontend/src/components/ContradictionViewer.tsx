@@ -11,20 +11,24 @@ interface Contradiction {
 
 interface ContradictionViewerProps {
   contradictions?: Contradiction[];
+  detectorModel?: string;
 }
 
-export default function ContradictionViewer({ contradictions = [] }: ContradictionViewerProps) {
+export default function ContradictionViewer({
+  contradictions = [],
+  detectorModel = "freephdlabor-v1 (Academic Discovery)",
+}: ContradictionViewerProps) {
   return (
     <div className="space-y-6 p-4">
       {/* Overview Card */}
       <div className="glass-panel p-5 border border-zinc-800 bg-zinc-950/60 rounded-xl space-y-4">
-        <div className="flex items-center gap-2.5 border-b border-zinc-850 pb-3">
+        <div className="flex items-center gap-2.5 border-b border-zinc-855 pb-3">
           <div className="p-1.5 bg-red-950/30 border border-red-800/40 rounded text-red-400">
             <AlertCircle className="w-5 h-5" />
           </div>
           <div>
             <h3 className="text-lg font-mono font-bold tracking-wider text-slate-100 uppercase">Research Contradictions</h3>
-            <p className="text-xs font-mono text-slate-500">Cross-referencing papers via LLaMA-3 Nemotron to flag design tradeoffs.</p>
+            <p className="text-xs font-mono text-slate-400">Cross-referencing papers via FreePHDLabor academic synthesis engine to flag design tradeoffs.</p>
           </div>
         </div>
 
@@ -40,8 +44,8 @@ export default function ContradictionViewer({ contradictions = [] }: Contradicti
             </div>
           </div>
           <div className="bg-zinc-900/40 border border-zinc-850 p-4 rounded-lg text-center space-y-1 col-span-2">
-            <div className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-wider">Detector Model</div>
-            <div className="text-sm font-mono font-bold text-slate-300 pt-1.5">llama-3.1-nemotron-70b</div>
+            <div className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-wider">Detector Model / Engine</div>
+            <div className="text-sm font-mono font-bold text-emerald-400 pt-1.5">{detectorModel}</div>
           </div>
         </div>
       </div>
