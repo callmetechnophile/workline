@@ -35,7 +35,20 @@ export abstract class BaseCloudProvider {
     const saved = localStorage.getItem(`${STORAGE_KEY_PREFIX}${this.id}`);
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        // Ensure no legacy mock accounts are ever loaded
+        const fakeAccounts = [
+          'callmetechnophile',
+          'engineering-drive@workline.ai',
+          'workline-engineer@gmail.com',
+          'workline-systems',
+          'workline-robotics',
+        ];
+        if (parsed.account && fakeAccounts.includes(parsed.account)) {
+          localStorage.removeItem(`${STORAGE_KEY_PREFIX}${this.id}`);
+          return { id: this.id, name: this.name, connected: false };
+        }
+        return parsed;
       } catch {
         // Ignore JSON parse error
       }
@@ -76,7 +89,10 @@ export class GoogleDriveProvider extends BaseCloudProvider {
   readonly type = 'cloud_storage';
 
   async connect(config: ProviderConfig): Promise<CloudProviderState> {
-    const account = config.account || 'workline-engineer@gmail.com';
+    if (!config.account) {
+      throw new Error('Google authentication is required to connect Google Drive.');
+    }
+    const account = config.account;
     const target = config.target || 'WORKLINE/Projects/Autonomous-Delivery-Drone';
     const newState: CloudProviderState = {
       id: this.id,
@@ -137,8 +153,11 @@ export class GitHubProvider extends BaseCloudProvider {
   readonly type = 'git';
 
   async connect(config: ProviderConfig): Promise<CloudProviderState> {
-    const account = config.account || 'callmetechnophile';
-    const target = config.target || 'workline-autonomous-delivery-drone';
+    if (!config.account) {
+      throw new Error('GitHub account identity or token verification is required to connect.');
+    }
+    const account = config.account;
+    const target = config.target || 'workline-project';
     const branch = config.branch || 'main';
 
     const newState: CloudProviderState = {
@@ -150,7 +169,7 @@ export class GitHubProvider extends BaseCloudProvider {
       branch,
       lastSync: new Date().toISOString(),
       syncDirection: 'LOCAL_TO_REMOTE',
-      lastCommitHash: 'd7a1b4e',
+      lastCommitHash: 'auth_verified',
       localVersion: 'v1.0',
       remoteVersion: 'v1.0',
       error: null,
@@ -191,8 +210,11 @@ export class GitLabProvider extends BaseCloudProvider {
   readonly type = 'git';
 
   async connect(config: ProviderConfig): Promise<CloudProviderState> {
-    const account = config.account || 'workline-systems';
-    const target = config.target || 'drone-power-subsystem';
+    if (!config.account) {
+      throw new Error('GitLab account identity or token verification is required to connect.');
+    }
+    const account = config.account;
+    const target = config.target || 'workline-subsystem';
     const branch = config.branch || 'main';
 
     const newState: CloudProviderState = {
@@ -204,7 +226,7 @@ export class GitLabProvider extends BaseCloudProvider {
       branch,
       lastSync: new Date().toISOString(),
       syncDirection: 'LOCAL_TO_REMOTE',
-      lastCommitHash: 'f4e2c91',
+      lastCommitHash: 'auth_verified',
       localVersion: 'v1.0',
       remoteVersion: 'v1.0',
       error: null,
@@ -243,8 +265,11 @@ export class BitbucketProvider extends BaseCloudProvider {
   readonly type = 'git';
 
   async connect(config: ProviderConfig): Promise<CloudProviderState> {
-    const account = config.account || 'workline-robotics';
-    const target = config.target || 'autonomous-drone-pwr';
+    if (!config.account) {
+      throw new Error('Bitbucket account identity or credentials verification is required to connect.');
+    }
+    const account = config.account;
+    const target = config.target || 'workline-project';
     const branch = config.branch || 'main';
 
     const newState: CloudProviderState = {
@@ -256,7 +281,7 @@ export class BitbucketProvider extends BaseCloudProvider {
       branch,
       lastSync: new Date().toISOString(),
       syncDirection: 'LOCAL_TO_REMOTE',
-      lastCommitHash: '8b73a21',
+      lastCommitHash: 'auth_verified',
       localVersion: 'v1.0',
       remoteVersion: 'v1.0',
       error: null,

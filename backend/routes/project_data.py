@@ -250,3 +250,118 @@ def sync_cloud_target(req: CloudSyncRequest):
         "commit_hash": "d7a1b4e",
         "files_synced": 38,
     }
+
+
+class VerifyAuthRequest(BaseModel):
+    provider: str
+    token: Optional[str] = None
+    username: Optional[str] = None
+    host: Optional[str] = None
+
+
+@router.post("/verify-auth")
+async def verify_auth_endpoint(req: VerifyAuthRequest):
+    """
+    Verifies actual live authentication credentials against the provider's API.
+    Returns real user account details or accurate authentication errors.
+    """
+    import httpx
+
+    provider = req.provider.lower()
+    token = (req.token or "").strip()
+
+    if not token:
+        raise HTTPException(status_code=400, detail="Authentication token or credential is required.")
+
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        try:
+            if provider == "github":
+                res = await client.get(
+                    "https://api.github.com/user",
+                    headers={
+                        "Authorization": f"Bearer {token}",
+                        "Accept": "application/vnd.github.v3+json",
+                        "User-Agent": "WORKLINE-AI-Workbench",
+                    },
+                )
+                if res.status_code == 200:
+                    data = res.json()
+                    return {
+                        "success": True,
+                        "provider": "github",
+                        "account": data.get("login"),
+                        "name": data.get("name"),
+                        "email": data.get("email"),
+                        "avatar_url": data.get("avatar_url"),
+                        "public_repos": data.get("public_repos"),
+                        "auth_type": "Personal Access Token (Verified)",
+                    }
+                else:
+                    err_msg = res.json().get("message", res.text) if res.content else f"HTTP {res.status_code}"
+                    return {"success": False, "error": f"GitHub Authentication Failed: {err_msg}"}
+
+            elif provider == "gitlab":
+                host = (req.host or "https://gitlab.com").rstrip("/")
+                res = await client.get(
+                    f"{host}/api/v4/user",
+                    headers={"PRIVATE-TOKEN": token},
+                )
+                if res.status_code == 200:
+                    data = res.json()
+                    return {
+                        "success": True,
+                        "provider": "gitlab",
+                        "account": data.get("username"),
+                        "name": data.get("name"),
+                        "email": data.get("email"),
+                        "avatar_url": data.get("avatar_url"),
+                        "auth_type": "GitLab Personal Access Token (Verified)",
+                    }
+                else:
+                    return {"success": False, "error": f"GitLab Authentication Failed: HTTP {res.status_code}"}
+
+            elif provider == "bitbucket":
+                username = (req.username or "").strip()
+                if not username:
+                    return {"success": False, "error": "Bitbucket requires both Username and App Password."}
+                res = await client.get(
+                    "https://api.bitbucket.org/2.0/user",
+                    auth=(username, token),
+                )
+                if res.status_code == 200:
+                    data = res.json()
+                    return {
+                        "success": True,
+                        "provider": "bitbucket",
+                        "account": data.get("username") or data.get("nickname"),
+                        "name": data.get("display_name"),
+                        "avatar_url": data.get("links", {}).get("avatar", {}).get("href"),
+                        "auth_type": "Bitbucket App Password (Verified)",
+                    }
+                else:
+                    return {"success": False, "error": f"Bitbucket Authentication Failed: HTTP {res.status_code}"}
+
+            elif provider in ("google", "google_drive"):
+                res = await client.get(
+                    "https://www.googleapis.com/oauth2/v3/userinfo",
+                    headers={"Authorization": f"Bearer {token}"},
+                )
+                if res.status_code == 200:
+                    data = res.json()
+                    return {
+                        "success": True,
+                        "provider": "google_drive",
+                        "account": data.get("email"),
+                        "name": data.get("name"),
+                        "avatar_url": data.get("picture"),
+                        "auth_type": "Google OAuth Token (Verified)",
+                    }
+                else:
+                    return {"success": False, "error": f"Google Authentication Failed: HTTP {res.status_code}"}
+
+            else:
+                return {"success": False, "error": f"Unsupported provider: {provider}"}
+
+        except httpx.RequestError as e:
+            return {"success": False, "error": f"Network error contacting {provider}: {str(e)}"}
+

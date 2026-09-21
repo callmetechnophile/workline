@@ -17,6 +17,7 @@ import {
   BitbucketProvider,
 } from '@/lib/workline-filesystem/providers/cloudProviders';
 import {
+  CloudProviderId,
   CloudProviderState,
   WorklineFileMap,
   ImportPreviewStats,
@@ -26,6 +27,9 @@ import {
 import FilesystemViewerModal from './FilesystemViewerModal';
 import ImportPreviewModal from './ImportPreviewModal';
 import DiffSyncModal from './DiffSyncModal';
+import ConnectProviderModal from './ConnectProviderModal';
+import { useUser } from '@clerk/nextjs';
+import { useCognitoAuth } from '@/lib/CognitoAuthContext';
 import {
   FolderArchive,
   Download,
@@ -76,7 +80,39 @@ export default function ProjectDataWorkspace() {
     status,
     hasProject,
     setProject,
+    apiBase,
   } = useProject();
+
+  const clerkAuth = useUser();
+  const cognitoAuth = useCognitoAuth();
+  const clerkUser = clerkAuth.user;
+  const externalAccounts = clerkUser?.externalAccounts || [];
+  const googleAccount = externalAccounts.find((acc: any) => 
+    acc.provider?.includes('google') || acc.verification?.strategy?.includes('google')
+  ) || (clerkUser?.primaryEmailAddress?.emailAddress ? {
+    emailAddress: clerkUser.primaryEmailAddress.emailAddress,
+    username: clerkUser.fullName || clerkUser.firstName || clerkUser.primaryEmailAddress.emailAddress.split('@')[0],
+    imageUrl: clerkUser.imageUrl,
+    provider: 'oauth_google',
+  } : null);
+  const githubAccount = externalAccounts.find((acc: any) => 
+    acc.provider?.includes('github') || acc.verification?.strategy?.includes('github')
+  );
+
+  const formatSyncTime = (isoString?: string | null) => {
+    if (!isoString) return 'Never';
+    try {
+      const d = new Date(isoString);
+      if (isNaN(d.getTime())) return 'Never';
+      const diffSec = Math.floor((Date.now() - d.getTime()) / 1000);
+      if (diffSec < 60) return 'Just now';
+      if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`;
+      if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h ago`;
+      return d.toLocaleDateString();
+    } catch {
+      return 'Never';
+    }
+  };
 
   // Local state for generated filesystem
   const [fileMap, setFileMap] = useState<WorklineFileMap>({});
@@ -91,6 +127,14 @@ export default function ProjectDataWorkspace() {
   const [githubState, setGithubState] = useState<CloudProviderState>(providers.github.getState());
   const [gitlabState, setGitlabState] = useState<CloudProviderState>(providers.gitlab.getState());
   const [bitbucketState, setBitbucketState] = useState<CloudProviderState>(providers.bitbucket.getState());
+
+  // Connect Provider Modal state
+  const [connectModal, setConnectModal] = useState<{
+    isOpen: boolean;
+    providerId: CloudProviderId;
+    providerName: string;
+    clerkAccount?: any;
+  } | null>(null);
 
   // Modals state
   const [isFilesystemModalOpen, setIsFilesystemModalOpen] = useState(false);
@@ -109,7 +153,7 @@ export default function ProjectDataWorkspace() {
     {
       id: 'log-init',
       action: 'SYSTEM_STANDBY',
-      actor: 'WORKLINE Storage Engine',
+      actor: clerkUser?.primaryEmailAddress?.emailAddress || cognitoAuth.userEmail || 'WORKLINE Storage Engine',
       timestamp: new Date().toLocaleTimeString(),
       details: 'Filesystem generator initialized for active project.',
     },
@@ -233,76 +277,53 @@ export default function ProjectDataWorkspace() {
     );
   };
 
-  // Connect / Disconnect Providers
-  const toggleGoogleDrive = async () => {
-    if (googleDriveState.connected) {
-      const fresh = providers.google_drive.disconnect();
-      setGoogleDriveState(fresh);
-      showToast('Disconnected from Google Drive', 'info');
-      addAudit('DISCONNECT', 'Current User', 'Disconnected Google Drive integration.');
-    } else {
-      const fresh = await providers.google_drive.connect({
-        account: 'engineering-drive@workline.ai',
-        target: `WORKLINE/Projects/${projectName ? projectName.replace(/\s+/g, '-') : 'Autonomous-Drone'}`,
-      });
-      setGoogleDriveState(fresh);
-      showToast('Connected to Google Drive!', 'success');
-      addAudit('CONNECT', 'Current User', `Connected Google Drive to ${fresh.target}`);
+  // Open real Authentication Modal for a Provider
+  const handleOpenConnectModal = (providerId: CloudProviderId, providerName: string) => {
+    let matchedClerk: any = null;
+    if (providerId === 'google_drive' && googleAccount) {
+      matchedClerk = {
+        email: (googleAccount as any).emailAddress,
+        avatarUrl: (googleAccount as any).imageUrl || (googleAccount as any).avatarUrl || null,
+        username: (googleAccount as any).username || (googleAccount as any).emailAddress?.split('@')[0],
+      };
+    } else if (providerId === 'github' && githubAccount) {
+      matchedClerk = {
+        username: (githubAccount as any).username,
+        email: (githubAccount as any).emailAddress,
+        avatarUrl: (githubAccount as any).imageUrl || (githubAccount as any).avatarUrl || null,
+      };
     }
+
+    setConnectModal({
+      isOpen: true,
+      providerId,
+      providerName,
+      clerkAccount: matchedClerk,
+    });
   };
 
-  const toggleGitHub = async () => {
-    if (githubState.connected) {
-      const fresh = providers.github.disconnect();
-      setGithubState(fresh);
-      showToast('Disconnected from GitHub', 'info');
-      addAudit('DISCONNECT', 'Current User', 'Disconnected GitHub integration.');
-    } else {
-      const fresh = await providers.github.connect({
-        account: 'callmetechnophile',
-        target: projectName ? `workline-${projectName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}` : 'workline-autonomous-drone',
-        branch: 'main',
-      });
-      setGithubState(fresh);
-      showToast('Connected to GitHub repository!', 'success');
-      addAudit('CONNECT', 'Current User', `Connected GitHub repository: ${fresh.account}/${fresh.target}`);
-    }
+  // Disconnect provider
+  const handleDisconnect = (providerId: CloudProviderId) => {
+    const providerInst = providers[providerId];
+    const fresh = providerInst.disconnect();
+    if (providerId === 'google_drive') setGoogleDriveState(fresh);
+    if (providerId === 'github') setGithubState(fresh);
+    if (providerId === 'gitlab') setGitlabState(fresh);
+    if (providerId === 'bitbucket') setBitbucketState(fresh);
+    showToast(`Disconnected from ${providerInst.name}`, 'info');
+    addAudit('DISCONNECT', 'Current User', `Disconnected ${providerInst.name} integration.`);
   };
 
-  const toggleGitLab = async () => {
-    if (gitlabState.connected) {
-      const fresh = providers.gitlab.disconnect();
-      setGitlabState(fresh);
-      showToast('Disconnected from GitLab', 'info');
-      addAudit('DISCONNECT', 'Current User', 'Disconnected GitLab integration.');
-    } else {
-      const fresh = await providers.gitlab.connect({
-        account: 'workline-systems',
-        target: 'drone-power-distribution',
-        branch: 'main',
-      });
-      setGitlabState(fresh);
-      showToast('Connected to GitLab project!', 'success');
-      addAudit('CONNECT', 'Current User', `Connected GitLab project: ${fresh.account}/${fresh.target}`);
-    }
-  };
-
-  const toggleBitbucket = async () => {
-    if (bitbucketState.connected) {
-      const fresh = providers.bitbucket.disconnect();
-      setBitbucketState(fresh);
-      showToast('Disconnected from Bitbucket', 'info');
-      addAudit('DISCONNECT', 'Current User', 'Disconnected Bitbucket integration.');
-    } else {
-      const fresh = await providers.bitbucket.connect({
-        account: 'workline-robotics',
-        target: 'drone-power-bb',
-        branch: 'main',
-      });
-      setBitbucketState(fresh);
-      showToast('Connected to Bitbucket repository!', 'success');
-      addAudit('CONNECT', 'Current User', `Connected Bitbucket repository: ${fresh.account}/${fresh.target}`);
-    }
+  // Save verified live connection from modal
+  const handleSaveVerifiedConnection = (newState: CloudProviderState) => {
+    const providerInst = providers[newState.id];
+    providerInst.saveState(newState);
+    if (newState.id === 'google_drive') setGoogleDriveState(newState);
+    if (newState.id === 'github') setGithubState(newState);
+    if (newState.id === 'gitlab') setGitlabState(newState);
+    if (newState.id === 'bitbucket') setBitbucketState(newState);
+    showToast(`Connected ${newState.name} as ${newState.account}!`, 'success');
+    addAudit('CONNECT', 'Current User', `Connected ${newState.name} account: ${newState.account}`);
   };
 
   // Open Diff Modal for a Provider
@@ -558,16 +579,29 @@ export default function ProjectDataWorkspace() {
 
               {googleDriveState.connected ? (
                 <div className="text-[11px] font-mono text-slate-400 space-y-1">
-                  <div className="text-slate-300 truncate">{googleDriveState.account}</div>
-                  <div className="text-slate-500 truncate text-[10px]">{googleDriveState.target}</div>
-                  <div className="text-[10px] text-slate-500 pt-1">
-                    Last sync: {googleDriveState.lastSync ? 'Just now' : 'Never'}
+                  <div className="flex items-center gap-1.5 text-slate-200 font-semibold truncate">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+                    <span className="truncate">{googleDriveState.account}</span>
+                  </div>
+                  <div className="text-slate-500 truncate text-[10px] pl-5">
+                    {googleDriveState.target}
+                  </div>
+                  <div className="text-[10px] text-slate-500 pt-1 pl-5">
+                    Last sync: {formatSyncTime(googleDriveState.lastSync)}
                   </div>
                 </div>
               ) : (
-                <p className="text-[11px] text-slate-500 leading-relaxed">
-                  Sync engineering package directly to Google Drive folders.
-                </p>
+                <div className="space-y-1.5">
+                  <p className="text-[11px] text-slate-500 leading-relaxed">
+                    Sync engineering package directly to Google Drive folders.
+                  </p>
+                  {googleAccount && (
+                    <div className="text-[10px] font-mono text-indigo-400 flex items-center gap-1.5 p-1.5 bg-indigo-950/40 border border-indigo-800/40 rounded">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
+                      <span className="truncate">Google identity detected ({googleAccount.emailAddress})</span>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
 
@@ -581,7 +615,7 @@ export default function ProjectDataWorkspace() {
                     Sync
                   </button>
                   <button
-                    onClick={toggleGoogleDrive}
+                    onClick={() => handleDisconnect('google_drive')}
                     className="py-1.5 px-2.5 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 rounded text-xs cursor-pointer transition-colors"
                   >
                     Disconnect
@@ -589,7 +623,7 @@ export default function ProjectDataWorkspace() {
                 </>
               ) : (
                 <button
-                  onClick={toggleGoogleDrive}
+                  onClick={() => handleOpenConnectModal('google_drive', 'Google Drive')}
                   className="w-full py-1.5 px-3 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded text-xs font-semibold cursor-pointer transition-colors"
                 >
                   Connect Drive
@@ -619,20 +653,35 @@ export default function ProjectDataWorkspace() {
 
               {githubState.connected ? (
                 <div className="text-[11px] font-mono text-slate-400 space-y-1">
-                  <div className="text-slate-300 truncate">{githubState.account}/{githubState.target}</div>
-                  <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
+                  <div className="flex items-center gap-1.5 text-slate-200 font-semibold truncate">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+                    <span className="truncate">{githubState.account}/{githubState.target}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-[10px] text-slate-500 pl-5">
                     <GitBranch className="w-3 h-3 text-indigo-400" />
                     <span>{githubState.branch || 'main'}</span>
                     <span>• {githubState.lastCommitHash}</span>
                   </div>
-                  <div className="text-[10px] text-slate-500 pt-1">
-                    Last push: Just now
+                  <div className="text-[10px] text-slate-500 pt-1 pl-5">
+                    Last push: {formatSyncTime(githubState.lastSync)}
                   </div>
                 </div>
               ) : (
-                <p className="text-[11px] text-slate-500 leading-relaxed">
-                  Export structured .wl repository with automatic commit tracking.
-                </p>
+                <div className="space-y-1.5">
+                  <p className="text-[11px] text-slate-500 leading-relaxed">
+                    Export structured .wl repository with automatic commit tracking.
+                  </p>
+                  {githubAccount ? (
+                    <div className="text-[10px] font-mono text-indigo-400 flex items-center gap-1.5 p-1.5 bg-indigo-950/40 border border-indigo-800/40 rounded">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
+                      <span className="truncate">GitHub identity linked (@{githubAccount.username})</span>
+                    </div>
+                  ) : (
+                    <div className="text-[10px] font-mono text-slate-500">
+                      Connect via Personal Access Token (PAT).
+                    </div>
+                  )}
+                </div>
               )}
             </div>
 
@@ -646,7 +695,7 @@ export default function ProjectDataWorkspace() {
                     Push
                   </button>
                   <button
-                    onClick={toggleGitHub}
+                    onClick={() => handleDisconnect('github')}
                     className="py-1.5 px-2.5 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 rounded text-xs cursor-pointer transition-colors"
                   >
                     Disconnect
@@ -654,7 +703,7 @@ export default function ProjectDataWorkspace() {
                 </>
               ) : (
                 <button
-                  onClick={toggleGitHub}
+                  onClick={() => handleOpenConnectModal('github', 'GitHub')}
                   className="w-full py-1.5 px-3 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded text-xs font-semibold cursor-pointer transition-colors"
                 >
                   Connect GitHub
@@ -684,12 +733,20 @@ export default function ProjectDataWorkspace() {
 
               {gitlabState.connected ? (
                 <div className="text-[11px] font-mono text-slate-400 space-y-1">
-                  <div className="text-slate-300 truncate">{gitlabState.account}/{gitlabState.target}</div>
-                  <div className="text-[10px] text-slate-500">{gitlabState.branch || 'main'} • {gitlabState.lastCommitHash}</div>
+                  <div className="flex items-center gap-1.5 text-slate-200 font-semibold truncate">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+                    <span className="truncate">{gitlabState.account}/{gitlabState.target}</span>
+                  </div>
+                  <div className="text-[10px] text-slate-500 pl-5">
+                    {gitlabState.branch || 'main'} • {gitlabState.lastCommitHash}
+                  </div>
+                  <div className="text-[10px] text-slate-500 pt-1 pl-5">
+                    Last sync: {formatSyncTime(gitlabState.lastSync)}
+                  </div>
                 </div>
               ) : (
                 <p className="text-[11px] text-slate-500 leading-relaxed">
-                  Push project package to self-hosted or cloud GitLab projects.
+                  Push project package to self-hosted or cloud GitLab projects via Personal Access Token.
                 </p>
               )}
             </div>
@@ -704,7 +761,7 @@ export default function ProjectDataWorkspace() {
                     Push
                   </button>
                   <button
-                    onClick={toggleGitLab}
+                    onClick={() => handleDisconnect('gitlab')}
                     className="py-1.5 px-2.5 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 rounded text-xs cursor-pointer transition-colors"
                   >
                     Disconnect
@@ -712,7 +769,7 @@ export default function ProjectDataWorkspace() {
                 </>
               ) : (
                 <button
-                  onClick={toggleGitLab}
+                  onClick={() => handleOpenConnectModal('gitlab', 'GitLab')}
                   className="w-full py-1.5 px-3 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded text-xs font-semibold cursor-pointer transition-colors"
                 >
                   Connect GitLab
@@ -742,12 +799,20 @@ export default function ProjectDataWorkspace() {
 
               {bitbucketState.connected ? (
                 <div className="text-[11px] font-mono text-slate-400 space-y-1">
-                  <div className="text-slate-300 truncate">{bitbucketState.account}/{bitbucketState.target}</div>
-                  <div className="text-[10px] text-slate-500">{bitbucketState.branch || 'main'} • {bitbucketState.lastCommitHash}</div>
+                  <div className="flex items-center gap-1.5 text-slate-200 font-semibold truncate">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+                    <span className="truncate">{bitbucketState.account}/{bitbucketState.target}</span>
+                  </div>
+                  <div className="text-[10px] text-slate-500 pl-5">
+                    {bitbucketState.branch || 'main'} • {bitbucketState.lastCommitHash}
+                  </div>
+                  <div className="text-[10px] text-slate-500 pt-1 pl-5">
+                    Last sync: {formatSyncTime(bitbucketState.lastSync)}
+                  </div>
                 </div>
               ) : (
                 <p className="text-[11px] text-slate-500 leading-relaxed">
-                  Sync with Bitbucket Cloud or Enterprise repositories.
+                  Sync with Bitbucket Cloud repositories using your username and App Password.
                 </p>
               )}
             </div>
@@ -762,7 +827,7 @@ export default function ProjectDataWorkspace() {
                     Push
                   </button>
                   <button
-                    onClick={toggleBitbucket}
+                    onClick={() => handleDisconnect('bitbucket')}
                     className="py-1.5 px-2.5 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 rounded text-xs cursor-pointer transition-colors"
                   >
                     Disconnect
@@ -770,7 +835,7 @@ export default function ProjectDataWorkspace() {
                 </>
               ) : (
                 <button
-                  onClick={toggleBitbucket}
+                  onClick={() => handleOpenConnectModal('bitbucket', 'Bitbucket')}
                   className="w-full py-1.5 px-3 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded text-xs font-semibold cursor-pointer transition-colors"
                 >
                   Connect Bitbucket
@@ -978,6 +1043,20 @@ export default function ProjectDataWorkspace() {
           diff={activeDiff}
           onSyncLocalToRemote={handleSyncToRemote}
           onPullRemoteToLocal={handlePullFromRemote}
+        />
+      )}
+
+      {/* Real Credentials & Authentication Modal */}
+      {connectModal && (
+        <ConnectProviderModal
+          isOpen={connectModal.isOpen}
+          onClose={() => setConnectModal(null)}
+          providerId={connectModal.providerId}
+          providerName={connectModal.providerName}
+          defaultProjectName={displayProjectName}
+          clerkAccount={connectModal.clerkAccount}
+          onSaveConnection={handleSaveVerifiedConnection}
+          apiBase={apiBase}
         />
       )}
     </div>
