@@ -551,7 +551,14 @@ def export_pdf(data: Dict[str, Any]) -> Dict[str, Any]:
     story.append(Spacer(1, 6))
     code_text = generate_firmware_code(components, intent)
     for line in code_text.split("\n"):
-        story.append(Paragraph(line.replace(" ", "&nbsp;").replace("<", "&lt;").replace(">", "&gt;"), code_style))
+        if line.strip() == "":
+            # Preserve blank separator lines — ReportLab collapses Paragraph("") to zero height
+            story.append(Spacer(1, 12))
+        else:
+            story.append(Paragraph(
+                line.replace(" ", "&nbsp;").replace("<", "&lt;").replace(">", "&gt;"),
+                code_style
+            ))
     story.append(PageBreak())
 
     # ==================================================================
@@ -931,7 +938,16 @@ def export_docx(data: Dict[str, Any]) -> Dict[str, Any]:
     add_body("Target MCU: ESP32  |  Framework: Arduino C++", bold=True)
     code_text = generate_firmware_code(components, intent)
     for line in code_text.split("\n"):
-        add_code(line)
+        if line.strip() == "":
+            # Preserve blank lines — Word collapses empty paragraphs
+            p = doc.add_paragraph()
+            p.paragraph_format.space_before = Pt(0)
+            p.paragraph_format.space_after = Pt(0)
+            run = p.add_run("\u00a0")  # non-breaking space placeholder
+            run.font.name = code_font_name
+            run.font.size = Pt(9)
+        else:
+            add_code(line)
     doc.add_page_break()
 
     # ===================== GANTT + CONNECTION NOTES =====================
