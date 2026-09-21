@@ -356,33 +356,31 @@ export const ComponentPlacement: React.FC<ComponentPlacementProps> = ({
             </div>
 
             {/* Code Body with Line Numbers */}
-            <div className="p-4 overflow-x-auto max-h-[500px] overflow-y-auto text-xs font-mono leading-relaxed bg-[#0d1117]">
-              <pre className="text-zinc-300">
-                <code>
-                  {generatedCode.split("\n").map((line, idx) => (
-                    <div key={idx} className="table-row hover:bg-zinc-800/30">
-                      <span className="table-cell pr-4 text-zinc-600 select-none text-right w-8 text-[11px]">
-                        {idx + 1}
-                      </span>
-                      <span
-                        className={`table-cell whitespace-pre ${
-                          line.startsWith("//") || line.startsWith("/*") || line.startsWith(" *") || line.startsWith('"""') || line.startsWith("# ")
-                            ? "text-zinc-500 italic"
-                            : line.includes("#define") || line.includes("import ") || line.includes("#include") || line.includes("const ")
-                            ? "text-purple-400"
-                            : line.includes("void ") || line.includes("def ") || line.includes("int ") || line.includes("uint") || line.includes("float ")
-                            ? "text-cyan-300 font-semibold"
-                            : line.includes("Serial.") || line.includes("logging.") || line.includes("Wire.") || line.includes("GPIO.") || line.includes("HAL_")
-                            ? "text-amber-300"
-                            : "text-zinc-200"
-                        }`}
-                      >
-                        {line}
-                      </span>
-                    </div>
-                  ))}
-                </code>
-              </pre>
+            <div className="overflow-x-auto max-h-[500px] overflow-y-auto bg-[#0d1117] rounded-b-xl">
+              <div className="min-w-full table text-xs font-mono leading-5">
+                {generatedCode.split("\n").map((line, idx) => (
+                  <div key={idx} className="table-row group hover:bg-zinc-800/30">
+                    <span className="table-cell pl-4 pr-3 text-zinc-600 select-none text-right text-[11px] align-top w-12 border-r border-zinc-800/60">
+                      {idx + 1}
+                    </span>
+                    <span
+                      className={`table-cell pl-4 pr-4 whitespace-pre align-top ${
+                        line.startsWith("//") || line.startsWith("/*") || line.startsWith(" *") || line.startsWith('"""') || line.startsWith("# ")
+                          ? "text-zinc-500 italic"
+                          : line.includes("#define") || line.includes("import ") || line.includes("#include") || line.includes("const ")
+                          ? "text-purple-400"
+                          : line.includes("void ") || line.includes("def ") || line.includes("int ") || line.includes("uint") || line.includes("float ")
+                          ? "text-cyan-300 font-semibold"
+                          : line.includes("Serial.") || line.includes("logging.") || line.includes("Wire.") || line.includes("GPIO.") || line.includes("HAL_")
+                          ? "text-amber-300"
+                          : "text-zinc-200"
+                      }`}
+                    >
+                      {line || "\u00A0"}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
