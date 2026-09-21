@@ -111,15 +111,21 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
 
   const getToken = useCallback(async (): Promise<string | null> => {
     try {
+      const clerkToken = await clerkAuth.getToken().catch(() => null);
+      if (clerkToken) return clerkToken;
+    } catch {
+      // Fallback
+    }
+    try {
       const cogToken = await cognitoAuth.getToken();
       if (cogToken) return cogToken;
     } catch {
       // Fallback
     }
-    return (await clerkAuth.getToken().catch(() => null)) || null;
+    return null;
   }, [cognitoAuth, clerkAuth]);
 
-  const userId = cognitoAuth.userId || clerkAuth.userId;
+  const userId = clerkAuth.userId || cognitoAuth.userId || 'user_hardware_engineer';
 
   // Resolve API base URL
   useEffect(() => {

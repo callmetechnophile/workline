@@ -23,9 +23,9 @@ import {
   Users,
   ChevronRight
 } from 'lucide-react';
-import { UserButton, SignInButton, useAuth } from '@clerk/nextjs';
+import { useAuth } from '@clerk/nextjs';
 import { useCognitoAuth } from '@/lib/CognitoAuthContext';
-import CognitoUserButton from '@/components/auth/CognitoUserButton';
+import UnifiedUserButton from '@/components/auth/UnifiedUserButton';
 
 export type NavSection = 
   | 'overview'
@@ -229,7 +229,7 @@ export default function Sidebar({
 
       {/* User Account Section */}
       <div className="p-3 border-t border-slate-800 bg-slate-950/90">
-        <CognitoUserButton direction="up" className="w-full" />
+        <UnifiedUserButton direction="up" className="w-full" />
       </div>
     </aside>
   );

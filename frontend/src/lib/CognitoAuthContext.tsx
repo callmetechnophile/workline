@@ -39,7 +39,13 @@ export function CognitoAuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const saved = getSavedCognitoSession();
     if (saved) {
-      setSession(saved);
+      // Purge any pre-existing hardcoded testuser session
+      if (saved.email === 'testuser@workline.ai') {
+        clearCognitoSession();
+        setSession(null);
+      } else {
+        setSession(saved);
+      }
     }
     setIsLoaded(true);
   }, []);
@@ -47,19 +53,7 @@ export function CognitoAuthProvider({ children }: { children: ReactNode }) {
   const getToken = useCallback(async (): Promise<string | null> => {
     const token = await getValidCognitoIdToken();
     if (token) return token;
-
-    // If no valid session, auto-authenticate with demo user for seamless access
-    try {
-      const demoSession = await signInCognito(
-        COGNITO_CONFIG.demoUser.email,
-        COGNITO_CONFIG.demoUser.password
-      );
-      setSession(demoSession);
-      return demoSession.idToken;
-    } catch (err: any) {
-      console.warn('Auto-login as demo user fallback failed:', err);
-      return null;
-    }
+    return null;
   }, []);
 
   const signIn = useCallback(async (email: string, pass: string) => {
