@@ -60,14 +60,14 @@ def test_root_env_example_contains_all_sections():
         content = f.read()
 
     expected_sections = [
-        "CORE PLATFORM",
-        "SERVICE MESH INTER-SERVICE URLS",
-        "AI & MODEL INFERENCE",
-        "KNOWLEDGE & DATA STORAGE",
-        "MONETIZATION & PAYMENTS",
-        "PROCUREMENT",
-        "ARMOURIQ",
-        "FRONTEND PUBLIC VARIABLES",
+        "CORE APPLICATION & RUNTIME",
+        "AWS FOUNDATION & CREDENTIALS",
+        "AWS SERVERLESS & MESSAGING SERVICES",
+        "AUTHORITATIVE GRAPH DATABASE: SURREALDB",
+        "AUTHORITATIVE VECTOR ENGINE: QDRANT",
+        "FOUNDATIONAL AI: AMAZON BEDROCK",
+        "SECURITY & CRYPTOGRAPHIC GOVERNANCE: ARMORIQ",
+        "RESEARCH & COMPONENT INTELLIGENCE",
     ]
     for section in expected_sections:
         assert section in content, f"Missing section '{section}' in .env.example"

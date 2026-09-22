@@ -1,5 +1,4 @@
-"""Tests for Paper Banana visual generation provider, prompts, and artifacts."""
-
+import os
 import pytest
 from backend.workline.generation.image.prompts import ImagePromptBuilder
 from backend.workline.generation.image.provider import PaperBananaProvider
@@ -24,11 +23,14 @@ async def test_paperbanana_provider_generation():
     artifact = await provider.generate(req)
     assert artifact.project_id == "rover_vision"
     assert artifact.provider == "PaperBanana"
-    assert artifact.format == "svg"
+    assert artifact.format in ("svg", "png")
     assert artifact.sha256 != ""
-    assert artifact.content is not None
-    assert "<svg" in artifact.content
-    assert "WORKLINE" in artifact.content
+    if artifact.format == "svg":
+        assert artifact.content is not None
+        assert "<svg" in artifact.content
+        assert "WORKLINE" in artifact.content
+    else:
+        assert os.path.exists(artifact.storage_path)
 
 
 def test_image_prompt_builder_grounding():

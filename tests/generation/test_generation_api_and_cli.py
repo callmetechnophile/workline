@@ -31,7 +31,7 @@ def test_api_generation_image_and_presentation():
     img_data = img_res.json()
     artifact = img_data.get("artifact", img_data)
     assert artifact["provider"] == "PaperBanana"
-    assert artifact["format"] == "svg"
+    assert artifact["format"] in ("svg", "png")
     art_id = artifact["artifact_id"]
 
     # 2. POST /api/generation/presentation

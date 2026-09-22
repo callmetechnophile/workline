@@ -58,7 +58,7 @@ from cli.wline.commands.system import system_app
 
 app = typer.Typer(
     name="wline",
-    help="WORKLINE – Engineering Lifecycle Platform CLI",
+    help="Workline - Engineering Lifecycle Platform CLI",
     no_args_is_help=False,
     add_completion=False,
 )

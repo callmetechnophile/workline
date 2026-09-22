@@ -64,6 +64,10 @@ def inspect_project_cmd(
     if not target_name:
         exit_with_error("No active project. Specify a project name or open one.", ExitCode.INVALID_ARGUMENTS, json_mode=json_output)
 
+    from pathlib import Path
+    if target_name.endswith(".wlipjt") or (name and Path(name).is_file()):
+        return inspect_project_package(file_path=target_name)
+
     project_info = find_project(target_name)
     if not project_info:
         exit_with_error(f"Project '{target_name}' not found in workspace.", ExitCode.INVALID_ARGUMENTS, json_mode=json_output)

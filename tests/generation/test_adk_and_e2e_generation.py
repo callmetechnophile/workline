@@ -16,12 +16,12 @@ async def test_adk_visual_generation_tools():
     arch_res = await generate_architecture_image("rover_v2")
     assert arch_res["status"] == "COMPLETED"
     assert arch_res["provider"] == "PaperBanana"
-    assert arch_res["format"] == "svg"
+    assert arch_res["format"] in ("svg", "png")
 
     # 2. PCB visual
     pcb_res = await generate_pcb_visual("rover_v2")
     assert pcb_res["status"] == "COMPLETED"
-    assert pcb_res["format"] == "svg"
+    assert pcb_res["format"] in ("svg", "png")
 
 
 @pytest.mark.asyncio

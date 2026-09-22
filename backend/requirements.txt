@@ -27,3 +27,5 @@ orjson>=3.9.0
 aiosqlite>=0.19.0
 loguru>=0.7.0
 scrapling>=0.2.0
+strawberry-graphql>=0.210.0
+pymupdf>=1.24.0

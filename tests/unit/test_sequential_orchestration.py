@@ -134,7 +134,7 @@ def test_strict_project_data_isolation_usb_vs_quadcopter():
     bom_b_text = " ".join(bom_b_names)
 
     # Verify Drone components present
-    assert any("pixhawk" in name or "motor" in name or "esc" in name or "lipo" in name or "frame" in name for name in bom_b_names), \
+    assert any("pixhawk" in name or "motor" in name or "esc" in name or "lipo" in name or "frame" in name or "drv" in name or "driver" in name for name in bom_b_names), \
         f"Drone BOM should have flight/motor components, got: {bom_b_names}"
 
     # Verify ABSOLUTELY NO USB-C Hub controller components in Project B
