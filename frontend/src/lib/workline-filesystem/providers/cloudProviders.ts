@@ -90,7 +90,7 @@ export abstract class BaseCloudProvider {
   }
 
   abstract connect(config: ProviderConfig): Promise<CloudProviderState>;
-  abstract sync(fileMap: WorklineFileMap, currentProject: any): Promise<{ success: boolean; message: string; diff?: ProjectDiffSummary }>;
+  abstract sync(fileMap: WorklineFileMap, currentProject: unknown): Promise<{ success: boolean; message: string; diff?: ProjectDiffSummary }>;
 }
 
 /**
@@ -191,7 +191,7 @@ export class GitHubProvider extends BaseCloudProvider {
     return newState;
   }
 
-  async sync(fileMap: WorklineFileMap, currentProject: any): Promise<{ success: boolean; message: string; diff?: ProjectDiffSummary }> {
+  async sync(_fileMap: WorklineFileMap, _currentProject: unknown): Promise<{ success: boolean; message: string; diff?: ProjectDiffSummary }> {
     const state = this.getState();
     if (!state.connected) {
       throw new Error('GitHub is not connected. Connect a repository first.');
@@ -248,7 +248,7 @@ export class GitLabProvider extends BaseCloudProvider {
     return newState;
   }
 
-  async sync(fileMap: WorklineFileMap, currentProject: any): Promise<{ success: boolean; message: string; diff?: ProjectDiffSummary }> {
+  async sync(_fileMap: WorklineFileMap, _currentProject: unknown): Promise<{ success: boolean; message: string; diff?: ProjectDiffSummary }> {
     const state = this.getState();
     if (!state.connected) {
       throw new Error('GitLab is not connected.');
@@ -303,7 +303,7 @@ export class BitbucketProvider extends BaseCloudProvider {
     return newState;
   }
 
-  async sync(fileMap: WorklineFileMap, currentProject: any): Promise<{ success: boolean; message: string; diff?: ProjectDiffSummary }> {
+  async sync(_fileMap: WorklineFileMap, _currentProject: unknown): Promise<{ success: boolean; message: string; diff?: ProjectDiffSummary }> {
     const state = this.getState();
     if (!state.connected) {
       throw new Error('Bitbucket is not connected.');
