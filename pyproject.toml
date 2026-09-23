@@ -34,6 +34,7 @@ dev = [
 
 [project.scripts]
 wline = "cli.wline.main:main"
+wg = "cli.wg.main:main"
 
 [tool.setuptools.packages.find]
 include = ["cli*", "backend*"]
