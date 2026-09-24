@@ -75,8 +75,9 @@ def realtime_project(tmp_path):
     )
     bom_file.write_text(bom_content, encoding="utf-8")
     
-    # Index project
-    runner.invoke(wg_app, ["index", "--path", str(proj_dir)])
+    # Index project using ProjectIndexer
+    from cli.workline.retrieval.indexer import ProjectIndexer
+    ProjectIndexer(proj_dir).index_full()
     
     return proj_dir
 
@@ -144,8 +145,12 @@ def test_realtime_agent_live_context_multi_turn(realtime_project):
 
 
 def test_voice_command_startup_flow(realtime_project):
-    """Verify wg voice outputs the official WORKLINE REALTIME status banner."""
-    result = runner.invoke(wg_app, ["voice", "--path", str(realtime_project)])
+    """Verify voice_command outputs the official WORKLINE REALTIME status banner."""
+    import typer
+    from cli.workline.commands.voice import voice_command
+    test_app = typer.Typer()
+    test_app.command()(voice_command)
+    result = runner.invoke(test_app, ["--path", str(realtime_project)])
     assert result.exit_code == 0
     assert "WORKLINE REALTIME" in result.output
     assert "Autonomous Delivery Drone Power Distribution" in result.output

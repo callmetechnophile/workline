@@ -143,7 +143,9 @@ class WorklineRealtimeAgent:
         
         # Follow-up "Why did we select it?"
         if any(w in u_low for w in ("why", "reason", "choose", "select")):
-            decisions = [r for r in records if r.resource_type in ("decision", "component")]
+            decisions = [r for r in records if r.resource_type == "decision"]
+            if not decisions:
+                decisions = [r for r in records if r.resource_type in ("decision", "component")]
             if decisions:
                 d = decisions[0]
                 lines = [l.strip() for l in d.content.splitlines() if ":" in l and not l.strip().startswith("#")]

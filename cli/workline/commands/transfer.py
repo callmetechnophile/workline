@@ -1,93 +1,37 @@
-"""
-Implementation of `wg export`, `wg import`, `wg sync`, and `wg git` commands.
-"""
+"""Package transfer commands for wg: export and import .wlipjt packages."""
 
 from pathlib import Path
-import subprocess
 from typing import Optional
+
 import typer
 from rich.console import Console
 
-from cli.workline.export.exporter import export_project_zip, import_project_zip
-from cli.workline.project.filesystem import find_project_root
-from cli.workline.retrieval.indexer import ProjectIndexer
-
 console = Console()
-
-git_app = typer.Typer(help="Git version control operations on project")
 
 
 def export_command(
-    path: Optional[str] = typer.Option(None, "--path", "-p", help="Project path to export"),
-    zip_mode: bool = typer.Option(True, "--zip", help="Bundle as portable .workline.zip"),
-    output: Optional[str] = typer.Option(None, "--output", "-o", help="Target output file path"),
+    path: Optional[str] = typer.Argument(None, help="Project path (defaults to current directory)"),
+    output: Optional[str] = typer.Option(None, "--output", "-o", help="Output file path"),
+    include_git: bool = typer.Option(False, "--git", help="Include git history in package"),
+    include_vectors: bool = typer.Option(False, "--vectors", help="Include Qdrant vectors in package"),
+    force: bool = typer.Option(False, "--force", help="Export even if validation fails"),
 ) -> None:
-    """Bundle project into portable archive excluding secrets and local index cache."""
-    target_dir = Path(path).resolve() if path else Path.cwd()
-    root = find_project_root(target_dir)
-    if not root:
-        console.print(f"[bold red]Error:[/bold red] '{target_dir}' is not a WORKLINE project.")
-        raise typer.Exit(code=1)
-
-    out_path = Path(output).resolve() if output else None
-    try:
-        exported_file = export_project_zip(root, output_zip=out_path)
-        console.print(f"\n[bold green]✓ Project exported successfully:[/bold green] [bold white]{exported_file.name}[/bold white]")
-        console.print(f"  Target: [cyan]{exported_file}[/cyan]")
-        console.print(f"  Zero-secrets & index-cache exclusion: [green]PASSED[/green]\n")
-    except Exception as e:
-        console.print(f"[bold red]Export failed:[/bold red] {e}")
-        raise typer.Exit(code=1)
+    """Export the project to a portable .wlipjt archive. Alias for `wg backup`."""
+    from cli.workline.commands.backup import backup_command
+    backup_command(
+        path=path,
+        output=output,
+        include_git=include_git,
+        include_vectors=include_vectors,
+        force=force,
+    )
 
 
 def import_command(
-    archive: str = typer.Argument(..., help="Path to .workline.zip archive or project folder to import"),
-    destination: Optional[str] = typer.Option(None, "--destination", "-d", help="Destination folder"),
+    package: str = typer.Argument(..., help="Path to the .wlipjt package file"),
+    target: Optional[str] = typer.Option(None, "--target", "-t", help="Restore target directory"),
+    strategy: str = typer.Option("restore", "--strategy", "-s", help="Import strategy: restore, merge, new"),
 ) -> None:
-    """Import a WORKLINE project archive and automatically initialize its local Moss index."""
-    src = Path(archive).resolve()
-    dest = Path(destination).resolve() if destination else Path.cwd() / src.stem.replace(".workline", "")
-
-    try:
-        imported_root = import_project_zip(src, dest)
-        console.print(f"\n[bold green]✓ Project imported:[/bold green] [cyan]{imported_root}[/cyan]")
-        
-        # Automatically build local Moss index on import
-        console.print("Reconstructing local Moss retrieval layer from .wl filesystem...")
-        indexer = ProjectIndexer(imported_root)
-        stats = indexer.index_full(rebuild=True)
-        console.print(f"[bold green]✓ Local retrieval ready:[/bold green] {stats.total_records_indexed:,} records indexed.\n")
-    except Exception as e:
-        console.print(f"[bold red]Import failed:[/bold red] {e}")
-        raise typer.Exit(code=1)
-
-
-def sync_command(
-    path: Optional[str] = typer.Option(None, "--path", "-p", help="Project path"),
-) -> None:
-    """Synchronize project manifest, validate checksums, and update local Moss index."""
-    target_dir = Path(path).resolve() if path else Path.cwd()
-    root = find_project_root(target_dir)
-    if not root:
-        console.print(f"[bold red]Error:[/bold red] '{target_dir}' is not a WORKLINE project.")
-        raise typer.Exit(code=1)
-
-    indexer = ProjectIndexer(root)
-    stats, changed = indexer.index_incremental()
-    console.print(f"\n[bold green]✓ Project synchronized:[/bold green] {stats.total_records_indexed:,} total records ({len(changed)} updated).\n")
-
-
-@git_app.command("status")
-def git_status(path: Optional[str] = typer.Option(None, "--path", "-p")) -> None:
-    """Run git status inside the project directory."""
-    target_dir = Path(path).resolve() if path else Path.cwd()
-    root = find_project_root(target_dir) or target_dir
-    subprocess.run(["git", "status"], cwd=root)
-
-
-@git_app.command("diff")
-def git_diff(path: Optional[str] = typer.Option(None, "--path", "-p")) -> None:
-    """Run git diff inside the project directory."""
-    target_dir = Path(path).resolve() if path else Path.cwd()
-    root = find_project_root(target_dir) or target_dir
-    subprocess.run(["git", "diff"], cwd=root)
+    """Import / restore a project from a .wlipjt archive. Alias for `wg restore`."""
+    from cli.workline.commands.restore import restore_command
+    restore_command(package=package, target=target, strategy=strategy)

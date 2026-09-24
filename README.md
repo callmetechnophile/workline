@@ -1,7 +1,7 @@
 <div align="center">
 
 # ⚡ WORKLINE
-### Enterprise Autonomous Engineering Lifecycle Orchestration Platform
+### Local-First Autonomous Engineering Platform & Intelligence Runtime
 
 [![Python](https://img.shields.io/badge/Python-3.12%2B-blue?logo=python&logoColor=white)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110%2B-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
@@ -13,15 +13,17 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-green.svg)](LICENSE)
 
 <p align="center">
-  <b>Workline</b> transforms natural-language system requirements into validated hardware specifications, multi-vendor optimized bills of materials (BOMs), physics-accurate simulations, cross-component PCB pin interconnects, compilable multi-platform microcontroller firmware, and fabrication-ready EDA artifacts.
+  <b>Workline</b> transforms natural-language system requirements into validated hardware specifications, multi-vendor optimized bills of materials (BOMs), physics-accurate simulations, cross-component PCB pin interconnects, compilable multi-platform microcontroller firmware, and fabrication-ready EDA artifacts — anchored in a portable, local-first <code>.wl</code> project representation.
 </p>
 
 [Architecture](#-system-architecture) •
+[Local Intelligence & CLI](#-local-intelligence--canonical-cli-wline) •
+[External APIs & Integrations](#-external-api-configuration-wline---apis) •
+[Google Drive Browser Agent](#-google-drive-browser-agent-wline-drive) •
 [Key Features](#-core-capabilities) •
-[Pinout & Firmware Engine](#-pcb-pin-interconnect--firmware-engine) •
-[CLI Reference](#-canonical-command-line-interface-wline) •
+[Pinout & Firmware](#-pcb-pin-interconnect--firmware-engine) •
 [Getting Started](#-getting-started) •
-[AWS Cloud Native](#-aws-cloud-native-deployment)
+[AWS Deployment](#-aws-cloud-native-deployment)
 
 ---
 
@@ -31,13 +33,16 @@
 
 Modern hardware engineering is fragmented across disparate silos: schematic capture, distributor catalog queries, thermal/electrical physics simulations, microcontroller firmware authoring, and procurement logistics.
 
-**Workline** solves this through a unified **Agent Control Fabric** powering **27 specialized Google ADK domain agents** across 90+ capabilities. It automates the hardware design loop through deterministic gatekeepers:
+**Workline** solves this through a unified **Agent Control Fabric** powering **27 specialized Google ADK domain agents** across 90+ capabilities, paired with a **Local Engineering Intelligence Runtime**:
 1. **Requirements Decomposition**: Translates plain text into structured mechanical, electrical, thermal, and regulatory constraints.
-2. **Component Intelligence & Datasheet Grounding**: Direct live integration with **Octopart / Nexar APIs**, indexing verified MPNs, distributor stock, and technical datasheets.
-3. **Scholarly Literature Retrieval**: Grounded in peer-reviewed science via **arXiv, Crossref, and Semantic Scholar**.
-4. **Deterministic Validation**: Gatekeepers evaluate voltage rail sequencing, thermal derating (>105°C trip), and lifecycle obsolescence (PASS / FAIL / CONFLICT).
-5. **PCB Pinout & Firmware Synthesis**: Dynamically maps electrical interconnects across all ICs and generates compilable code for **ESP32, Raspberry Pi, Arduino, and STM32**.
-6. **Multi-Vendor Procurement**: Optimizes landed BOM costs (catalog base price + regional freight) with **Algorand x402** micro-settlement protocol integration.
+2. **Local-First `.wl` Project Model**: Complete portable project representation stored locally in human-readable YAML/markdown format (`README.wl`, `manifest.wl`, `requirements/`, `components/`, `bom/`).
+3. **Derived Local Moss Retrieval**: Zero-cloud-dependency in-process semantic engine combining BM25 keyword search and deterministic 384-dimensional dense vectors.
+4. **Dual-Mode Retrieval (`ProjectRetriever`)**: Automatically routes between offline Moss and containerized Qdrant vector databases.
+5. **Component Intelligence & Datasheet Grounding**: Live integration with **Octopart / Nexar APIs**, indexing verified MPNs, distributor stock, and technical datasheets.
+6. **Scholarly Literature Retrieval**: Grounded in peer-reviewed science via **arXiv, Crossref, and Semantic Scholar**.
+7. **Deterministic Validation**: Gatekeepers evaluate voltage rail sequencing, thermal derating (>105°C trip), and lifecycle obsolescence (PASS / FAIL / CONFLICT).
+8. **PCB Pinout & Firmware Synthesis**: Dynamically maps electrical interconnects across all ICs and generates compilable code for **ESP32, Raspberry Pi, Arduino, and STM32**.
+9. **Multi-Vendor Procurement**: Optimizes landed BOM costs (catalog base price + regional freight) with **Algorand x402** micro-settlement protocol integration.
 
 ---
 
@@ -45,19 +50,21 @@ Modern hardware engineering is fragmented across disparate silos: schematic capt
 
 ```mermaid
 flowchart TD
-    subgraph INTAKE ["1. Intake & Semantic Intelligence"]
-        REQ["Natural Language Requirements / Specs"] --> NLP["Decomposition & Constraint Extractor"]
-        NLP --> NEXAR["Nexar / Octopart Intelligence API"]
-        NLP --> SCHOLAR["arXiv / Crossref Literature Engine"]
+    subgraph INTAKE ["1. Intake & Local Control"]
+        ACT["workline --activate"] --> ENV["Active WORKLINE Session"]
+        ENV --> WLINE["wline CLI (Launcher & Doorway)"]
+        WLINE --> WL[(".wl Portable Project Filesystem")]
     end
 
-    subgraph MEMORY ["2. Dual-Engine Knowledge Layer"]
-        NEXAR --> SDB[("SurrealDB: Knowledge Graph & Constraints")]
-        SCHOLAR --> QDR[("Qdrant: Semantic Vector Embeddings")]
+    subgraph MEMORY ["2. Local & Stack Intelligence Layer"]
+        WL --> MOSS["Local Moss Engine (.wl/index/ BM25 + Embeddings)"]
+        WL --> SDB[("SurrealDB: Graph Entities & Constraints")]
+        WL --> QDR[("Qdrant: Vector Embeddings")]
+        MOSS & QDR --> RETR["ProjectRetriever (Dual-Mode Router)"]
     end
 
     subgraph FABRIC ["3. Workline Agent Control Fabric (27 Agents)"]
-        SDB & QDR --> COORD["ArmourFlow Agent Orchestrator"]
+        SDB & RETR --> COORD["ArmourFlow Agent Orchestrator"]
         COORD --> ARCH["Architecture & Wiring Agent"]
         COORD --> VOLT["Voltage & Power Budget Agent"]
         COORD --> THERM["2D Thermal & Physics Solver"]
@@ -78,12 +85,128 @@ flowchart TD
         GATE --> EDA["Generative PCB Layout & KiCad Netlists"]
     end
 
-    subgraph DELIVERY ["6. Delivery & Procurement"]
+    subgraph DELIVERY ["6. Delivery & External Storage"]
         BOM --> X402["Algorand x402 Settlement & Landed Costing"]
-        EDA & FW --> PKG[".wlipjt Versioned Engineering Package"]
+        EDA & FW --> PKG[".wlipjt Encrypted Archive (ZIP + TOON)"]
+        PKG --> GDRIVE["Google Drive Browser-Agent Sync"]
         PKG --> CAL["Gantt Roadmap & Google Calendar Sync"]
     end
 ```
+
+---
+
+## 💻 Local Intelligence & Canonical CLI (`wline`)
+
+Workline uses a clean, focused **two-stage command model**:
+
+### 1. Environment Bootstrap: `workline --activate`
+
+Initializes and validates the local engineering runtime environment:
+
+```bash
+workline --activate
+```
+
+Outputs the comprehensive service health status:
+
+```text
+WORKLINE
+------------------------------------------
+Runtime        READY     Python 3.12+ / wline v1.0.0
+Project        READY     RescueSwarm
+SurrealDB      READY     Port 8001 reachable
+Qdrant         READY     Port 6333 reachable
+Moss           READY     Local in-process semantic engine
+Agents         READY     Local tool registry & A2A protocol
+LiveKit        READY     Local token fallback active
+------------------------------------------
+WORKLINE environment ACTIVE.
+```
+
+If non-essential container services are down, WORKLINE automatically operates in **DEGRADED** mode, keeping the complete local engineering workflow functional offline using local files and Moss.
+
+---
+
+### 2. Active Environment Operations: `wline`
+
+Once activated, all operations use the canonical **`wline`** command namespace:
+
+```bash
+# View active project and environment state
+wline
+
+# Scaffold a new engineering project
+wline new
+
+# Open project in WORKLINE graphical web workbench (launches stack + browser)
+wline open RescueSwarm
+
+# Inspect project .wl metadata, manifest, and intelligence state
+wline inspect
+
+# Show environment and active project status
+wline status
+
+# Multi-point system diagnostics (Python, Docker, SurrealDB, Qdrant, Git, LLM)
+wline doctor
+
+# Create portable, tamper-evident .wlipjt backup archive (secrets auto-scrubbed)
+wline backup
+
+# Restore a project from .wlipjt package or .wl directory
+wline restore project.wlipjt
+
+# Synchronize local state with configured project storage
+wline sync
+
+# Show WORKLINE version
+wline version
+```
+
+---
+
+## 🔑 External API Configuration (`wline --apis`)
+
+Workline is **local-first**: all core engineering functions run locally without requiring external cloud APIs. External integrations are configured centrally via:
+
+```bash
+# Launch interactive configuration manager
+wline --apis
+# Or:
+wline apis
+
+# View status of external providers without exposing secrets
+wline --apis status
+
+# Safely remove provider configuration with confirmation
+wline --apis reset
+```
+
+Supported provider categories:
+- **AI & Model Providers**: Amazon Bedrock (Claude 3.5 Sonnet / Haiku / Nova), NVIDIA NIM, OpenAI, Anthropic
+- **Engineering Data**: Nexar / Octopart (live distributor stock, component pricing, datasheets)
+- **Realtime Services**: LiveKit (project-scoped audio/voice agent rooms)
+- **Git Providers**: GitHub (repository sync, releases, issue tracking)
+- **Research APIs**: Tavily (scientific literature & datasheet search)
+
+> **🔒 Security Invariant**: Secrets are stored machine-locally in `~/.workline/credentials.json` under named profiles (`default`, `development`, `production`). Credentials are **NEVER** stored inside `.wl` or `.wlipjt` project files.
+
+---
+
+## 📁 Google Drive Browser Agent (`wline drive`)
+
+Workline integrates with Google Drive via an automated **browser-agent** workflow:
+
+```bash
+# Backup active project to Google Drive
+wline drive --action backup
+
+# Restore project from Google Drive
+wline drive --action restore
+```
+
+- **Zero Cloud API Credentials Required**: Operates directly through the user's authenticated browser session on `drive.google.com`. No OAuth client IDs, API keys, or Google passwords needed.
+- **Mandatory Verification**: The browser agent verifies that `README.wl` and `.wl/manifest.wl` are present in the target folder before confirming backup completion.
 
 ---
 
@@ -98,85 +221,24 @@ flowchart TD
 
 ### 2. PCB Pin Interconnect Matrix & KiCad Netlist Generator
 - **Eliminates Blank Layout States**: Dynamically generates the exact pin-level wiring between all active project semiconductors (Microcontrollers, AFEs, Power Monitors, Transceivers, Regulators, and MOSFETs).
-- **Protocol Bus Filtering**: One-click isolation of `I2C Bus (SDA/SCL)`, `CAN Bus (TX/RX/CANH/CANL)`, `Power Rails (3.3V/VBAT/GND)`, and `Safety Alerts/Gates`.
-- **Export Formats**: Instant download of KiCad `.net` netlists and detailed `.csv` wiring schedules.
+- **Physical Electrical Grounding**: Every connection maps physical IC pins (e.g. `U1.23` → `U2.7`), complete with net names, wire gauge, and protocol tags (`I2C_SDA`, `SPI_MOSI`, `CAN_H`, `SWD_CLK`).
+- **One-Click Export**: Emits standard KiCad 8 netlists, wire-harness wiring lists, and interactive SVG board layout visualizations.
 
-### 3. Multi-Platform Microcontroller Firmware Engine
-- **Pin-Synchronized Firmware**: Generates production-ready code whose `#define` macros and peripheral pin assignments **strictly mirror** the PCB pinout matrix above.
-- **Supported Platforms**:
-  - ⚡ **ESP32**: C++ with Arduino Core / ESP-IDF (`Wire.h`, `driver/twai.h` CAN, hardware ISRs).
-  - 🍓 **Raspberry Pi**: Python 3 (`smbus2`, `RPi.GPIO`, `python-can`).
-  - ♾️ **Arduino**: C++ AVR (`Wire.h`, MCP2515 SPI CAN, external interrupts).
-  - 🦾 **STM32**: C with STM32Cube HAL (`stm32f4xx_hal.h`, I2C1, CAN1, EXTI).
-- **Peripheral Telemetry Routines**: Pre-configured registers for reading voltage/current (e.g. INA226 over 0x40), cell voltages (BQ76952 over 0x08), and broadcasting CAN frames at 500 kbps.
+### 3. Compilable Multi-Platform Firmware Synthesis
+- **Zero-Stub Code Generation**: Synthesizes ready-to-flash C++/C firmware customized for the active pinout and selected silicon:
+  - **ESP-IDF / Arduino**: Hardware I2C/SPI bus initializations, RTOS tasks, and peripheral drivers.
+  - **Raspberry Pi**: Linux userspace `/dev/i2c-1` and `spidev` Python/C++ implementations.
+  - **STM32**: HAL / LL driver calls matching generated pin configurations.
+- Generates pin definition headers (`pin_definitions.h`), telemetry polling loops, and complete PlatformIO (`platformio.ini`) / CMake configs.
 
-### 4. Deterministic Multi-Physics Simulation Suite
-- **SPICE Electrical Solver**: Nodal matrix analysis verifying DC operating points, voltage drops, and transient responses.
-- **2D Finite-Difference Thermal Solver**: Computes steady-state surface temperature profiles across copper pours and FR4 substrates.
-- **Physics-Informed Neural Network (PINN)**: High-speed deep learning surrogate predicting hotspot thermal dissipation in milliseconds.
-- **Safety Gate**: Automatically flags thermal risks if junctions exceed 105°C and suggests heatsink/copper pour mitigations.
+### 4. 2D Physics-Informed Thermal Modeling (PINN)
+- Solves 2D heat-diffusion partial differential equations ($k \nabla^2 T + Q = 0$) across multi-layer FR4 boards.
+- Detects hotspot thermal runaways before fabrication, factoring in component dissipation ($P_D$), copper plane spreading, and ambient convection.
+- Automatic gatekeeper halts workflow if junction temperature exceeds 105°C.
 
-### 5. Google Calendar & Gantt Roadmap Integration
-- **Gantt Timeline**: Phase tracking, dependency lines, and milestone visualization across engineering sprints.
-- **Google Calendar Export**: One-click schedule synchronization with Google Calendar via direct URL deep links and downloadable RFC 5545 `.ics` files.
-
----
-
-## 🔌 PCB Pin Interconnect & Firmware Engine
-
-Workline ensures that electrical hardware design and software firmware are generated from the **same deterministic source of truth**:
-
-```
-PCB Interconnect Netlist                      Microcontroller Firmware
-────────────────────────                      ────────────────────────
-U1 ESP32 Pin 15 (GPIO8)  ──[NET_I2C_SDA]──>  #define PIN_I2C_SDA  8   (Wire.begin)
-U1 ESP32 Pin 16 (GPIO9)  ──[NET_I2C_SCL]──>  #define PIN_I2C_SCL  9   (Wire.begin)
-U1 ESP32 Pin 11 (GPIO4)  ──[NET_CAN_TX]───>  #define PIN_TWAI_TX  4   (TWAI Driver)
-U1 ESP32 Pin 12 (GPIO5)  ──[NET_CAN_RX]───>  #define PIN_TWAI_RX  5   (TWAI Driver)
-U1 ESP32 Pin 13 (GPIO6)  ──[NET_BMS_ALERT]─>  #define PIN_ALERT    6   (attachInterrupt)
-```
-
-### Supported Microcontroller Families
-
-| Platform | Language / Framework | Peripherals Configured | Code Features |
-| :--- | :--- | :--- | :--- |
-| **ESP32-S3** | C++ (Arduino / ESP-IDF) | I2C (400kHz), TWAI/CAN (500k), EXTI | Non-blocking telemetry loop, ISR handlers, CAN frame packing |
-| **Raspberry Pi 4 / CM4** | Python 3 (`smbus2`, `RPi.GPIO`) | I2C1, GPIO Events, SocketCAN | Register reading classes, clean signal exits, logging |
-| **Arduino Uno / Nano** | C++ (AVR Libc) | Wire (A4/A5), INT0/INT1, SPI | Memory-efficient fixed-point math, 115200 baud serial |
-| **STM32F4 / G4** | C (STM32Cube HAL) | I2C1 (PB8/PB9), CAN1 (PA11/PA12), EXTI | Clock tree setup, NVIC interrupt priorities, Mailbox TX |
-
----
-
-## 💻 Canonical Command Line Interface (`wline`)
-
-Workline provides a powerful CLI (`wline`) for automated terminal workflows:
-
-```bash
-# Initialize workspace and verify environment
-wline init
-wline system health
-
-# Project Lifecycle Management
-wline project create "BMS-16S-Pro" --description "16S LiFePO4 battery management system"
-wline project list
-wline project open <project-id>
-
-# Run Multi-Agent Engineering Workflows
-wline workflow run pcb_end_to_end --project BMS-16S-Pro
-wline task run --capability thermal_analysis --project BMS-16S-Pro
-wline engineering optimize --project BMS-16S-Pro
-
-# Hardware Pinout & PCB Generation
-wline pcb create --width 100 --height 80 --project BMS-16S-Pro
-wline pcb validate --project BMS-16S-Pro
-wline pcb pinn train --epochs 50
-wline pcb export --format kicad --project BMS-16S-Pro
-
-# Literature & Document Synthesis
-wline evidence search "BQ76952 I2C pullup requirements"
-wline documents generate --type architecture_spec --project BMS-16S-Pro
-wline security audit --project BMS-16S-Pro
-```
+### 5. Algorand x402 Micro-Settlement Integration
+- Integrates the **x402 payment standard** on the Algorand blockchain for automated component purchasing and developer micro-royalties.
+- Supports programmatic tokenized escrow releases upon verified hardware gate completion.
 
 ---
 
@@ -186,6 +248,7 @@ wline security audit --project BMS-16S-Pro
 - **Runtime**: Python 3.12+
 - **API Framework**: FastAPI, Pydantic v2, Strawberry GraphQL
 - **CLI Framework**: Typer, Rich formatting
+- **Local Retrieval**: Moss (BM25 + 384-dim hash embeddings), Qdrant Manager
 - **Physics & Math**: NumPy, SciPy, PyTorch (PINN thermal model)
 - **Agent Governance**: ArmorIQ SDK with HMAC cryptographic delegation
 
@@ -198,7 +261,7 @@ wline security audit --project BMS-16S-Pro
 ### Databases & Cloud Storage
 - **Relational & Graph Database**: **SurrealDB v2** (project entities, dependency graphs, pin nets)
 - **Vector Database**: **Qdrant** (ANN semantic search over datasheets and research literature)
-- **Local Fallback**: SQLite for offline idempotency and zero-credential environments
+- **Local Source of Truth**: `.wl` filesystem representation + Moss local index
 - **Object Storage**: Amazon S3 / Local Filesystem Artifact Store
 
 ---
@@ -208,6 +271,7 @@ wline security audit --project BMS-16S-Pro
 ### Prerequisites
 - **Python**: Version 3.12 or higher
 - **Node.js**: Version 20.x or higher (`npm` or `pnpm`)
+- **Docker**: For running SurrealDB and Qdrant containers locally
 - **Git**
 
 ### 1. Clone the Repository
@@ -216,7 +280,7 @@ git clone https://github.com/callmetechnophile/workline.git
 cd workline
 ```
 
-### 2. Backend Setup
+### 2. Backend & CLI Setup
 ```bash
 # Create and activate virtual environment
 python -m venv .venv
@@ -226,30 +290,26 @@ python -m venv .venv
 # Linux / macOS:
 source .venv/bin/activate
 
-# Install dependencies
-pip install -r requirements.txt
+# Install package in development mode
+pip install -e .
 
-# Configure environment variables
-cp .env.example .env
+# Or install dependencies via requirements
+pip install -r requirements.txt
 ```
 
-### 3. Frontend Setup
+### 3. Activate WORKLINE
+```bash
+# Bootstrap local environment
+workline --activate
+
+# Verify system health
+wline doctor
+```
+
+### 4. Frontend Workbench Setup
 ```bash
 cd frontend
 npm install
-```
-
-### 4. Running the Development Servers
-
-**Start Backend (Port 8000):**
-```bash
-# From repository root with virtual environment activated:
-python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000 --reload
-```
-
-**Start Frontend (Port 3000):**
-```bash
-# In frontend directory:
 npm run dev
 ```
 
@@ -261,7 +321,7 @@ Navigate to **`http://localhost:3000`** in your browser.
 
 Workline is architected for turnkey deployment to Amazon Web Services using **AWS SAM** and **Terraform**:
 
-```
+```text
 CloudFront CDN ──> API Gateway HTTP API ──> AWS Lambda (FastAPI / Mangum)
                                                 ├── AWS Step Functions (27 Agents)
                                                 ├── Amazon DynamoDB (State & Locks)
@@ -280,10 +340,9 @@ sam deploy --config-file infra/aws/samconfig.toml --config-env production
 ```
 
 Detailed AWS documentation:
-- [AWS_ARCHITECTURE.md](AWS_ARCHITECTURE.md) — Comprehensive infrastructure topology and networking.
-- [AWS_DEPLOYMENT.md](AWS_DEPLOYMENT.md) — Step-by-step cloud provisioning and deployment guide.
-- [DATABASE_ARCHITECTURE.md](DATABASE_ARCHITECTURE.md) — Multi-tier persistence specifications.
-- [SECURITY.md](SECURITY.md) — Authentication, IAM least-privilege, and HMAC delegation models.
+- [AWS_ARCHITECTURE.md](docs/aws-redesign/02_TARGET_ARCHITECTURE.md) — Comprehensive infrastructure topology and networking.
+- [DATABASE_ARCHITECTURE.md](docs/aws-redesign/04_DATA_ARCHITECTURE.md) — Multi-tier persistence specifications.
+- [SECURITY.md](docs/aws-redesign/05_SECURITY_ARCHITECTURE.md) — Authentication, IAM least-privilege, and HMAC delegation models.
 
 ---
 
@@ -292,14 +351,14 @@ Detailed AWS documentation:
 The repository includes a comprehensive, automated test suite covering all tiers:
 
 ```bash
+# Run canonical wline CLI, .wl format, recovery, and realtime tests
+pytest cli/tests/test_wline_cli.py cli/tests/test_wl_format.py cli/tests/test_project_recovery.py cli/tests/test_livekit_realtime.py -v
+
 # Run AWS migration and cloud subsystem tests
 pytest tests/aws/test_aws_migration_suite.py -v
 
 # Run canonical 27 agent execution tests
 pytest tests/cli/test_canonical_27_agents.py -v
-
-# Run CLI command test matrix (125 tests)
-pytest tests/cli/ -v
 
 # Run frontend build verification
 cd frontend && npm run build
@@ -310,8 +369,9 @@ cd frontend && npm run build
 ## 🛡 Security & Governance
 
 - **Cryptographic Delegation**: Agent-to-agent tool executions generate HMAC-signed receipts (`parent_receipt_id`, `receipt_id`, `allowed_scope`).
+- **Machine-Local Secret Isolation**: API keys and tokens are stored in `~/.workline/credentials.json` and scrubbed from `.wl` / `.wlipjt` archives.
 - **3-Tier Action Boundaries**: Autonomous agents are restricted to *Recommendation* and *Proposal* scopes. Physical state mutations or order placements require explicit human-in-the-loop authorization.
-- **Sensitive Data Scrubbing**: API credentials, authorization bearer headers, and private keys are scrubbed from telemetry logs.
+- **Sensitive Data Scrubbing**: API credentials, authorization bearer headers, and private keys are automatically scrubbed from telemetry logs.
 
 ---
 

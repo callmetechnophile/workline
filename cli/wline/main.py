@@ -1,10 +1,19 @@
-"""Main entry point for the Workline CLI (wline)."""
+"""
+Main entry point for the WORKLINE CLI (wline).
 
+All operations begin with:
+    wline <command>
+
+Environment activation is bootstrapped via:
+    workline --activate
+"""
+
+import os
 from pathlib import Path
 import sys
 from typing import Optional
 
-# Ensure repository root is on sys.path so armourflow, backend, and research_agents are importable
+# Ensure repository root is on sys.path
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
@@ -13,111 +22,94 @@ import typer
 from rich.console import Console
 
 from cli.wline import __version__
-from cli.wline.commands.agent import agent_app
-from cli.wline.commands.bom import bom_app
-from cli.wline.commands.component import component_app
-from cli.wline.commands.config import config_app
-from cli.wline.commands.database import database_app
-from cli.wline.commands.finding import finding_app
-from cli.wline.commands.git import git_app
-from cli.wline.commands.github import github_app
-from cli.wline.commands.init import init_command
-from cli.wline.commands.knowledge import knowledge_app
-from cli.wline.commands.lesson import lesson_app
-from cli.wline.commands.order import order_app
-from cli.wline.commands.payment import payment_app
-from cli.wline.commands.pcb import pcb_app
-from cli.wline.commands.procurement import procurement_app
-from cli.wline.commands.project import project_app
-from cli.wline.commands.requirement import requirement_app
-from cli.wline.commands.status import status_command
-from cli.wline.commands.team import team_app
-from cli.wline.commands.version import release_command, snapshot_command, version_command
-from cli.wline.commands.decision import decision_app
-from cli.wline.commands.generate import app as generate_app
-from cli.wline.commands.cache import app as cache_app
-from cli.wline.commands.document import app as document_app
-from cli.wline.commands.entity import app as entity_app
-from cli.wline.commands.graph import app as graph_app
-from cli.wline.commands.requirement import app as requirement_app
-from cli.wline.commands.doctor import doctor_app
-from cli.wline.commands.auth import auth_app, login_command, logout_command, whoami_command
-from cli.wline.commands.sync import sync_app
-from cli.wline.ui.banner import print_main_banner
+from cli.wline.core.credentials import APICredentialManager
+from cli.wline.core.session import EnvironmentSessionManager
 
-# ── New ArmourFlow-integrated command sub-apps ────────────────────────────────
-from cli.wline.commands.agents import agents_app
-from cli.wline.commands.task import task_app
-from cli.wline.commands.workflow import workflow_app
-from cli.wline.commands.engineering import engineering_app
-from cli.wline.commands.evidence import evidence_app
-from cli.wline.commands.documents import documents_app
-from cli.wline.commands.security import security_app
-from cli.wline.commands.eval import eval_app
-from cli.wline.commands.system import system_app
+# ── Unified Core Command Implementations ──────────────────────────────────────
+from cli.workline.commands.new import new_project_command
+from cli.workline.commands.open import open_command
+from cli.workline.commands.inspect import inspect_command
+from cli.workline.commands.backup import backup_command
+from cli.workline.commands.restore import restore_command
+from cli.workline.commands.sync import sync_command
+from cli.workline.commands.doctor import doctor_command
+from cli.workline.commands.status import status_command
+from cli.workline.commands.start_stop import start_command, stop_command, logs_command
+from cli.wline.commands.apis import apis_interactive_manager, apis_status_command, apis_reset_command
+from cli.wline.commands.drive import drive_command
 
 app = typer.Typer(
     name="wline",
-    help="Workline - Engineering Lifecycle Platform CLI",
+    help="WORKLINE — Local Engineering Intelligence Runtime & Platform Gateway",
     no_args_is_help=False,
     add_completion=False,
 )
 console = Console()
 
-# ── Existing command mounts ───────────────────────────────────────────────────
-app.command("init")(init_command)
-app.add_typer(project_app, name="project")
-app.add_typer(knowledge_app, name="knowledge")
-app.add_typer(decision_app, name="decision")
-app.add_typer(requirement_app, name="requirement")
-app.add_typer(finding_app, name="finding")
-app.add_typer(lesson_app, name="lesson")
-app.add_typer(team_app, name="team")
-app.add_typer(git_app, name="git")
-app.add_typer(github_app, name="github")
-app.add_typer(agent_app, name="agent")          # wline agent (singular) – internal runtime
-app.add_typer(component_app, name="component")
-app.add_typer(procurement_app, name="procurement")
-app.add_typer(bom_app, name="bom")
-app.add_typer(order_app, name="order")
-app.add_typer(payment_app, name="payment")
-app.add_typer(pcb_app, name="pcb")
-app.add_typer(generate_app, name="generate")
-app.add_typer(cache_app, name="cache")
-app.add_typer(document_app, name="document")
-app.add_typer(entity_app, name="entity")
-app.add_typer(graph_app, name="graph")          # wline graph (related / evidence / query / traverse)
-app.add_typer(config_app, name="config")
-app.add_typer(database_app, name="database")
-app.add_typer(doctor_app, name="doctor")
-app.add_typer(auth_app, name="auth")
-app.add_typer(sync_app, name="sync")
-app.command("login")(login_command)
-app.command("logout")(logout_command)
-app.command("whoami")(whoami_command)
+# ── Runtime Sub-App ───────────────────────────────────────────────────────────
+runtime_app = typer.Typer(
+    name="runtime",
+    help="Developer & diagnostic commands for internal services",
+    no_args_is_help=False,
+)
+runtime_app.command("status")(status_command)
+runtime_app.command("start")(start_command)
+runtime_app.command("stop")(stop_command)
+runtime_app.command("restart")(start_command)
+runtime_app.command("logs")(logs_command)
+
+# ── Core Commands ─────────────────────────────────────────────────────────────
+app.command("new")(new_project_command)
+app.command("open")(open_command)
+app.command("inspect")(inspect_command)
 app.command("status")(status_command)
-app.command("version")(version_command)
-app.command("snapshot")(snapshot_command)
-app.command("release")(release_command)
-
-# ── ArmourFlow Control Fabric – integrated command mounts ─────────────────────
-app.add_typer(agents_app, name="agents")        # wline agents (plural) – domain agent registry
-app.add_typer(task_app, name="task")            # wline task – Control Fabric task lifecycle
-app.add_typer(workflow_app, name="workflow")    # wline workflow – named workflow dispatch
-app.add_typer(engineering_app, name="engineering")  # wline engineering – sim/optimize/dfm
-app.add_typer(evidence_app, name="evidence")    # wline evidence – Tavily research + DB
-app.add_typer(documents_app, name="documents")  # wline documents – TechDocAgent (agent.27)
-app.add_typer(security_app, name="security")    # wline security – ArmorIQ + agent.22
-app.add_typer(eval_app, name="eval")            # wline eval – UniversalEvaluationHarness
-app.add_typer(system_app, name="system")        # wline system – platform health/diagnostics
+app.command("doctor")(doctor_command)
+app.command("backup")(backup_command)
+app.command("restore")(restore_command)
+app.command("sync")(sync_command)
+app.command("drive")(drive_command)
+app.add_typer(runtime_app, name="runtime")
 
 
+# ── Version Command ───────────────────────────────────────────────────────────
 def version_callback(value: bool) -> None:
     if value:
-        version_command()
+        console.print(
+            f"WORKLINE ([bold cyan]wline[/bold cyan]) "
+            f"version [bold white]{__version__}[/bold white]"
+        )
         raise typer.Exit()
 
 
+@app.command("version")
+def version_command() -> None:
+    """Show WORKLINE version."""
+    console.print(
+        f"WORKLINE ([bold cyan]wline[/bold cyan]) "
+        f"version [bold white]{__version__}[/bold white]"
+    )
+
+
+# ── APIs Subcommand Dispatcher (wline apis) ───────────────────────────────────
+apis_app = typer.Typer(
+    name="apis",
+    help="Configure and manage external API integrations (Bedrock, GitHub, LiveKit, etc.)",
+    invoke_without_command=True,
+)
+
+
+@apis_app.callback(invoke_without_command=True)
+def apis_default(ctx: typer.Context) -> None:
+    if ctx.invoked_subcommand is None:
+        apis_interactive_manager()
+
+
+apis_app.command("status")(apis_status_command)
+apis_app.command("reset")(apis_reset_command)
+app.add_typer(apis_app, name="apis")
+
+
+# ── Main Entry Callback (Handles wline with no args & wline --apis) ───────────
 @app.callback(invoke_without_command=True)
 def main_callback(
     ctx: typer.Context,
@@ -125,40 +117,61 @@ def main_callback(
         None,
         "--version",
         "-v",
-        help="Show Workline version and exit.",
+        help="Show version and exit.",
         callback=version_callback,
         is_eager=True,
     ),
+    apis: bool = typer.Option(
+        False,
+        "--apis",
+        help="Open API Configuration Manager (or use 'wline apis').",
+    ),
 ) -> None:
-    """WORKLINE Engineering Lifecycle Platform."""
+    """WORKLINE — Engineering Lifecycle Platform & Local Intelligence Runtime."""
+    # Inject stored credentials to environment on any wline invocation
+    APICredentialManager.inject_credentials_to_env()
+
+    if apis and ctx.invoked_subcommand is None:
+        apis_interactive_manager()
+        raise typer.Exit()
+
     if ctx.invoked_subcommand is None:
-        print_main_banner()
-        console.print("\n[bold white]Usage:[/bold white]\n  wline <command>\n")
-        console.print("[bold white]Platform commands (Workline Control Fabric):[/bold white]\n")
-        console.print("  [bold cyan]agents[/bold cyan]      List / inspect / health-check the 27 domain agents")
-        console.print("  [bold cyan]task[/bold cyan]        Submit, list, inspect, and cancel Control Fabric tasks")
-        console.print("  [bold cyan]workflow[/bold cyan]    Dispatch named engineering workflows")
-        console.print("  [bold cyan]engineering[/bold cyan] Simulation, Pareto optimization, and DFM analysis")
-        console.print("  [bold cyan]evidence[/bold cyan]    Research evidence search (Tavily) and inspection")
-        console.print("  [bold cyan]documents[/bold cyan]   Generate, list, and review technical documentation")
-        console.print("  [bold cyan]graph[/bold cyan]       SurrealQL queries and graph traversal")
-        console.print("  [bold cyan]security[/bold cyan]    Security audit and threat scanning (ArmorIQ + agent.22)")
-        console.print("  [bold cyan]eval[/bold cyan]        Run evaluation benchmarks and view reports")
-        console.print("  [bold cyan]system[/bold cyan]      Platform health, status, and diagnostics\n")
-        console.print("[bold white]Workspace commands:[/bold white]\n")
-        console.print("  [cyan]init[/cyan]        Initialize local project workspace & Git repository")
-        console.print("  [cyan]project[/cyan]     Manage engineering projects (create, list, open, status)")
-        console.print("  [cyan]git[/cyan]         Local Git version control (status, commit, log, push)")
-        console.print("  [cyan]github[/cyan]      GitHub remote management (auth, init, connect, push)")
-        console.print("  [cyan]agent[/cyan]       Internal Workline agent runtime (run, status, approve)")
-        console.print("  [cyan]database[/cyan]    Manage SurrealDB and Qdrant data layers")
-        console.print("  [cyan]config[/cyan]      Manage workspace configuration")
-        console.print("  [cyan]version[/cyan]     Display Workline CLI and project version\n")
-        console.print("[dim]Run 'wline <command> --help' for detailed usage.[/dim]\n")
+        state = EnvironmentSessionManager.load_state()
+        active_proj = state.active_project_name or "None"
+        env_status = state.status
+
+        status_color = "green" if env_status == "ACTIVE" else ("yellow" if env_status == "DEGRADED" else "dim")
+
+        console.print(f"\n[bold white]WORKLINE[/bold white]")
+        console.print("------------------------------------------")
+        console.print(f"[bold]Project:[/bold] {active_proj}")
+        console.print(f"[bold]State:[/bold]   [{status_color}]{env_status}[/{status_color}]\n")
+
+        console.print("[bold]Project Control:[/bold]")
+        console.print("  [cyan]new[/cyan]        Create a new WORKLINE engineering project")
+        console.print("  [cyan]open[/cyan]       Open/select a WORKLINE project")
+        console.print("  [cyan]inspect[/cyan]    Inspect project intelligence & manifest state")
+        console.print("  [cyan]status[/cyan]     Show current WORKLINE environment status\n")
+
+        console.print("[bold]Project Data & Storage:[/bold]")
+        console.print("  [cyan]backup[/cyan]     Create a portable .wlipjt backup package")
+        console.print("  [cyan]restore[/cyan]    Restore a WORKLINE project")
+        console.print("  [cyan]sync[/cyan]       Synchronize with configured project storage")
+        console.print("  [cyan]drive[/cyan]      Google Drive browser-agent backup & restore\n")
+
+        console.print("[bold]System & Integrations:[/bold]")
+        console.print("  [cyan]doctor[/cyan]     Diagnose the local WORKLINE environment")
+        console.print("  [cyan]runtime[/cyan]    Internal runtime controls (status, start, stop, logs)")
+        console.print("  [cyan]apis[/cyan]       Manage external API integrations (--apis)\n")
+
+        if env_status == "INACTIVE":
+            console.print("[dim]Note: WORKLINE is not activated. Run [bold]workline --activate[/bold] to initialize.[/dim]\n")
+        else:
+            console.print("[dim]Run [bold]wline <command> --help[/bold] for details.[/dim]\n")
 
 
 def main() -> None:
-    """Executable entry point."""
+    """Executable entry point for wline."""
     app()
 
 

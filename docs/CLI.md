@@ -1,90 +1,225 @@
-# WORKLINE CLI (`wg`) User & Reference Guide
+# WORKLINE CLI (`wline`) — Canonical Command Reference
 
-**WORKLINE CLI (`wg`)** is the standalone developer command-line interface for portable engineering projects. It operates directly over the `.wl` filesystem with an embedded, on-device **Local Moss Semantic Retrieval Layer**.
+## Overview
+
+The canonical command namespace for the WORKLINE environment is **`wline`**.
+There is **NO** separate `wg` CLI.
+
+WORKLINE uses a clean two-stage entry model:
+1. **Bootstrap / Activation**:
+   ```bash
+   workline --activate
+   ```
+   Initializes the local environment, verifies runtime dependencies, probes core and derived services, sets up the activation session, and prepares `wline`.
+
+2. **Active Environment Operations**:
+   ```bash
+   wline <command>
+   ```
+   All subsequent operations (project management, inspection, backup, recovery, diagnostics, integrations) use `wline`.
+
+All domain engineering operations (BOM management, PCB routing, component selection, thermal simulation, formal requirements authoring, trade-off decisions) live inside the **WORKLINE** application and are accessed via `wline open`.
 
 ---
 
-## 1. Quick Start
+## Installation
 
-### Installation & Verification
-```bash
-# Verify CLI installation
-wg --version
-wg doctor
+WORKLINE declares two primary console scripts in `pyproject.toml`:
+```toml
+[project.scripts]
+workline = "cli.wline.workline_entry:main"
+wline = "cli.wline.main:main"
 ```
 
-### Initializing a New Project
+Install in development / editable mode:
 ```bash
-# Initialize an engineering project
-wg init autonomous-drone --domain "Hardware Systems & Power Engineering"
-
-# Enter project directory
-cd autonomous-drone
-
-# Open and verify project
-wg open
+pip install -e .
 ```
 
 ---
 
-## 2. Command Reference
+## Architecture Topology
 
-### Core Project Commands
-
-| Command | Description | Example |
-| :--- | :--- | :--- |
-| `wg init <name>` | Initialize standard `.wl` filesystem structure | `wg init my-drone -d "Robotics"` |
-| `wg open [path]` | Detect and open active WORKLINE project | `wg open` |
-| `wg inspect [path]` | Telemetry overview of resources and Moss index | `wg inspect` |
-| `wg check [path]` | Cryptographic manifest and zero-secrets audit | `wg check` |
-| `wg doctor` | Comprehensive workspace & system diagnostics | `wg doctor` |
-
-### Local Moss Retrieval & AI Commands
-
-| Command | Description | Example |
-| :--- | :--- | :--- |
-| `wg index` | Build full local Moss semantic retrieval index | `wg index` |
-| `wg index --incremental` | Index only modified/added resources via hashes | `wg index --incremental` |
-| `wg index --rebuild` | Clear derived index and rebuild from `.wl` files | `wg index --rebuild` |
-| `wg index --watch` | Realtime watch mode for file changes | `wg index --watch` |
-| `wg index status` | View index document counts and health | `wg index status` |
-| `wg search "<query>"` | Hybrid semantic + lexical search over project | `wg search "12V regulator" -t component` |
-| `wg context "<query>"` | Retrieve structured context bundle within budget | `wg context "power distribution"` |
-| `wg ask "<question>"` | Grounded AI Q&A with verified file citations | `wg ask "Why did we choose TPS62160?"` |
-| `wg voice [--text]` | Realtime conversational LiveKit agent session | `wg voice --text` |
-
-### Domain Resource Inspection
-
-| Command | Description |
-| :--- | :--- |
-| `wg requirements` | Inspect functional, technical, and constraint requirements |
-| `wg architecture` | View system block diagram and subsystem interfaces |
-| `wg components` | View component dossiers and Manufacturer Part Numbers (MPN) |
-| `wg bom` | Inspect Bill of Materials, quantities, and cost estimates |
-| `wg tasks` | Filter tasks by status (`--status open`) and assignee (`--assignee rahul`) |
-| `wg decisions` | View Architectural Decision Records (ADRs) |
-| `wg research` | Search research literature dossiers and findings |
-| `wg documents` | View technical specifications and datasheets |
-| `wg analysis` | View power budget, thermal dissipation, and PCB stackup reports |
-| `wg agents` | View configured domain agents and cryptographic audit receipts |
-| `wg team` | View team members, roles, and export policies |
-
-### Portability & Packaging
-
-| Command | Description | Example |
-| :--- | :--- | :--- |
-| `wg export [--zip]` | Bundle project into `.workline.zip` (excludes secrets & index) | `wg export --zip` |
-| `wg import <path>` | Extract `.workline.zip` and automatically rebuild Moss index | `wg import drone.workline.zip` |
-| `wg sync` | Reconcile manifest hashes and update local retrieval | `wg sync` |
-| `wg git [status\|diff]` | Run Git operations with strict `.wlignore` rules | `wg git status` |
+```
+                    TERMINAL
+                        │
+                        │
+              workline --activate
+                        │
+                        ▼
+              ┌─────────────────┐
+              │     WORKLINE    │
+              │ LOCAL ENVIRONMENT│
+              └────────┬────────┘
+                       │
+                       ▼
+                    wline
+                       │
+             ┌─────────┼─────────┐
+             │         │         │
+             ▼         ▼         ▼
+          Project    Runtime   Backup
+          Control   Control    /Restore
+             │
+             ▼
+       ┌──────────────────┐
+       │ WORKLINE ENGINE  │
+       └────────┬─────────┘
+                │
+       ┌────────┼─────────┐
+       ▼        ▼         ▼
+   SurrealDB  Retrieval  Agents
+                │
+          ┌─────┴─────┐
+          ▼           ▼
+        Moss        Qdrant
+          │           │
+          └─────┬─────┘
+                ▼
+         Project Context
+                │
+       ┌────────┼────────┐
+       ▼        ▼        ▼
+      MCP      A2A     LiveKit
+       │        │        │
+       └────────┼────────┘
+                ▼
+         WORKLINE AGENT
+                │
+                ▼
+        ENGINEERING WORKSPACE
+```
 
 ---
 
-## 3. Invariant Guarantees
+## 1. Bootstrap: `workline --activate`
 
-1. **Zero-Secrets Policy**:
-   `.env`, credentials, private keys (`*.key`, `*.pem`), and tokens are strictly excluded from indexing, exports, and search.
-2. **Offline-First Resilience**:
-   The CLI and local Moss retrieval run 100% locally. Pass `wg --offline` to enforce zero external network calls.
-3. **Rebuildability**:
-   If the `.wl/index/` directory is deleted, running `wg index --rebuild` fully reconstructs all semantic retrieval capabilities from the authoritative `.wl` filesystem.
+Initializes and activates the local WORKLINE environment:
+```bash
+workline --activate
+```
+
+Outputs the environment status table:
+```
+WORKLINE
+------------------------------------------
+Runtime        READY     Python 3.13 / wline v1.0.0
+Project        READY     RescueSwarm
+SurrealDB      READY     Port 8001 reachable
+Qdrant         READY     Port 6333 reachable
+Moss           READY     Local in-process semantic engine
+Agents         READY     Local tool registry & A2A protocol
+LiveKit        READY     Local token fallback active
+------------------------------------------
+WORKLINE environment ACTIVE.
+```
+
+If non-essential services (like LiveKit or container ports) are offline, WORKLINE enters **DEGRADED** mode and remains fully functional offline using local files and Moss.
+
+---
+
+## 2. Core Commands (`wline`)
+
+### `wline`
+Shows the current WORKLINE environment and active project status.
+
+### `wline new`
+Interactive wizard to scaffold a new engineering project.
+```bash
+wline new
+```
+
+### `wline open [project]`
+Opens a project, sets it as active in the session, starts the local Docker stack if needed, and launches the WORKLINE web application.
+```bash
+wline open RescueSwarm
+```
+
+### `wline inspect [target]`
+Inspects either a live `.wl` project directory or an exported `.wlipjt` archive package.
+```bash
+wline inspect
+wline inspect backup.wlipjt --verbose
+```
+
+### `wline status`
+Shows current WORKLINE environment, active project, and service reachability.
+```bash
+wline status
+```
+
+### `wline doctor`
+Comprehensive multi-point environment diagnostics across 7 critical domains (CLI, Docker, Stack, Project, LLM Gateway, LiveKit, Git).
+```bash
+wline doctor
+```
+
+### `wline backup [path]`
+Exports the project into a portable, tamper-evident `.wlipjt` archive.
+All secrets (AWS keys, tokens, passwords) are automatically stripped.
+```bash
+wline backup
+wline backup --git --vectors --output ./backups/
+```
+
+### `wline restore <project.wl>`
+Restores a project from a `.wlipjt` archive or `.wl` bundle.
+```bash
+wline restore backup.wlipjt --target ./restored/ --strategy restore
+```
+
+### `wline sync [project_id]`
+Synchronizes `.wl` state between the local workspace and configured storage.
+```bash
+wline sync
+```
+
+### `wline drive`
+Google Drive browser-agent backup & restore.
+Uses the user's active browser session without requiring Google Drive API keys or OAuth setup.
+```bash
+wline drive --action backup
+wline drive --action restore
+```
+
+### `wline version` / `wline --version`
+Displays WORKLINE version information.
+```bash
+wline version
+```
+
+---
+
+## 3. External API Configuration: `wline --apis`
+
+The centralized entrypoint to configure external integrations (Amazon Bedrock, NVIDIA NIM, OpenAI, Anthropic, GitHub, Nexar, LiveKit, Tavily) **without** storing secrets in `.wl` project files.
+
+### Interactive Configuration Manager
+```bash
+wline --apis
+# Or:
+wline apis
+```
+
+### Provider Status
+```bash
+wline --apis status
+```
+
+### Reset Provider Configuration
+```bash
+wline --apis reset
+```
+
+All credentials are saved to machine-local storage at `~/.workline/credentials.json` under named profiles (`default`, `development`, `production`).
+
+---
+
+## 4. Advanced Runtime Controls: `wline runtime ...`
+
+Diagnostic and developer commands for managing internal services:
+- `wline runtime status`: Check container services and ports.
+- `wline runtime start`: Start Docker Compose services (`surrealdb`, `qdrant`, `redis`, `api`, `worker`).
+- `wline runtime stop`: Stop container services.
+- `wline runtime restart`: Restart container services.
+- `wline runtime logs [service]`: Tail logs for a specific service.
