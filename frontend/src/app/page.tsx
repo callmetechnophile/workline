@@ -709,7 +709,6 @@ function AuthenticatedWorkbench() {
                 asset: 'USDC',
                 asset_id: 10458941,
                 recipient: '3DOOXTOUNS7G3R6T2B2ESQBKECUQ2VRSOFXSOV54TAZ43FMC36X7W6G7MY',
-                // eslint-disable-next-line react-compiler/react-compiler
                 expires_at: new Date(Date.now() + 86400000).toISOString(),
                 status: 'REQUIRED',
               }}

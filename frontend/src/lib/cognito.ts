@@ -106,7 +106,6 @@ export async function signInCognito(username: string, password: string): Promise
   }
 
   const claims = parseJwtClaims(auth.IdToken);
-  // eslint-disable-next-line react-compiler/react-compiler
   const nowSec = Math.floor(Date.now() / 1000);
   const expiresAt = nowSec + (auth.ExpiresIn || 3600);
 
