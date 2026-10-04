@@ -18,10 +18,11 @@
 
 [Architecture](#-system-architecture) •
 [Local Intelligence & CLI](#-local-intelligence--canonical-cli-wline) •
+[Agent Runtime & Agent37](#-agent-runtime--agent37-sandbox) •
 [External APIs & Integrations](#-external-api-configuration-wline---apis) •
 [Google Drive Browser Agent](#-google-drive-browser-agent-wline-drive) •
 [Key Features](#-core-capabilities) •
-[Pinout & Firmware](#-pcb-pin-interconnect--firmware-engine) •
+[Documentation](#-documentation) •
 [Getting Started](#-getting-started) •
 [AWS Deployment](#-aws-cloud-native-deployment)
 
@@ -159,9 +160,83 @@ wline restore project.wlipjt
 # Synchronize local state with configured project storage
 wline sync
 
+# Google Drive browser-agent integration
+wline drive
+wline drive backup
+wline drive restore
+
+# Multi-agent fleet management and capabilities
+wline agents
+wline agents doctor
+wline agents capabilities
+
+# External API and credential management
+wline --apis
+
 # Show WORKLINE version
 wline version
 ```
+
+---
+
+## 🤖 Agent Runtime & Agent37 Sandbox
+
+WORKLINE features a unified **Agent Control Fabric** with automated runtime routing and cryptographic governance:
+
+```
+                         USER
+                          │
+                          ▼
+                  ┌──────────────┐
+                  │   WORKLINE   │
+                  │   PLATFORM   │
+                  └──────┬───────┘
+                         │
+        ┌────────────────┼─────────────────┐
+        │                │                 │
+        ▼                ▼                 ▼
+ Project Model      Agent Runtime      Workspace UI
+        │                │
+        │       ┌────────┼─────────┐
+        │       │        │         │
+        │      MCP      A2A      LiveKit
+        │       │        │         │
+        │       └────────┼─────────┘
+        │                │
+        ▼                ▼
+   SurrealDB        Agent Router
+                         │
+              ┌──────────┼───────────┐
+              │                      │
+              ▼                      ▼
+        Local Agents             Agent37
+                                  Sandbox
+              │                      │
+              └──────────┬───────────┘
+                         ▼
+                  ProjectRetriever
+                         │
+                ┌────────┴────────┐
+                ▼                 ▼
+             Local Moss         Qdrant
+          retrieval layer    vector database
+```
+
+### 1. Agent Router (`AgentRouter`)
+The `AgentRouter` evaluates task type, security requirements, and data sensitivity:
+- **`LOCAL`**: In-process execution with direct project filesystem access (architecture synthesis, BOM analysis, thermal calculations).
+- **`AGENT37`**: Dispatches speculative, high-compute, or untrusted tasks (web scraping, datasheet PDF extraction, external code execution) to an isolated remote sandbox.
+- **`EXTERNAL`**: Delegates to configured external APIs (Bedrock, TinyFish, LiveKit).
+
+### 2. Isolated Remote Sandbox (`Agent37Adapter`)
+- **Strict Security Boundaries**: Agent37 is strictly **read-only** to authoritative project state. It is granted scopes like `web`, `browser`, and `pdf_download`, while `bom_write`, `architecture_write`, and `database_write` are strictly denied.
+- **Verification Gates**: Artifacts produced by Agent37 are ingested by WORKLINE through human/agent verification gates before becoming part of the `.wl` project filesystem.
+- **Zero Secret Exposure**: Credentials are dynamically supplied via `APICredentialManager` into ephemeral in-memory environment variables.
+
+### 3. ArmorIQ Governance
+- Every agent delegation mints an ArmorIQ tracking token (`DEL-YYYY-XXXXX`).
+- Execution results include HMAC-SHA256 verifiable receipts stored in `.wl/agents/receipts.wl` and SurrealDB.
+- Authoritative mutations to `architecture/*.wl`, `requirements/*.wl`, and `bom/*.wl` require explicit human-in-the-loop approval.
 
 ---
 
@@ -176,18 +251,19 @@ wline --apis
 wline apis
 
 # View status of external providers without exposing secrets
-wline --apis status
+wline apis status
 
-# Safely remove provider configuration with confirmation
-wline --apis reset
+# Safely reset provider configuration
+wline apis reset
 ```
 
 Supported provider categories:
 - **AI & Model Providers**: Amazon Bedrock (Claude 3.5 Sonnet / Haiku / Nova), NVIDIA NIM, OpenAI, Anthropic
+- **Isolated Sandboxes**: Agent37 (`AGENT37_API_KEY`, `AGENT37_ENDPOINT`)
+- **Web & Research**: TinyFish (web search, autonomous scraping, and technical paper discovery)
 - **Engineering Data**: Nexar / Octopart (live distributor stock, component pricing, datasheets)
-- **Realtime Services**: LiveKit (project-scoped audio/voice agent rooms)
+- **Realtime Voice**: LiveKit (project-scoped audio/voice copilot rooms)
 - **Git Providers**: GitHub (repository sync, releases, issue tracking)
-- **Research APIs**: Tavily (scientific literature & datasheet search)
 
 > **🔒 Security Invariant**: Secrets are stored machine-locally in `~/.workline/credentials.json` under named profiles (`default`, `development`, `production`). Credentials are **NEVER** stored inside `.wl` or `.wlipjt` project files.
 
@@ -198,14 +274,17 @@ Supported provider categories:
 Workline integrates with Google Drive via an automated **browser-agent** workflow:
 
 ```bash
+# Open interactive Google Drive browser workspace
+wline drive
+
 # Backup active project to Google Drive
-wline drive --action backup
+wline drive backup
 
 # Restore project from Google Drive
-wline drive --action restore
+wline drive restore
 ```
 
-- **Zero Cloud API Credentials Required**: Operates directly through the user's authenticated browser session on `drive.google.com`. No OAuth client IDs, API keys, or Google passwords needed.
+- **Zero Cloud API Credentials Required**: Operates directly through the user's authenticated browser session on `drive.google.com`. No GCP service accounts, OAuth client IDs, or API keys needed.
 - **Mandatory Verification**: The browser agent verifies that `README.wl` and `.wl/manifest.wl` are present in the target folder before confirming backup completion.
 
 ---
@@ -263,6 +342,26 @@ wline drive --action restore
 - **Vector Database**: **Qdrant** (ANN semantic search over datasheets and research literature)
 - **Local Source of Truth**: `.wl` filesystem representation + Moss local index
 - **Object Storage**: Amazon S3 / Local Filesystem Artifact Store
+
+---
+
+## 📚 Documentation
+
+The WORKLINE engineering platform is governed by formal specifications and contracts:
+
+| Document | Description |
+| :--- | :--- |
+| **[CLI Reference](docs/CLI.md)** | Canonical `wline` command namespace, bootstrap flow, and sub-apps |
+| **[.wl Format Specification](docs/WL_FORMAT.md)** | Portable, open standard filesystem schema and structure |
+| **[Local Architecture](docs/LOCAL_ARCHITECTURE.md)** | Subsystem topology, local-first principles, and database management |
+| **[Local Retrieval](docs/LOCAL_RETRIEVAL.md)** | In-process Moss indexing, BM25 dense vectors, and `ProjectRetriever` |
+| **[Agent Runtime](docs/AGENT_RUNTIME.md)** | Multi-agent coordination, A2A messaging, and MCP tool protocols |
+| **[Agent37 Sandbox](docs/AGENT37.md)** | Isolated remote execution sandbox lifecycle, boundaries, and scopes |
+| **[ArmorIQ Governance](docs/ARMORIQ.md)** | Cryptographic delegation chains (`DEL-YYYY-XXXXX`), HMAC receipts, and gates |
+| **[Browser Agents](docs/BROWSER_AGENTS.md)** | Headless browser automation architecture and cookie isolation |
+| **[Google Drive Integration](docs/GOOGLE_DRIVE.md)** | Browser-driven backup and restore workflows (`wline drive`) |
+| **[API Configuration](docs/API_CONFIGURATION.md)** | Zero-secrets credential management and provider setup (`wline --apis`) |
+| **[Project Recovery](docs/PROJECT_RECOVERY.md)** | Portable `.wlipjt` archives, tamper-evident verification, and disaster recovery |
 
 ---
 
