@@ -286,3 +286,16 @@ def agents_health(
         )
 
     console.print(table)
+
+
+# Aliases for Section 53: wline agents status, wline agents doctor
+agents_app.command("status")(agents_list)
+agents_app.command("doctor")(agents_health)
+
+
+@agents_app.callback(invoke_without_command=True)
+def agents_default(ctx: typer.Context):
+    """Default invocation for `wline agents`."""
+    if ctx.invoked_subcommand is None:
+        agents_list(json_output=False)
+

@@ -151,6 +151,70 @@ class ProjectManager:
         )
         (root / WL_METADATA_DIR / "metadata.wl").write_text(metadata_wl, encoding="utf-8")
 
+        # Core project metadata summaries (.wl/*)
+        arch_summary_wl = (
+            "architecture:\n"
+            f"  project_id: {pid}\n"
+            f"  name: {name} Architecture\n"
+            "  status: DRAFT\n"
+            f"  version: {version}\n"
+            "  summary: High-level system architecture summary and block relationships.\n"
+        )
+        (root / WL_METADATA_DIR / "architecture.wl").write_text(arch_summary_wl, encoding="utf-8")
+
+        req_summary_wl = (
+            "requirements:\n"
+            f"  project_id: {pid}\n"
+            "  status: DRAFT\n"
+            "  total_requirements: 1\n"
+            "  compliance_status: PENDING\n"
+        )
+        (root / WL_METADATA_DIR / "requirements.wl").write_text(req_summary_wl, encoding="utf-8")
+
+        team_wl = (
+            "team:\n"
+            f"  project_id: {pid}\n"
+            "  members: []\n"
+            "  roles:\n"
+            "    - OWNER\n"
+            "    - ENGINEER\n"
+            "    - VIEWER\n"
+        )
+        (root / WL_METADATA_DIR / "team.wl").write_text(team_wl, encoding="utf-8")
+
+        agents_wl = (
+            "agents:\n"
+            "  governance: armoriq\n"
+            "  delegation_enabled: true\n"
+            "  allowed_runtimes:\n"
+            "    - local\n"
+            "    - agent37\n"
+            "  registered_agents:\n"
+            "    - engineering_copilot\n"
+            "    - component_planner\n"
+            "    - bom_optimizer\n"
+            "    - deep_research\n"
+        )
+        (root / WL_METADATA_DIR / "agents.wl").write_text(agents_wl, encoding="utf-8")
+
+        deps_wl = (
+            "dependencies:\n"
+            f"  project_id: {pid}\n"
+            "  schema_version: 1.0\n"
+            "  tools: []\n"
+            "  packages: []\n"
+        )
+        (root / WL_METADATA_DIR / "dependencies.wl").write_text(deps_wl, encoding="utf-8")
+
+        retrieval_wl = (
+            "retrieval:\n"
+            "  provider: moss\n"
+            "  vector_db: qdrant\n"
+            f"  collection: workline_{slug}\n"
+            "  status: READY\n"
+        )
+        (root / WL_METADATA_DIR / "retrieval.wl").write_text(retrieval_wl, encoding="utf-8")
+
         # Initial .wl/moss.wl metadata
         moss_wl = (
             "moss:\n"
@@ -228,6 +292,13 @@ class ProjectManager:
             f"description: Complete initial subsystem architecture specification.\n"
         )
         (root / "tasks" / "task-001.wl").write_text(task_init, encoding="utf-8")
+
+        # 5. Exports
+        exports_init = (
+            f"project_id: {pid}\n"
+            "exports: []\n"
+        )
+        (root / "exports" / "index.wl").write_text(exports_init, encoding="utf-8")
 
     def open_project(self, project_path: Optional[Path] = None) -> Tuple[Path, ProjectIdentity, ProjectManifestData]:
         """Open and verify an existing WORKLINE project."""

@@ -10,7 +10,7 @@ from typing import List
 import pytest
 from typer.testing import CliRunner
 
-from cli.wg.main import app
+from cli.wline.main import app
 from cli.workline import __version__
 
 runner = CliRunner()

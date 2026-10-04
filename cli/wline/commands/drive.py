@@ -158,26 +158,77 @@ class GoogleDriveBrowserProvider(BrowserStorageProvider):
         return True
 
 
-def drive_command(
+drive_app = typer.Typer(
+    name="drive",
+    help="Google Drive browser-agent backup & restore workflows.",
+    invoke_without_command=True,
+)
+
+
+@drive_app.command("backup")
+def drive_backup_cmd(
+    path: Optional[str] = typer.Option(None, "--path", "-p", help="Target project path"),
+    no_browser: bool = typer.Option(False, "--no-browser", help="Suppress opening the browser"),
+) -> None:
+    """Back up project to Google Drive via authenticated browser agent."""
+    target_path = Path(path).resolve() if path else Path.cwd()
+    root = find_project_root(target_path) or target_path
+    if not (root / "README.wl").exists():
+        console.print(f"[red]Error:[/red] '{root}' is not a valid WORKLINE project (README.wl missing).")
+        raise typer.Exit(code=1)
+    provider = GoogleDriveBrowserProvider(console)
+    res = provider.backup_project(root, open_browser=not no_browser)
+    if not res.success:
+        raise typer.Exit(code=1)
+
+
+@drive_app.command("restore")
+def drive_restore_cmd(
+    path: Optional[str] = typer.Option(None, "--path", "-p", help="Target project path"),
+    no_browser: bool = typer.Option(False, "--no-browser", help="Suppress opening the browser"),
+) -> None:
+    """Restore project from Google Drive via authenticated browser agent."""
+    target_path = Path(path).resolve() if path else Path.cwd()
+    provider = GoogleDriveBrowserProvider(console)
+    provider.restore_project(target_path, open_browser=not no_browser)
+
+
+@drive_app.callback(invoke_without_command=True)
+def drive_default(
+    ctx: typer.Context,
     path: Optional[str] = typer.Option(None, "--path", "-p", help="Target project path"),
     action: str = typer.Option("backup", "--action", "-a", help="Action: backup or restore"),
     no_browser: bool = typer.Option(False, "--no-browser", help="Suppress opening the browser"),
 ) -> None:
+    """Default invocation for `wline drive`."""
+    if ctx.invoked_subcommand is None:
+        drive_command(path=path, action=action, no_browser=no_browser)
+
+
+def drive_command(
+    action: str = typer.Argument("backup", help="Action: backup or restore"),
+    action_opt: Optional[str] = typer.Option(None, "--action", "-a", help="Action: backup or restore"),
+    path: Optional[str] = typer.Option(None, "--path", "-p", help="Target project path"),
+    no_browser: bool = typer.Option(False, "--no-browser", help="Suppress opening the browser"),
+) -> None:
     """Backup or restore WORKLINE project using Google Drive via browser agent."""
+    effective_action = action_opt or action or "backup"
     target_path = Path(path).resolve() if path else Path.cwd()
     root = find_project_root(target_path) or target_path
 
     provider = GoogleDriveBrowserProvider(console)
 
-    if action.lower() == "backup":
+    if effective_action.lower() == "backup":
         if not (root / "README.wl").exists():
             console.print(f"[red]Error:[/red] '{root}' is not a valid WORKLINE project (README.wl missing).")
             raise typer.Exit(code=1)
         res = provider.backup_project(root, open_browser=not no_browser)
         if not res.success:
             raise typer.Exit(code=1)
-    elif action.lower() == "restore":
+    elif effective_action.lower() == "restore":
         provider.restore_project(root, open_browser=not no_browser)
     else:
-        console.print(f"[red]Unknown action '{action}'. Use backup or restore.[/red]")
+        console.print(f"[red]Unknown action '{effective_action}'. Use backup or restore.[/red]")
         raise typer.Exit(code=1)
+
+

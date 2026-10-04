@@ -21,6 +21,7 @@ STANDARD_MODULES: List[str] = [
     "team",
     "agents",
     "history",
+    "exports",
 ]
 
 WL_METADATA_DIR = ".wl"

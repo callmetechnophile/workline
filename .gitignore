@@ -28,6 +28,7 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+*.code-workspace
 
 # Exporters output & temporary files
 backend/exports/*.pdf

@@ -40,7 +40,7 @@ from cli.wline.commands.drive import drive_command
 
 app = typer.Typer(
     name="wline",
-    help="WORKLINE — Local Engineering Intelligence Runtime & Platform Gateway",
+    help="Workline - Engineering Lifecycle Platform CLI & Local Intelligence Runtime",
     no_args_is_help=False,
     add_completion=False,
 )
@@ -58,7 +58,14 @@ runtime_app.command("stop")(stop_command)
 runtime_app.command("restart")(start_command)
 runtime_app.command("logs")(logs_command)
 
-# ── Core Commands ─────────────────────────────────────────────────────────────
+# ── Core Commands & Apps ──────────────────────────────────────────────────────
+from cli.workline.commands.init import init_project_command
+from cli.wline.commands.agents import agents_app
+from cli.wline.commands.drive import drive_command
+from cli.wline.commands.config import config_app
+from cli.wline.commands.project import project_app
+
+app.command("init")(init_project_command)
 app.command("new")(new_project_command)
 app.command("open")(open_command)
 app.command("inspect")(inspect_command)
@@ -68,6 +75,12 @@ app.command("backup")(backup_command)
 app.command("restore")(restore_command)
 app.command("sync")(sync_command)
 app.command("drive")(drive_command)
+app.command("start")(start_command)
+app.command("stop")(stop_command)
+app.command("logs")(logs_command)
+app.add_typer(agents_app, name="agents")
+app.add_typer(config_app, name="config")
+app.add_typer(project_app, name="project")
 app.add_typer(runtime_app, name="runtime")
 
 
